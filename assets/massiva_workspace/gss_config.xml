@@ -98,8 +98,8 @@
 	<TestCase name="TP_0150_ASW_PUS_TC_6_2_WRITE_BYTES_TO_0x41020080" 
 		procedure="FT_PROCS/st06/tp_0150_asw_pus_tc_6_2_write_bytes_to_0x41020080.xml"/>
 
-	<TestCase name="TP_0160_ASW_PUS_TC_6_9_CHECKSUM_FROM_0x40000090_TO_0x400000BF" 
-		procedure="FT_PROCS/st06/tp_0160_asw_pus_tc_6_9_checksum_from_0x40000090_to_0x400000BF.xml"/>
+	<TestCase name="TP_0160_ASW_PUS_TC_6_9_CHECKSUM_FROM_0x41020200_TO_0x4102022F"
+		procedure="FT_PROCS/st06/tp_0160_asw_pus_tc_6_9_checksum_from_0x41020200_to_0x4102022F.xml"/>
 
 	<TestCase name="TP_0170_ASW_PUS_TC_6_5_REJECT_READ_BYTES_FROM_INVALID_MEMORY_ID" 
 		procedure="FT_PROCS/st06/tp_0170_asw_pus_tc_6_5_reject_read_bytes_from_invalid_memory_id.xml"/>

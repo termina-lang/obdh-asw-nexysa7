@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE test_proc SYSTEM "../../DTDs/test_proc.dtd">
+
+<!--
+
+ID: TP_0160_ASW_PUS_TC_6_9_CHECKSUM_FROM_0x41020200_TO_0x4102022F
+Description:
+
+The test writes 48 known bytes to memory addresses 0x41020200 to 0x4102022F
+with TC(6,2), and then checks that telecommand TC(6,9) calculates their
+checksum and that the TM (6,10) carries the expected value 0x5D6E.
+
+-->
+
+<test_proc name="TP_0160_ASW_PUS_TC_6_9_CHECKSUM_FROM_0x41020200_TO_0x4102022F">
+	<step name="tc_6_2_write_bytes_to_0x41020200" id="0" prev_step_idref="NULL" output_idref_from_prev_step="NULL" mode="continuous">
+		<inputs>
+
+			<input_level_2 name="tc_6_2" ifRef="0" delay_value="120" delay_unit="miliseconds">
+				<level2 format="TC_Formats/Level2/st06/asw_pus_tc_6_2_format.xml"/>
+				<app_to_level2 export="STEPS_XML/INPUTS/tc_6_2/tc_6_2_write_bytes_to_0x41020200.xml"/>
+				<level1 format="DEFAULT"/>
+				<level2_to_level1 export="TC_Formats/Lv2_To_Lv1/st06/asw_pus_tc_6_2_to_asw_pus_v2_tc_ack_0b1001.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_to_level0 export="DEFAULT"/>
+			</input_level_2>
+
+		</inputs>
+		<outputs checkmode="all" valid_time_interval_value="2000" valid_time_interval_unit="miliseconds">
+			<output_level_1 name="tm_1_1" id="0" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_1_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+			<output_level_1 name="tm_1_7" id="1" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_7_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+		</outputs>
+	</step>
+	<step name="tc_6_9_checksum_from_0x41020200_to_0x4102022F" id="1" prev_step_idref="NULL" output_idref_from_prev_step="NULL" mode="continuous">
+		<inputs>
+
+			<input_level_2 name="tc_6_9" ifRef="0" delay_value="120" delay_unit="miliseconds">
+				<level2 format="TC_Formats/Level2/st06/asw_pus_tc_6_9_format.xml"/>
+				<app_to_level2 export="STEPS_XML/INPUTS/tc_6_9/tc_6_9_checksum_from_0x41020200_to_0x4102022F.xml"/>
+				<level1 format="DEFAULT"/>
+				<level2_to_level1 export="TC_Formats/Lv2_To_Lv1/st06/asw_pus_tc_6_9_to_asw_pus_v2_tc_ack_0b1001.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_to_level0 export="DEFAULT"/>
+			</input_level_2>
+
+		</inputs>
+		<outputs checkmode="all" valid_time_interval_value="2000" valid_time_interval_unit="miliseconds">
+			<output_level_1 name="tm_1_1" id="0" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_1_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+			<output_level_2 name="tm_6_10_checksum" id="1" ifRef="0">
+				<level2 format="TM_Formats/Level2/st06/asw_pus_tm_6_10_format.xml"/>
+				<level2_filter apply_def_filter="no" extra_filter="TM_Filters/Level2/st06/asw_pus_tm_6_10_checksum_from_0x41020200_to_0x4102022F_filter.xml"/>
+				<level1 format="DEFAULT"/>
+ 				<level2_from_level1 import="TM_Formats/Lv2_From_Lv1/st06/asw_pus_tm_6_10_from_asw_pus_v2_tm.xml"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st06/asw_pus_v2_tm_6_10_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_2>
+			<output_level_1 name="tm_1_7" id="2" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_7_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+		</outputs>
+	</step>
+</test_proc>

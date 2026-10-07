@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Export SYSTEM "../../DTDs/export.dtd">
+<Export from="NULL" to="asw_pus_6_2.xml">
+
+	<Sizes>
+		<sizeFromFileLength id="0" fromFile="STEPS_XML/INPUTS/tc_6_2/bytes_to_write_0x41020200.txt"/>
+	</Sizes>
+
+	<settings>
+		<settingFromConst value="1" toFieldRef="MemoryID"/>
+		<settingFromConst value="1" toFieldRef="N"/>
+		<settingFromConst value="0x20200" toFieldRef="StartAddress"/>
+		<settingFromSize sizeRef="0" toFieldRef="Length"/>
+		<settingFromFile file="STEPS_XML/INPUTS/tc_6_2/bytes_to_write_0x41020200.txt" toFieldRef="DataToWrite"/>
+	</settings>
+</Export>

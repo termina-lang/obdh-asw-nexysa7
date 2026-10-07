@@ -2,20 +2,20 @@
 <!DOCTYPE MintermFilter SYSTEM "../../../DTDs/filters.dtd">
 
 <MintermFilter formatFile="../../TM_Formats/Level2/st06/asw_pus_tm_6_10_format.xml">
-    <BoolVar id="0" name="memory_id_equal_to_0" constantType="hex">
+    <BoolVar id="0" name="memory_id_equal_to_1" constantType="hex">
 		<FieldRef name="MemoryID" />
 		<Op type="equal" />
-		<Constant value="0" />
+		<Constant value="1" />
 	</BoolVar>
 	<BoolVar id="1" name="N_equal_to_1" constantType="hex">
 		<FieldRef name="N" />
 		<Op type="equal" />
 		<Constant value="0x1" />
 	</BoolVar>
-	<BoolVar id="2" name="StartAddess_equal_to_0x90" constantType="hex">
+	<BoolVar id="2" name="StartAddess_equal_to_0x20200" constantType="hex">
 		<FieldRef name="StartAddress" />
 		<Op type="equal" />
-		<Constant value="90" />
+		<Constant value="20200" />
 	</BoolVar>
 	<BoolVar id="3" name="Length_equal_to_48" constantType="decimal">
 		<FieldRef name="Length" />
@@ -25,7 +25,7 @@
 	<BoolVar id="4" name="ChecksumEqual" constantType="hex">
 		<FieldRef name="Checksum" />
 		<Op type="equal" />
-		<Constant value="530A" />
+		<Constant value="5D6E" />
 	</BoolVar>
 	<Minterm id="0">
 		<BoolVarRef idRef="0" />
