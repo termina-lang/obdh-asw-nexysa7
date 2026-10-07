@@ -1,4 +1,4 @@
-# OBDH-ASW-Termina
+# OBDH-ASW-NEXYSA7
 
 This repository contains the source code of an on-board data handling (OBDH) application for a satellite, written in the Termina programming language. The application implements a representative subset of the functionality expected from an OBDH system: receiving telecommands from the ground, generating and transmitting telemetry, monitoring system parameters, and executing corrective actions when anomalies are detected. Command and telemetry packets follow the protocol defined by the Consultative Committee for Space Data Systems (CCSDS), and the application implements a set of services in accordance with the ECSS Packet Utilization Standard (PUS).
 

@@ -1,4 +1,4 @@
-name: obdh-asw-termina
+name: obdh-asw-nexysa7
 output-folder: output
 efp-folder: efp
 platform: rtems5-leon3-nexysa7
