@@ -76,7 +76,7 @@ void CPUSService128__exec_tc(const termina__event_t * const termina__ev, void * 
     {
         
         #line 69 "src/service_libraries/pus_services/pus_service128.fin"
-        int32_t error_code = status.Failure._0;
+        const int32_t error_code = status.Failure._0;
 
         #line 72 "src/service_libraries/pus_services/pus_service128.fin"
         if (error_code == 4L) {

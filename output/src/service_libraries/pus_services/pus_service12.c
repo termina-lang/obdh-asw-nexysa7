@@ -54,7 +54,7 @@ static _Bool CPUSService12__PID_has_expected_masked_value(const termina__event_t
     (void)termina__ev;
 
     #line 261 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 262 "src/service_libraries/pus_services/pus_service12.fin"
     _Bool res = false;
@@ -111,7 +111,7 @@ static _Bool CPUSService12__PID_is_above_upper_limit(const termina__event_t * co
     (void)termina__ev;
 
     #line 195 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 196 "src/service_libraries/pus_services/pus_service12.fin"
     _Bool res = false;
@@ -171,7 +171,7 @@ static _Bool CPUSService12__PID_is_below_lower_limit(const termina__event_t * co
     (void)termina__ev;
 
     #line 228 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 229 "src/service_libraries/pus_services/pus_service12.fin"
     _Bool res = false;
@@ -235,7 +235,7 @@ static Status__i32 CPUSService12__add_monitoring_transition(const termina__event
     if ((size_t)self->monitoring_transition_counter < 1U) {
         
         #line 545 "src/service_libraries/pus_services/pus_service12.fin"
-        size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+        const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
         #line 547 "src/service_libraries/pus_services/pus_service12.fin"
         self->param_mon_transitions_table[termina__check__array_index(1U, (size_t)self->monitoring_transition_counter)].PID = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].PID;
@@ -250,7 +250,7 @@ static Status__i32 CPUSService12__add_monitoring_transition(const termina__event
         if (self->do_monitoring_req_status_update.fault_info._variant == FaultInfo__ParamOutOfLimit) {
             
             #line 551 "src/service_libraries/pus_services/pus_service12.fin"
-            ParamOutOfLimitInfo out_of_limit_info = self->do_monitoring_req_status_update.fault_info.ParamOutOfLimit._0;
+            const ParamOutOfLimitInfo out_of_limit_info = self->do_monitoring_req_status_update.fault_info.ParamOutOfLimit._0;
 
             #line 552 "src/service_libraries/pus_services/pus_service12.fin"
             self->param_mon_transitions_table[termina__check__array_index(1U, (size_t)self->monitoring_transition_counter)].limit_value = out_of_limit_info.PID_limit;
@@ -263,7 +263,7 @@ static Status__i32 CPUSService12__add_monitoring_transition(const termina__event
         if (self->do_monitoring_req_status_update.fault_info._variant == FaultInfo__ParamFaultValue) {
             
             #line 555 "src/service_libraries/pus_services/pus_service12.fin"
-            ParamFaultValueInfo fault_value_info = self->do_monitoring_req_status_update.fault_info.ParamFaultValue._0;
+            const ParamFaultValueInfo fault_value_info = self->do_monitoring_req_status_update.fault_info.ParamFaultValue._0;
 
             #line 556 "src/service_libraries/pus_services/pus_service12.fin"
             self->param_mon_transitions_table[termina__check__array_index(1U, (size_t)self->monitoring_transition_counter)].limit_value = fault_value_info.PID_expected_value;
@@ -281,7 +281,7 @@ static Status__i32 CPUSService12__add_monitoring_transition(const termina__event
         if (self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition._variant == MonitorDefinition__ParamValueCheck) {
             
             #line 566 "src/service_libraries/pus_services/pus_service12.fin"
-            ParamValueCheckDefinition value_definition = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamValueCheck._0;
+            const ParamValueCheckDefinition value_definition = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamValueCheck._0;
 
             #line 568 "src/service_libraries/pus_services/pus_service12.fin"
             self->param_mon_transitions_table[termina__check__array_index(1U, (size_t)self->monitoring_transition_counter)].mask_value = value_definition.mask_value;
@@ -319,7 +319,7 @@ static Status__i32 CPUSService12__add_monitoring_transition(const termina__event
         if (tm_handler._variant == Option__Some) {
             
             #line 591 "src/service_libraries/pus_services/pus_service12.fin"
-            termina__box_t b_tm_handler = tm_handler.Some._0;
+            const termina__box_t b_tm_handler = tm_handler.Some._0;
 
             #line 593 "src/service_libraries/pus_services/pus_service12.fin"
             uint16_t tm_count = 0U;
@@ -375,7 +375,7 @@ static void CPUSService12__add_valid_mng_mon_def(const termina__event_t * const 
     (void)termina__ev;
 
     #line 908 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t PMONID = (size_t)self->exec_tc_req_status_update.tc_data_5.PMONID;
+    const size_t PMONID = (size_t)self->exec_tc_req_status_update.tc_data_5.PMONID;
 
     #line 910 "src/service_libraries/pus_services/pus_service12.fin"
     self->param_mon_config_table[termina__check__array_index(16U, PMONID)] = self->exec_tc_req_status_update.tc_data_5.mon_config;
@@ -430,7 +430,7 @@ static ParamValueCheckDefinition CPUSService12__get_expected_value_monitoring_de
     (void)termina__ev;
 
     #line 108 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 109 "src/service_libraries/pus_services/pus_service12.fin"
     ParamValueCheckDefinition monitoring_definition = { .EvID = 0U, .expected_value = 0U, .mask_value = 0U };
@@ -439,7 +439,7 @@ static ParamValueCheckDefinition CPUSService12__get_expected_value_monitoring_de
     if (self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition._variant == MonitorDefinition__ParamValueCheck) {
         
         #line 117 "src/service_libraries/pus_services/pus_service12.fin"
-        ParamValueCheckDefinition param_check_definition = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamValueCheck._0;
+        const ParamValueCheckDefinition param_check_definition = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamValueCheck._0;
 
         #line 119 "src/service_libraries/pus_services/pus_service12.fin"
         monitoring_definition = param_check_definition;
@@ -487,7 +487,7 @@ static ParamLimitCheckDefinition CPUSService12__get_limits_monitoring_definition
     (void)termina__ev;
 
     #line 82 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 83 "src/service_libraries/pus_services/pus_service12.fin"
     ParamLimitCheckDefinition monitoring_definition = { .high_limit = 0U, .high_limit_evID = 0U, .low_limit = 0U, .low_limit_evID = 0U };
@@ -496,7 +496,7 @@ static ParamLimitCheckDefinition CPUSService12__get_limits_monitoring_definition
     if (self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition._variant == MonitorDefinition__ParamLimitCheck) {
         
         #line 92 "src/service_libraries/pus_services/pus_service12.fin"
-        ParamLimitCheckDefinition limit_check_def = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamLimitCheck._0;
+        const ParamLimitCheckDefinition limit_check_def = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamLimitCheck._0;
 
         #line 94 "src/service_libraries/pus_services/pus_service12.fin"
         monitoring_definition = limit_check_def;
@@ -551,7 +551,7 @@ static _Bool CPUSService12__is_expected_value_monitoring(const termina__event_t 
     (void)termina__ev;
 
     #line 69 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 70 "src/service_libraries/pus_services/pus_service12.fin"
     _Bool is_exp_val_mon = false;
@@ -574,7 +574,7 @@ static _Bool CPUSService12__is_limits_monitoring(const termina__event_t * const 
     (void)termina__ev;
 
     #line 55 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 56 "src/service_libraries/pus_services/pus_service12.fin"
     _Bool is_limits_mon = false;
@@ -618,7 +618,7 @@ static _Bool CPUSService12__manage_new_status(const termina__event_t * const ter
     _Bool transition = false;
 
     #line 498 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 500 "src/service_libraries/pus_services/pus_service12.fin"
     CheckState new_state = self->do_monitoring_req_status_update.new_status;
@@ -697,7 +697,7 @@ static DoMonitoringReqStatus CPUSService12__manage_expected_value(const termina_
     DoMonitoringReqStatus next_status = { ._variant = DoMonitoringReqStatus__GetRequestStatusUpdate };
 
     #line 352 "src/service_libraries/pus_services/pus_service12.fin"
-    CheckValueResult check_status = { ._variant = CheckValueResult__MonitorValueExpected };
+    const CheckValueResult check_status = { ._variant = CheckValueResult__MonitorValueExpected };
 
     #line 353 "src/service_libraries/pus_services/pus_service12.fin"
     self->do_monitoring_req_status_update.new_status._variant = CheckState__ParamValueStatus;
@@ -724,7 +724,7 @@ static DoMonitoringReqStatus CPUSService12__manage_interval_control(const termin
     (void)termina__ev;
 
     #line 133 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 134 "src/service_libraries/pus_services/pus_service12.fin"
     DoMonitoringReqStatus next_status = { ._variant = DoMonitoringReqStatus__Exit };
@@ -754,7 +754,7 @@ static DoMonitoringReqStatus CPUSService12__manage_param_above_upper_limit(const
     DoMonitoringReqStatus next_status = { ._variant = DoMonitoringReqStatus__GetRequestStatusUpdate };
 
     #line 367 "src/service_libraries/pus_services/pus_service12.fin"
-    CheckLimitsResult check_status = { ._variant = CheckLimitsResult__MonitorAboveHighLimit };
+    const CheckLimitsResult check_status = { ._variant = CheckLimitsResult__MonitorAboveHighLimit };
 
     #line 368 "src/service_libraries/pus_services/pus_service12.fin"
     self->do_monitoring_req_status_update.new_status._variant = CheckState__ParamLimitStatus;
@@ -764,13 +764,13 @@ static DoMonitoringReqStatus CPUSService12__manage_param_above_upper_limit(const
     self->do_monitoring_req_status_update.new_status.ParamLimitStatus._0.Some._0 = check_status;
 
     #line 370 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 374 "src/service_libraries/pus_services/pus_service12.fin"
     if (self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition._variant == MonitorDefinition__ParamLimitCheck) {
         
         #line 374 "src/service_libraries/pus_services/pus_service12.fin"
-        ParamLimitCheckDefinition check_definition = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamLimitCheck._0;
+        const ParamLimitCheckDefinition check_definition = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamLimitCheck._0;
 
         #line 376 "src/service_libraries/pus_services/pus_service12.fin"
         ParamOutOfLimitInfo fault_info = { .PID = 0U, .PID_limit = 0U, .PID_value = 0U };
@@ -849,7 +849,7 @@ static DoMonitoringReqStatus CPUSService12__manage_param_below_lower_limit(const
     DoMonitoringReqStatus next_status = { ._variant = DoMonitoringReqStatus__GetRequestStatusUpdate };
 
     #line 422 "src/service_libraries/pus_services/pus_service12.fin"
-    CheckLimitsResult check_status = { ._variant = CheckLimitsResult__MonitorBelowLowLimit };
+    const CheckLimitsResult check_status = { ._variant = CheckLimitsResult__MonitorBelowLowLimit };
 
     #line 423 "src/service_libraries/pus_services/pus_service12.fin"
     self->do_monitoring_req_status_update.new_status._variant = CheckState__ParamLimitStatus;
@@ -859,13 +859,13 @@ static DoMonitoringReqStatus CPUSService12__manage_param_below_lower_limit(const
     self->do_monitoring_req_status_update.new_status.ParamLimitStatus._0.Some._0 = check_status;
 
     #line 425 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 429 "src/service_libraries/pus_services/pus_service12.fin"
     if (self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition._variant == MonitorDefinition__ParamLimitCheck) {
         
         #line 429 "src/service_libraries/pus_services/pus_service12.fin"
-        ParamLimitCheckDefinition check_definition = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamLimitCheck._0;
+        const ParamLimitCheckDefinition check_definition = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamLimitCheck._0;
 
         #line 431 "src/service_libraries/pus_services/pus_service12.fin"
         ParamOutOfLimitInfo fault_info = { .PID = 0U, .PID_limit = 0U, .PID_value = 0U };
@@ -953,10 +953,10 @@ static DoMonitoringReqStatus CPUSService12__manage_param_within_limits(const ter
     self->do_monitoring_req_status_update.new_status = new_status;
 
     #line 479 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 480 "src/service_libraries/pus_services/pus_service12.fin"
-    CheckState current_status = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].current_state;
+    const CheckState current_status = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].current_state;
 
     #line 482 "src/service_libraries/pus_services/pus_service12.fin"
     if (are_status_equal(new_status, current_status) == false) {
@@ -982,7 +982,7 @@ static DoMonitoringReqStatus CPUSService12__manage_unexpected_value(const termin
     DoMonitoringReqStatus next_status = { ._variant = DoMonitoringReqStatus__GetRequestStatusUpdate };
 
     #line 295 "src/service_libraries/pus_services/pus_service12.fin"
-    CheckValueResult check_status = { ._variant = CheckValueResult__MonitorValueUnexpected };
+    const CheckValueResult check_status = { ._variant = CheckValueResult__MonitorValueUnexpected };
 
     #line 296 "src/service_libraries/pus_services/pus_service12.fin"
     self->do_monitoring_req_status_update.new_status._variant = CheckState__ParamValueStatus;
@@ -992,13 +992,13 @@ static DoMonitoringReqStatus CPUSService12__manage_unexpected_value(const termin
     self->do_monitoring_req_status_update.new_status.ParamValueStatus._0.Some._0 = check_status;
 
     #line 297 "src/service_libraries/pus_services/pus_service12.fin"
-    size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
+    const size_t current_PMON_ID = (size_t)self->do_monitoring_req_status_update.PMONID;
 
     #line 301 "src/service_libraries/pus_services/pus_service12.fin"
     if (self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition._variant == MonitorDefinition__ParamValueCheck) {
         
         #line 301 "src/service_libraries/pus_services/pus_service12.fin"
-        ParamValueCheckDefinition check_definition = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamValueCheck._0;
+        const ParamValueCheckDefinition check_definition = self->param_mon_config_table[termina__check__array_index(16U, current_PMON_ID)].definition.ParamValueCheck._0;
 
         #line 303 "src/service_libraries/pus_services/pus_service12.fin"
         ParamFaultValueInfo fault_info = { .PID = 0U, .PID_expected_value = 0U, .PID_mask = 0U, .PID_value = 0U };
@@ -1922,7 +1922,7 @@ void CPUSService12__exec_tc(const termina__event_t * const termina__ev, void * c
     {
         
         #line 1303 "src/service_libraries/pus_services/pus_service12.fin"
-        int32_t error_code = status.Failure._0;
+        const int32_t error_code = status.Failure._0;
 
         #line 1305 "src/service_libraries/pus_services/pus_service12.fin"
         if (error_code == 4L) {

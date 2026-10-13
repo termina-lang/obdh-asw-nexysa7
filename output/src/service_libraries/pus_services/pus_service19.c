@@ -592,7 +592,7 @@ void CPUSService19__exec_tc(const termina__event_t * const termina__ev, void * c
     {
         
         #line 513 "src/service_libraries/pus_services/pus_service19.fin"
-        int32_t error_code = status.Failure._0;
+        const int32_t error_code = status.Failure._0;
 
         #line 515 "src/service_libraries/pus_services/pus_service19.fin"
         if (error_code == 4L) {

@@ -35,13 +35,13 @@ void CGPIODriver__write_led(const termina__event_t * const termina__ev, void * c
         (*status)._variant = Status__Success;
 
         #line 69 "src/resources/gpio_driver.fin"
-        uint8_t bit = led + 17U;
+        const uint8_t bit = led + 17U;
 
         #line 70 "src/resources/gpio_driver.fin"
         if (value == 0U) {
             
             #line 71 "src/resources/gpio_driver.fin"
-            uint32_t mask = 0xFFFFFFFFU ^ (uint32_t)((uint32_t)1U << bit);
+            const uint32_t mask = 0xFFFFFFFFU ^ (uint32_t)((uint32_t)1U << bit);
 
             #line 72 "src/resources/gpio_driver.fin"
             self->registers->Output = self->registers->Output & mask;

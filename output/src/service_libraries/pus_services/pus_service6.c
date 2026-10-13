@@ -22,10 +22,10 @@ static uint16_t CPUSService6__check_data(const termina__event_t * const termina_
     (void)termina__ev;
 
     #line 86 "src/service_libraries/pus_services/pus_service6.fin"
-    size_t bank_index = (size_t)self->exec_tc_req_status_update.mem_id;
+    const size_t bank_index = (size_t)self->exec_tc_req_status_update.mem_id;
 
     #line 87 "src/service_libraries/pus_services/pus_service6.fin"
-    size_t start_address = (size_t)self->exec_tc_req_status_update.address;
+    const size_t start_address = (size_t)self->exec_tc_req_status_update.address;
 
     #line 88 "src/service_libraries/pus_services/pus_service6.fin"
     uint8_t data[256U] = { 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U };
@@ -108,10 +108,10 @@ static Status__i32 CPUSService6__write_data(const termina__event_t * const termi
     Status__i32 status = { ._variant = Status__Success };
 
     #line 61 "src/service_libraries/pus_services/pus_service6.fin"
-    size_t bank_index = (size_t)self->exec_tc_req_status_update.mem_id;
+    const size_t bank_index = (size_t)self->exec_tc_req_status_update.mem_id;
 
     #line 62 "src/service_libraries/pus_services/pus_service6.fin"
-    size_t start_address = (size_t)self->exec_tc_req_status_update.address;
+    const size_t start_address = (size_t)self->exec_tc_req_status_update.address;
 
     #line 64 "src/service_libraries/pus_services/pus_service6.fin"
     for (size_t i = 0U; i < 256U && i < (size_t)self->exec_tc_req_status_update.length; i = i + 1U) {
@@ -194,10 +194,10 @@ static Status__i32 CPUSService6__read_data(const termina__event_t * const termin
     Status__i32 status = { ._variant = Status__Success };
 
     #line 74 "src/service_libraries/pus_services/pus_service6.fin"
-    size_t bank_index = (size_t)self->exec_tc_req_status_update.mem_id;
+    const size_t bank_index = (size_t)self->exec_tc_req_status_update.mem_id;
 
     #line 75 "src/service_libraries/pus_services/pus_service6.fin"
-    size_t start_address = (size_t)self->exec_tc_req_status_update.address;
+    const size_t start_address = (size_t)self->exec_tc_req_status_update.address;
 
     #line 77 "src/service_libraries/pus_services/pus_service6.fin"
     for (size_t i = 0U; i < 256U && i < (size_t)self->exec_tc_req_status_update.length; i = i + 1U) {
@@ -257,7 +257,7 @@ static Status__i32 CPUSService6__exec6_5TC(const termina__event_t * const termin
             if (tm_handler._variant == Option__Some) {
                 
                 #line 206 "src/service_libraries/pus_services/pus_service6.fin"
-                termina__box_t b_tm_handler = tm_handler.Some._0;
+                const termina__box_t b_tm_handler = tm_handler.Some._0;
 
                 #line 208 "src/service_libraries/pus_services/pus_service6.fin"
                 MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -346,7 +346,7 @@ static Status__i32 CPUSService6__exec6_9TC(const termina__event_t * const termin
         self->pus_service_1.notify_tm_1_3(termina__ev, self->pus_service_1._that, self->exec_tc_req_status_update.packet_id, self->exec_tc_req_status_update.packet_seq_ctrl, self->exec_tc_req_status_update.flags_ack, &status);
 
         #line 283 "src/service_libraries/pus_services/pus_service6.fin"
-        uint16_t checksum = CPUSService6__check_data(termina__ev, self);
+        const uint16_t checksum = CPUSService6__check_data(termina__ev, self);
 
         #line 285 "src/service_libraries/pus_services/pus_service6.fin"
         Option__box tm_handler = { ._variant = Option__None };
@@ -358,7 +358,7 @@ static Status__i32 CPUSService6__exec6_9TC(const termina__event_t * const termin
         if (tm_handler._variant == Option__Some) {
             
             #line 290 "src/service_libraries/pus_services/pus_service6.fin"
-            termina__box_t b_tm_handler = tm_handler.Some._0;
+            const termina__box_t b_tm_handler = tm_handler.Some._0;
 
             #line 292 "src/service_libraries/pus_services/pus_service6.fin"
             MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -522,7 +522,7 @@ void CPUSService6__exec_tc(const termina__event_t * const termina__ev, void * co
     {
         
         #line 385 "src/service_libraries/pus_services/pus_service6.fin"
-        int32_t error_code = status.Failure._0;
+        const int32_t error_code = status.Failure._0;
 
         #line 387 "src/service_libraries/pus_services/pus_service6.fin"
         if (error_code == 4L) {

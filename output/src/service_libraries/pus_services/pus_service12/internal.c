@@ -10,7 +10,7 @@ uint8_t get_check_status_index(const CheckState status) {
     if (status._variant == CheckState__ParamValueStatus) {
         
         #line 199 "src/service_libraries/pus_services/pus_service12/internal.fin"
-        Option__CheckValueResult param_status = status.ParamValueStatus._0;
+        const Option__CheckValueResult param_status = status.ParamValueStatus._0;
 
         #line 203 "src/service_libraries/pus_services/pus_service12/internal.fin"
         if (param_status._variant == Option__None) {
@@ -22,7 +22,7 @@ uint8_t get_check_status_index(const CheckState status) {
         {
             
             #line 206 "src/service_libraries/pus_services/pus_service12/internal.fin"
-            CheckValueResult result = param_status.Some._0;
+            const CheckValueResult result = param_status.Some._0;
 
             #line 210 "src/service_libraries/pus_services/pus_service12/internal.fin"
             if (result._variant == CheckValueResult__MonitorValueUnexpected) {
@@ -45,7 +45,7 @@ uint8_t get_check_status_index(const CheckState status) {
     if (status._variant == CheckState__ParamLimitStatus) {
         
         #line 221 "src/service_libraries/pus_services/pus_service12/internal.fin"
-        Option__CheckLimitsResult limit_status = status.ParamLimitStatus._0;
+        const Option__CheckLimitsResult limit_status = status.ParamLimitStatus._0;
 
         #line 225 "src/service_libraries/pus_services/pus_service12/internal.fin"
         if (limit_status._variant == Option__None) {
@@ -57,7 +57,7 @@ uint8_t get_check_status_index(const CheckState status) {
         {
             
             #line 228 "src/service_libraries/pus_services/pus_service12/internal.fin"
-            CheckLimitsResult result = limit_status.Some._0;
+            const CheckLimitsResult result = limit_status.Some._0;
 
             #line 232 "src/service_libraries/pus_services/pus_service12/internal.fin"
             if (result._variant == CheckLimitsResult__MonitorAboveHighLimit) {
@@ -87,7 +87,7 @@ uint8_t get_check_status_index(const CheckState status) {
     if (status._variant == CheckState__ParamDeltaStatus) {
         
         #line 246 "src/service_libraries/pus_services/pus_service12/internal.fin"
-        Option__CheckDeltaResult delta_status = status.ParamDeltaStatus._0;
+        const Option__CheckDeltaResult delta_status = status.ParamDeltaStatus._0;
 
         #line 250 "src/service_libraries/pus_services/pus_service12/internal.fin"
         if (delta_status._variant == Option__None) {
@@ -99,7 +99,7 @@ uint8_t get_check_status_index(const CheckState status) {
         {
             
             #line 253 "src/service_libraries/pus_services/pus_service12/internal.fin"
-            CheckDeltaResult result = delta_status.Some._0;
+            const CheckDeltaResult result = delta_status.Some._0;
 
             #line 257 "src/service_libraries/pus_services/pus_service12/internal.fin"
             if (result._variant == CheckDeltaResult__MonitorDeltaLow) {
@@ -230,7 +230,7 @@ _Bool is_valid_check_limit_def(const MonitorDefinition * const param_limit_check
     if ((*param_limit_check_definition)._variant == MonitorDefinition__ParamLimitCheck) {
         
         #line 344 "src/service_libraries/pus_services/pus_service12/internal.fin"
-        ParamLimitCheckDefinition param_limit_def = (*param_limit_check_definition).ParamLimitCheck._0;
+        const ParamLimitCheckDefinition param_limit_def = (*param_limit_check_definition).ParamLimitCheck._0;
 
         #line 346 "src/service_libraries/pus_services/pus_service12/internal.fin"
         if (param_limit_def.low_limit < param_limit_def.high_limit) {

@@ -370,7 +370,7 @@ static Status__i32 CPUSService4__exec4_1TC(const termina__event_t * const termin
             if (tm_handler._variant == Option__Some) {
                 
                 #line 162 "src/service_libraries/pus_services/pus_service4.fin"
-                termina__box_t b_tm_handler = tm_handler.Some._0;
+                const termina__box_t b_tm_handler = tm_handler.Some._0;
 
                 #line 164 "src/service_libraries/pus_services/pus_service4.fin"
                 MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -637,7 +637,7 @@ void CPUSService4__exec_tc(const termina__event_t * const termina__ev, void * co
     {
         
         #line 371 "src/service_libraries/pus_services/pus_service4.fin"
-        int32_t error_code = status.Failure._0;
+        const int32_t error_code = status.Failure._0;
 
         #line 373 "src/service_libraries/pus_services/pus_service4.fin"
         if (error_code == 4L) {

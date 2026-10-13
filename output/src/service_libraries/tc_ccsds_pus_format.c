@@ -45,7 +45,7 @@ uint16_t get_packet_length(const uint8_t tc_bytes[256U]) {
 uint16_t get_packet_seq_ctrl(const uint8_t tc_bytes[256U]) {
     
     #line 114 "src/service_libraries/tc_ccsds_pus_format.fin"
-    uint16_t crc_offset = get_packet_length(tc_bytes) + 5U;
+    const uint16_t crc_offset = get_packet_length(tc_bytes) + 5U;
 
     #line 115 "src/service_libraries/tc_ccsds_pus_format.fin"
     uint16_t packet_error_ctrl = deserialize_uint16(&tc_bytes[termina__check__array_slice(256U, 2U, (size_t)crc_offset, (size_t)(uint16_t)((crc_offset + 2U) & 0xFFFFU))]);

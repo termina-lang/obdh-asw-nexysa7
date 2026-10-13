@@ -42,7 +42,7 @@ void CPUSService3__do_hk(const termina__event_t * const termina__ev, void * cons
                 if (tm_handler._variant == Option__Some) {
                     
                     #line 329 "src/service_libraries/pus_services/pus_service3.fin"
-                    termina__box_t b_tm_handler = tm_handler.Some._0;
+                    const termina__box_t b_tm_handler = tm_handler.Some._0;
 
                     #line 331 "src/service_libraries/pus_services/pus_service3.fin"
                     uint16_t tm_count = 0U;
@@ -203,7 +203,7 @@ static Status__i32 CPUSService3__exec3_31TC(const termina__event_t * const termi
         if (opt_index._variant == Option__Some) {
             
             #line 184 "src/service_libraries/pus_services/pus_service3.fin"
-            size_t sid_index = opt_index.Some._0;
+            const size_t sid_index = opt_index.Some._0;
 
             #line 186 "src/service_libraries/pus_services/pus_service3.fin"
             self->pus_service_1.notify_tm_1_3(termina__ev, self->pus_service_1._that, exec_tc_req_status_update->packet_id, exec_tc_req_status_update->packet_seq_ctrl, exec_tc_req_status_update->flags_ack, &status);
@@ -258,7 +258,7 @@ static Status__i32 CPUSService3__exec3_5TC(const termina__event_t * const termin
         if (opt_index._variant == Option__Some) {
             
             #line 68 "src/service_libraries/pus_services/pus_service3.fin"
-            size_t sid_index = opt_index.Some._0;
+            const size_t sid_index = opt_index.Some._0;
 
             #line 70 "src/service_libraries/pus_services/pus_service3.fin"
             self->pus_service_1.notify_tm_1_3(termina__ev, self->pus_service_1._that, exec_tc_req_status_update->packet_id, exec_tc_req_status_update->packet_seq_ctrl, exec_tc_req_status_update->flags_ack, &status);
@@ -313,7 +313,7 @@ static Status__i32 CPUSService3__exec3_6TC(const termina__event_t * const termin
         if (opt_index._variant == Option__Some) {
             
             #line 126 "src/service_libraries/pus_services/pus_service3.fin"
-            size_t sid_index = opt_index.Some._0;
+            const size_t sid_index = opt_index.Some._0;
 
             #line 128 "src/service_libraries/pus_services/pus_service3.fin"
             self->pus_service_1.notify_tm_1_3(termina__ev, self->pus_service_1._that, exec_tc_req_status_update->packet_id, exec_tc_req_status_update->packet_seq_ctrl, exec_tc_req_status_update->flags_ack, &status);
@@ -437,7 +437,7 @@ void CPUSService3__exec_tc(const termina__event_t * const termina__ev, void * co
     {
         
         #line 274 "src/service_libraries/pus_services/pus_service3.fin"
-        int32_t error_code = status.Failure._0;
+        const int32_t error_code = status.Failure._0;
 
         #line 277 "src/service_libraries/pus_services/pus_service3.fin"
         if (error_code == 4L) {

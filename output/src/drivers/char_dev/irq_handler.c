@@ -21,7 +21,7 @@ Status__i32 CCharDevIRQHandler__irq_handler(const termina__event_t * const termi
     if (result._variant == CharDevIrqStatus__RxComplete) {
         
         #line 22 "src/drivers/char_dev/irq_handler.fin"
-        size_t size = result.RxComplete._0;
+        const size_t size = result.RxComplete._0;
 
         #line 23 "src/drivers/char_dev/irq_handler.fin"
         termina__out_port__send(termina__ev, self->frame_ready_output, (const void *)&size);
@@ -35,7 +35,7 @@ Status__i32 CCharDevIRQHandler__irq_handler(const termina__event_t * const termi
     {
         
         #line 28 "src/drivers/char_dev/irq_handler.fin"
-        int32_t error_code = result.IrqError._0;
+        const int32_t error_code = result.IrqError._0;
 
         #line 29 "src/drivers/char_dev/irq_handler.fin"
         status._variant = Status__Failure;

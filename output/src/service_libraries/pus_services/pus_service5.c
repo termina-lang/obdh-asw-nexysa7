@@ -41,7 +41,7 @@ static Status__i32 CPUSService5__exec5_5TC(const termina__event_t * const termin
         if (status._variant == Status__Success) {
             
             #line 117 "src/service_libraries/pus_services/pus_service5.fin"
-            uint32_t mask = (uint32_t)0x1U << termina__check__shift_amount(32U, (uint8_t)((offset - 1U) & 0xFFU));
+            const uint32_t mask = (uint32_t)0x1U << termina__check__shift_amount(32U, (uint8_t)((offset - 1U) & 0xFFU));
 
             #line 118 "src/service_libraries/pus_services/pus_service5.fin"
             self->Ev_ID_enable_config[config_slot - 1U] = self->Ev_ID_enable_config[config_slot - 1U] | mask;
@@ -92,7 +92,7 @@ static Status__i32 CPUSService5__exec5_6TC(const termina__event_t * const termin
         if (status._variant == Status__Success) {
             
             #line 166 "src/service_libraries/pus_services/pus_service5.fin"
-            uint32_t mask = (uint32_t)0x1U << termina__check__shift_amount(32U, (uint8_t)((offset - 1U) & 0xFFU));
+            const uint32_t mask = (uint32_t)0x1U << termina__check__shift_amount(32U, (uint8_t)((offset - 1U) & 0xFFU));
 
             #line 167 "src/service_libraries/pus_services/pus_service5.fin"
             self->Ev_ID_enable_config[config_slot - 1U] = self->Ev_ID_enable_config[config_slot - 1U] & (uint32_t)(0xFFFFFFFEU ^ mask);
@@ -181,7 +181,7 @@ void CPUSService5__exec_tc(const termina__event_t * const termina__ev, void * co
     {
         
         #line 300 "src/service_libraries/pus_services/pus_service5.fin"
-        int32_t error_code = status.Failure._0;
+        const int32_t error_code = status.Failure._0;
 
         #line 302 "src/service_libraries/pus_services/pus_service5.fin"
         if (error_code == 4L) {
@@ -294,7 +294,7 @@ void CPUSService5__send_tm_5_2(const termina__event_t * const termina__ev, void 
     if (tm_handler._variant == Option__Some) {
         
         #line 189 "src/service_libraries/pus_services/pus_service5.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 191 "src/service_libraries/pus_services/pus_service5.fin"
         startup_tm((TMHandler *)b_tm_handler.data);
@@ -367,7 +367,7 @@ void CPUSService5__send_tm_5_x(const termina__event_t * const termina__ev, void 
     if (tm_handler._variant == Option__Some) {
         
         #line 227 "src/service_libraries/pus_services/pus_service5.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 229 "src/service_libraries/pus_services/pus_service5.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -385,7 +385,7 @@ void CPUSService5__send_tm_5_x(const termina__event_t * const termina__ev, void 
         if ((*fault_info)._variant == FaultInfo__ParamOutOfLimit) {
             
             #line 236 "src/service_libraries/pus_services/pus_service5.fin"
-            ParamOutOfLimitInfo fault_value_info = (*fault_info).ParamOutOfLimit._0;
+            const ParamOutOfLimitInfo fault_value_info = (*fault_info).ParamOutOfLimit._0;
 
             #line 237 "src/service_libraries/pus_services/pus_service5.fin"
             *status = build_tm_5_x_param_out_of_limit((TMHandler *)b_tm_handler.data, tm_count, fault_value_info, evID, current_obt);
@@ -395,7 +395,7 @@ void CPUSService5__send_tm_5_x(const termina__event_t * const termina__ev, void 
         if ((*fault_info)._variant == FaultInfo__ParamFaultValue) {
             
             #line 239 "src/service_libraries/pus_services/pus_service5.fin"
-            ParamFaultValueInfo fault_value_info = (*fault_info).ParamFaultValue._0;
+            const ParamFaultValueInfo fault_value_info = (*fault_info).ParamFaultValue._0;
 
             #line 240 "src/service_libraries/pus_services/pus_service5.fin"
             *status = build_tm_5_x_param_check_value_fail((TMHandler *)b_tm_handler.data, tm_count, fault_value_info, evID, current_obt);

@@ -19,7 +19,7 @@ Status__i32 CTXRxBottomHalfTask__get_tc(const termina__event_t * const termina__
     if (tc_handler._variant == Option__Some) {
         
         #line 24 "src/tasks/tc_rx.fin"
-        termina__box_t tc_handler_b = tc_handler.Some._0;
+        const termina__box_t tc_handler_b = tc_handler.Some._0;
 
         #line 26 "src/tasks/tc_rx.fin"
         for (size_t i = 0U; i < 256U && (i < size && ret._variant == Status__Success); i = i + 1U) {
@@ -34,7 +34,7 @@ Status__i32 CTXRxBottomHalfTask__get_tc(const termina__event_t * const termina__
             if (obyte._variant == Option__Some) {
                 
                 #line 33 "src/tasks/tc_rx.fin"
-                uint8_t byte = obyte.Some._0;
+                const uint8_t byte = obyte.Some._0;
 
                 #line 34 "src/tasks/tc_rx.fin"
                 (*(TCHandler *)tc_handler_b.data).tc_descriptor.tc_bytes[i] = byte;

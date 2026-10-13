@@ -85,7 +85,7 @@ void CPUSService1__notify_tm_1_1(const termina__event_t * const termina__ev, voi
         if (tm_handler._variant == Option__Some) {
             
             #line 412 "src/service_libraries/pus_services/pus_service1.fin"
-            termina__box_t b_tm_handler = tm_handler.Some._0;
+            const termina__box_t b_tm_handler = tm_handler.Some._0;
 
             #line 414 "src/service_libraries/pus_services/pus_service1.fin"
             MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -174,7 +174,7 @@ void CPUSService1__notify_tm_1_3(const termina__event_t * const termina__ev, voi
         if (tm_handler._variant == Option__Some) {
             
             #line 579 "src/service_libraries/pus_services/pus_service1.fin"
-            termina__box_t b_tm_handler = tm_handler.Some._0;
+            const termina__box_t b_tm_handler = tm_handler.Some._0;
 
             #line 581 "src/service_libraries/pus_services/pus_service1.fin"
             MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -263,7 +263,7 @@ void CPUSService1__notify_tm_1_7(const termina__event_t * const termina__ev, voi
         if (tm_handler._variant == Option__Some) {
             
             #line 1531 "src/service_libraries/pus_services/pus_service1.fin"
-            termina__box_t b_tm_handler = tm_handler.Some._0;
+            const termina__box_t b_tm_handler = tm_handler.Some._0;
 
             #line 1533 "src/service_libraries/pus_services/pus_service1.fin"
             MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -349,7 +349,7 @@ void CPUSService1__send_tm_1_2(const termina__event_t * const termina__ev, void 
     if (tm_handler._variant == Option__Some) {
         
         #line 462 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 464 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -539,7 +539,7 @@ void CPUSService1__send_tm_1_4_EvID_not_valid(const termina__event_t * const ter
     if (tm_handler._variant == Option__Some) {
         
         #line 916 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 918 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -612,7 +612,7 @@ void CPUSService1__send_tm_1_4_PID_not_valid(const termina__event_t * const term
     if (tm_handler._variant == Option__Some) {
         
         #line 964 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 966 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -685,7 +685,7 @@ void CPUSService1__send_tm_1_4_PID_read_only_via_TC(const termina__event_t * con
     if (tm_handler._variant == Option__Some) {
         
         #line 1434 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1436 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -758,7 +758,7 @@ void CPUSService1__send_tm_1_4_PID_stats_undefined(const termina__event_t * cons
     if (tm_handler._variant == Option__Some) {
         
         #line 1387 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1389 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -831,7 +831,7 @@ void CPUSService1__send_tm_1_4_PMONID_invalid(const termina__event_t * const ter
     if (tm_handler._variant == Option__Some) {
         
         #line 1152 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1154 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -904,7 +904,7 @@ void CPUSService1__send_tm_1_4_PMON_defined(const termina__event_t * const termi
     if (tm_handler._variant == Option__Some) {
         
         #line 1058 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1060 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -977,7 +977,7 @@ void CPUSService1__send_tm_1_4_PMON_definition_invalid(const termina__event_t * 
     if (tm_handler._variant == Option__Some) {
         
         #line 1198 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1200 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1050,7 +1050,7 @@ void CPUSService1__send_tm_1_4_PMON_enabled(const termina__event_t * const termi
     if (tm_handler._variant == Option__Some) {
         
         #line 1105 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1107 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1123,7 +1123,7 @@ void CPUSService1__send_tm_1_4_PMON_undefined(const termina__event_t * const ter
     if (tm_handler._variant == Option__Some) {
         
         #line 1011 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1013 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1196,7 +1196,7 @@ void CPUSService1__send_tm_1_4_SID_not_valid(const termina__event_t * const term
     if (tm_handler._variant == Option__Some) {
         
         #line 772 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 774 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1269,7 +1269,7 @@ void CPUSService1__send_tm_1_4_device_address_not_valid(const termina__event_t *
     if (tm_handler._variant == Option__Some) {
         
         #line 724 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 726 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1342,7 +1342,7 @@ void CPUSService1__send_tm_1_4_error_in_acceptance(const termina__event_t * cons
     if (tm_handler._variant == Option__Some) {
         
         #line 1481 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1483 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1415,7 +1415,7 @@ void CPUSService1__send_tm_1_4_ev_action_enabled(const termina__event_t * const 
     if (tm_handler._variant == Option__Some) {
         
         #line 1245 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1247 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1488,7 +1488,7 @@ void CPUSService1__send_tm_1_4_ev_action_rejected(const termina__event_t * const
     if (tm_handler._variant == Option__Some) {
         
         #line 1292 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1294 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1561,7 +1561,7 @@ void CPUSService1__send_tm_1_4_ev_action_undefined(const termina__event_t * cons
     if (tm_handler._variant == Option__Some) {
         
         #line 1340 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1342 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1634,7 +1634,7 @@ void CPUSService1__send_tm_1_4_mem_address_not_valid(const termina__event_t * co
     if (tm_handler._variant == Option__Some) {
         
         #line 819 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 821 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1707,7 +1707,7 @@ void CPUSService1__send_tm_1_4_mem_id_read_only(const termina__event_t * const t
     if (tm_handler._variant == Option__Some) {
         
         #line 868 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 870 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1780,7 +1780,7 @@ void CPUSService1__send_tm_1_4_num_of_instr_not_valid(const termina__event_t * c
     if (tm_handler._variant == Option__Some) {
         
         #line 678 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 680 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1853,7 +1853,7 @@ void CPUSService1__send_tm_1_4_short_pack_length(const termina__event_t * const 
     if (tm_handler._variant == Option__Some) {
         
         #line 629 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 631 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -1929,7 +1929,7 @@ void CPUSService1__send_tm_1_8_device_command_exec_error(const termina__event_t 
     if (tm_handler._variant == Option__Some) {
         
         #line 1676 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1678 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -2002,7 +2002,7 @@ void CPUSService1__send_tm_1_8_max_ev_actions_defined(const termina__event_t * c
     if (tm_handler._variant == Option__Some) {
         
         #line 1580 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1582 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -2075,7 +2075,7 @@ void CPUSService1__send_tm_1_8_mem_access_error(const termina__event_t * const t
     if (tm_handler._variant == Option__Some) {
         
         #line 1772 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1774 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -2148,7 +2148,7 @@ void CPUSService1__send_tm_1_8_not_free_stats_config(const termina__event_t * co
     if (tm_handler._variant == Option__Some) {
         
         #line 1724 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1726 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -2221,7 +2221,7 @@ void CPUSService1__send_tm_1_8_tm_exceed_limit_appdata(const termina__event_t * 
     if (tm_handler._variant == Option__Some) {
         
         #line 1629 "src/service_libraries/pus_services/pus_service1.fin"
-        termina__box_t b_tm_handler = tm_handler.Some._0;
+        const termina__box_t b_tm_handler = tm_handler.Some._0;
 
         #line 1631 "src/service_libraries/pus_services/pus_service1.fin"
         MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };

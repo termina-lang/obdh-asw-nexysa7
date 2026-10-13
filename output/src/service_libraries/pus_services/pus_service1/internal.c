@@ -12,7 +12,7 @@ const uint8_t EXEC_COMPLETION_ACK_ENABLED_MASK = 0x8U;
 _Bool is_crc_valid(const TCDescriptor * const tc_descriptor) {
     
     #line 80 "src/service_libraries/pus_services/pus_service1/internal.fin"
-    uint16_t cal_crc_value = cal_crc_16(tc_descriptor->tc_bytes, tc_descriptor->tc_num_bytes - 2U);
+    const uint16_t cal_crc_value = cal_crc_16(tc_descriptor->tc_bytes, tc_descriptor->tc_num_bytes - 2U);
 
     #line 81 "src/service_libraries/pus_services/pus_service1/internal.fin"
     uint16_t packet_error_ctrl = get_packet_seq_ctrl(tc_descriptor->tc_bytes);
@@ -28,7 +28,7 @@ _Bool is_crc_valid(const TCDescriptor * const tc_descriptor) {
 _Bool is_apid_valid(const TCDescriptor * const tc_descriptor) {
     
     #line 96 "src/service_libraries/pus_services/pus_service1/internal.fin"
-    uint16_t epd_apid = 0x32CU;
+    const uint16_t epd_apid = 0x32CU;
 
     #line 97 "src/service_libraries/pus_services/pus_service1/internal.fin"
     uint16_t tc_apid = get_APID(tc_descriptor->tc_bytes);
@@ -44,7 +44,7 @@ _Bool is_apid_valid(const TCDescriptor * const tc_descriptor) {
 _Bool is_sourceID_valid(const TCDescriptor * const tc_descriptor) {
     
     #line 112 "src/service_libraries/pus_services/pus_service1/internal.fin"
-    uint16_t System_SourceID = 0x78U;
+    const uint16_t System_SourceID = 0x78U;
 
     #line 114 "src/service_libraries/pus_services/pus_service1/internal.fin"
     uint16_t sourceID = get_source_id(tc_descriptor->tc_bytes);

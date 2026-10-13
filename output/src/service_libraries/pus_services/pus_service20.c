@@ -39,7 +39,7 @@ static Status__i32 CPUSService20__exec20_1TC(const termina__event_t * const term
         if (tm_handler._variant == Option__Some) {
             
             #line 59 "src/service_libraries/pus_services/pus_service20.fin"
-            termina__box_t b_tm_handler = tm_handler.Some._0;
+            const termina__box_t b_tm_handler = tm_handler.Some._0;
 
             #line 61 "src/service_libraries/pus_services/pus_service20.fin"
             MissionOBT current_obt = { .finetime = 0U, .seconds = 0U };
@@ -327,7 +327,7 @@ void CPUSService20__exec_tc(const termina__event_t * const termina__ev, void * c
     {
         
         #line 252 "src/service_libraries/pus_services/pus_service20.fin"
-        int32_t error_code = status.Failure._0;
+        const int32_t error_code = status.Failure._0;
 
         #line 254 "src/service_libraries/pus_services/pus_service20.fin"
         if (error_code == 4L) {

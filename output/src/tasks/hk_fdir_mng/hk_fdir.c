@@ -66,7 +66,7 @@ Status__i32 CHousekeepingFDIRTask__check_pending_actions(const termina__event_t 
         if (tc_handler._variant == Option__Some) {
             
             #line 132 "src/tasks/hk_fdir_mng/hk_fdir.fin"
-            termina__box_t b_tc_handler = tc_handler.Some._0;
+            const termina__box_t b_tc_handler = tc_handler.Some._0;
 
             #line 134 "src/tasks/hk_fdir_mng/hk_fdir.fin"
             self->pus_service_19.extract_action(termina__ev, self->pus_service_19._that, n, (TCHandler *)b_tc_handler.data);

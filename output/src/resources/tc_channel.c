@@ -122,7 +122,7 @@ void CTCChannel__enqueue(const termina__event_t * const termina__ev, void * cons
         {
             
             #line 102 "src/resources/tc_channel.fin"
-            int32_t error_code = result.Failure._0;
+            const int32_t error_code = result.Failure._0;
 
             #line 103 "src/resources/tc_channel.fin"
             (*status)._variant = CharDevIrqStatus__IrqError;
