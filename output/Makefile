@@ -3,7 +3,7 @@ R:=$(shell pwd)
 MKDIR:=mkdir
 
 PROJECT_NAME:=obdh-asw-nexysa7
-PLATFORM:=rtems5-leon3-nexysa7
+PLATFORM:=rtems5-leon3sf-nexysa7
 TERMINA_OSAL_DIR:=/opt/termina-osal
 TERMINA_PROFILE:=debug
 

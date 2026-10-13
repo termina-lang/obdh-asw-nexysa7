@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     CPUSService12::PID_has_expected_masked_value::path0 = 4.60e-06,
     CPUSService12::PID_is_above_upper_limit::path0 = 4.92e-06,

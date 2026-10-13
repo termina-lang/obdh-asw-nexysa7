@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     COBTManager::get_current_obt::path0 = 1.16e-05,
     COBTManager::set_obt::path0 = 1.04e-05

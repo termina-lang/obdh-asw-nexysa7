@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     CTCChannel::dequeue::path0 = 4.40e-07,
     CTCChannel::enqueue::path0 = 1.23e-05

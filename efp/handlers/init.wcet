@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     CInitHandler::init::path0 = 8.20e-06
 

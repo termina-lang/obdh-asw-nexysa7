@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     CManagerTExecutor::PUS_prio_exec_tc::path0 = 3.04e-06,
     CManagerTExecutor::PUS_prio_exec_tc::path1 = 3.04e-06,

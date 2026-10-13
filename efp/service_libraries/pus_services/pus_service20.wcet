@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     CPUSService20::exec20_1TC::path0 = 3.04e-06,
     CPUSService20::exec20_1TC::path1 = 3.04e-06,

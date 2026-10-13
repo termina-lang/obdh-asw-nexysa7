@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     CPUSService6::check_data::path0 = 1.72e-06,
     CPUSService6::is_address_valid::path0 = 2.68e-06,

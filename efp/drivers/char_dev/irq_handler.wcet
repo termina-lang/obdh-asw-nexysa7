@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     CCharDevIRQHandler::irq_handler::path0 = 8.08e-06,
     CCharDevIRQHandler::irq_handler::path1 = 5.00e-06

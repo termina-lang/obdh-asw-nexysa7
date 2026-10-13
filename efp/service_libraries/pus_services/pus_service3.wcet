@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     CPUSService3::do_hk::path0 = 1.40e-04,
     CPUSService3::do_hk::path1 = 1.53e-04,

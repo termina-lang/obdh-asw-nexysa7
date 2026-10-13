@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     CTXRxBottomHalfTask::get_tc::path0 = 0.001300,
     CTXRxBottomHalfTask::get_tc::path1 = 0.001276,

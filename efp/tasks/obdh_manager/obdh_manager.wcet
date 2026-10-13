@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     COBDHManagerTask::process_action_tc::path0 = 6.00e-06,
     COBDHManagerTask::process_action_tc::path1 = 6.00e-06,

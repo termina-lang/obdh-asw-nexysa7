@@ -1,4 +1,4 @@
-wcet rtems5-leon3-nexysa7 = {
+wcet rtems5-leon3sf-nexysa7 = {
 
     CPUSService4::SDP_get_mean::path0 = 3.80e-06,
     CPUSService4::SDP_param_higher_than_limit::path0 = 4.44e-06,
