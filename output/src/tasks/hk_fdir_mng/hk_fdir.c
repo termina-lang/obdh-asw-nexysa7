@@ -279,7 +279,7 @@ void termina__task_entry__CHousekeepingFDIRTask(void * const arg) {
         termina__msg_queue__recv(self->_task_msg_queue_id, &event, &status);
 
         if (status != termina__error__none) {
-            break;
+            termina__except__msg_queue_recv_error(self->_task_msg_queue_id, status);
         }
 
         switch (event.port_id) {
@@ -330,7 +330,7 @@ void termina__task_entry__CHousekeepingFDIRTask(void * const arg) {
 
             default:
 
-                termina__exec__reboot();
+                termina__except__runtime_failure(termina__runtime_operation__task_dispatch, termina__error__invalid_id);
 
                 break;
 
