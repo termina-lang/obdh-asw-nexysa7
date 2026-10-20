@@ -1,5 +1,5 @@
-#ifndef OBDH__OBDH_MANAGER__MNG_TC_EXECUTOR_H__
-#define OBDH__OBDH_MANAGER__MNG_TC_EXECUTOR_H__
+#ifndef OBDH__MANAGER__TC_EXECUTOR_H__
+#define OBDH__MANAGER__TC_EXECUTOR_H__
 
 #include <termina.h>
 

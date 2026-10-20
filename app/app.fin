@@ -15,7 +15,7 @@ import drivers.gaisler.grgpio;
 import drivers.memory.nexysa7;
 import obdh.hk_fdir;
 import obdh.bkg_tc_executor;
-import obdh.obdh_manager.obdh_manager;
+import obdh.manager;
 import obdh.init;
 import obdh.tmtc.frame_irq_handler;
 import obdh.tmtc.tc_frame_receiver;
@@ -24,7 +24,7 @@ import obdh.tm_counter;
 import obdh.obt_manager;
 
 
-import obdh.obdh_manager.obdh_manager;
+import obdh.manager;
 import obdh.hk_fdir;
 
 emitter hk_fdir_timer : PeriodicTimer = {

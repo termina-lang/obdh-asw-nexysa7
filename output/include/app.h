@@ -9,7 +9,7 @@
 #include "obdh/bkg_tc_executor.h"
 #include "obdh/hk_fdir.h"
 #include "obdh/init.h"
-#include "obdh/obdh_manager/obdh_manager.h"
+#include "obdh/manager.h"
 #include "obdh/obt_manager.h"
 #include "obdh/pus/services/service1.h"
 #include "obdh/pus/services/service12.h"

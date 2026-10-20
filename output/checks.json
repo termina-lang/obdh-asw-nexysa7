@@ -725,13 +725,13 @@
             ]
         },
         {
-            "module": "obdh.obdh_manager.mng_tc_executor",
-            "file": "src/obdh/obdh_manager/mng_tc_executor.fin",
+            "module": "obdh.manager",
+            "file": "src/obdh/manager.fin",
             "obligations": []
         },
         {
-            "module": "obdh.obdh_manager.obdh_manager",
-            "file": "src/obdh/obdh_manager/obdh_manager.fin",
+            "module": "obdh.manager.tc_executor",
+            "file": "src/obdh/manager/tc_executor.fin",
             "obligations": []
         },
         {

@@ -1,9 +1,9 @@
-#ifndef OBDH__OBDH_MANAGER__OBDH_MANAGER_H__
-#define OBDH__OBDH_MANAGER__OBDH_MANAGER_H__
+#ifndef OBDH__MANAGER_H__
+#define OBDH__MANAGER_H__
 
 #include <termina.h>
 
-#include "obdh/obdh_manager/mng_tc_executor.h"
+#include "obdh/manager/tc_executor.h"
 
 #include "option.h"
 
