@@ -2,29 +2,31 @@
 #include <termina.h>
 
 #include "app.h"
-#include "drivers/char_dev/uart/apbuart.h"
-#include "handlers/init.h"
-#include "resources/system_data_pool.h"
-#include "service_libraries/errors.h"
-#include "service_libraries/pus_services/pus_service1.h"
-#include "service_libraries/pus_services/pus_service1/internal.h"
-#include "service_libraries/pus_services/pus_service12/internal.h"
-#include "service_libraries/pus_services/pus_service128/types.h"
-#include "service_libraries/pus_services/pus_service17/internal.h"
-#include "service_libraries/pus_services/pus_service19/types.h"
-#include "service_libraries/pus_services/pus_service2/types.h"
-#include "service_libraries/pus_services/pus_service20/types.h"
-#include "service_libraries/pus_services/pus_service3/internal.h"
-#include "service_libraries/pus_services/pus_service4/internal.h"
-#include "service_libraries/pus_services/pus_service5/internal.h"
-#include "service_libraries/pus_services/pus_service6/internal.h"
-#include "service_libraries/pus_services/pus_service9/types.h"
-#include "service_libraries/pus_tc_handler.h"
-#include "service_libraries/pus_tm_handler.h"
-#include "service_libraries/queue_u8.h"
-#include "service_libraries/tc_ccsds_pus_format.h"
-#include "service_libraries/tm_ccsds_pus_format.h"
-#include "tasks/hk_fdir_mng/hk_fdir.h"
+#include "checksum/crc16.h"
+#include "drivers/gaisler/apbuart.h"
+#include "drivers/memory.h"
+#include "drivers/memory/nexysa7.h"
+#include "obdh/hk_fdir.h"
+#include "obdh/init.h"
+#include "obdh/pus/services/service1.h"
+#include "obdh/pus/services/service1/internal.h"
+#include "obdh/pus/services/service12/internal.h"
+#include "obdh/pus/services/service128/types.h"
+#include "obdh/pus/services/service17/internal.h"
+#include "obdh/pus/services/service19/types.h"
+#include "obdh/pus/services/service2/types.h"
+#include "obdh/pus/services/service20/types.h"
+#include "obdh/pus/services/service3/internal.h"
+#include "obdh/pus/services/service4/internal.h"
+#include "obdh/pus/services/service5/internal.h"
+#include "obdh/pus/services/service6/internal.h"
+#include "obdh/pus/services/service9/types.h"
+#include "obdh/pus/tc_handler.h"
+#include "obdh/pus/tc_packet.h"
+#include "obdh/pus/tm_handler.h"
+#include "obdh/pus/tm_packet.h"
+#include "obdh/system_data_pool.h"
+#include "obdh/tmtc/tm_frame_transmitter.h"
 
 void termina__app__init_globals(void) {
     
@@ -32,6 +34,10 @@ void termina__app__init_globals(void) {
     hk_fdir_timer.period.tv_usec = 0U;
     tm_pool._lock_type.type = termina__resource_lock_type__none;
     tc_pool._lock_type.type = termina__resource_lock_type__none;
+    termina__deque__init(&tc_frame_deque, termina__deque_items__tc_frame_deque,
+                         1U);
+    termina__deque__init(&tm_frame_deque, termina__deque_items__tm_frame_deque,
+                         10U);
     for (size_t termina__i0 = 0U;
          termina__i0 < 12U;
          termina__i0 = termina__i0 + 1U) {
@@ -42,48 +48,46 @@ void termina__app__init_globals(void) {
          termina__i0 = termina__i0 + 1U) {
         atomic_store(&u8_system_data_pool[termina__i0], 0U);
     }
-    tc_channel._lock_type.type = termina__resource_lock_type__none;
-    tc_channel.aux_index = 0U;
+    tc_frame_receiver._lock_type.type = termina__resource_lock_type__none;
     for (size_t termina__i0 = 0U;
          termina__i0 < 2U;
          termina__i0 = termina__i0 + 1U) {
-        tc_channel.raw_rx_tc_length[termina__i0] = 0U;
+        tc_frame_receiver.raw_rx_tc_length[termina__i0] = 0U;
     }
-    tc_channel.rx_status._variant = TCRxStatus__SyncBytesRx;
-    tc_channel.sync_word[0U] = 0xBEU;
-    tc_channel.sync_word[1U] = 0xBAU;
-    tc_channel.sync_word[2U] = 0xBEU;
-    tc_channel.sync_word[3U] = 0xEFU;
-    tc_channel.tc_num_bytes = 0U;
-    for (size_t termina__i0 = 0U;
-         termina__i0 < 1024U;
-         termina__i0 = termina__i0 + 1U) {
-        tc_channel.tc_rx_queue.elements[termina__i0] = 0U;
-    }
-    tc_channel.tc_rx_queue.head_index = 0U;
-    tc_channel.tc_rx_queue.num_elements = 0U;
+    tc_frame_receiver.rx_index = 0U;
+    tc_frame_receiver.rx_status._variant = TCFrameRxStatus__SyncBytesRx;
+    tc_frame_receiver.sync_index = 0U;
+    tc_frame_receiver.sync_word[0U] = 0xBEU;
+    tc_frame_receiver.sync_word[1U] = 0xBAU;
+    tc_frame_receiver.sync_word[2U] = 0xBEU;
+    tc_frame_receiver.sync_word[3U] = 0xEFU;
+    tc_frame_receiver.tc_frame = &tc_frame_deque;
+    tc_frame_receiver.tc_handler_pool._that = &tc_pool;
+    tc_frame_receiver.tc_handler_pool.alloc = termina__pool__alloc;
+    tc_frame_receiver.tc_handler_pool.free = termina__pool__free;
     uart_drv._lock_type.type = termina__resource_lock_type__none;
     uart_drv.registers = (volatile APBUARTRegs *)0x80000100U;
-    uart_drv.rem_bytes = false;
-    uart_drv.rx_queue._that = &tc_channel;
-    uart_drv.rx_queue.enqueue = &CTCChannel__enqueue;
-    for (size_t termina__i0 = 0U;
-         termina__i0 < 1024U;
-         termina__i0 = termina__i0 + 1U) {
-        uart_drv.uart_tx_queue.elements[termina__i0] = 0U;
-    }
-    uart_drv.uart_tx_queue.head_index = 0U;
-    uart_drv.uart_tx_queue.num_elements = 0U;
     gpio_drv._lock_type.type = termina__resource_lock_type__none;
     gpio_drv.registers = (volatile GPIO_registers *)0x80000A00U;
-    tm_channel._lock_type.type = termina__resource_lock_type__none;
-    tm_channel.char_dev._that = &uart_drv;
-    tm_channel.char_dev.send = &CAPBUARTDriver__send;
-    tm_channel.tm_handler_pool._that = &tm_pool;
-    tm_channel.tm_handler_pool.alloc = termina__pool__alloc;
-    tm_channel.tm_handler_pool.free = termina__pool__free;
     tm_counter._lock_type.type = termina__resource_lock_type__none;
+    tm_counter.lost_tm = 0U;
     tm_counter.tm_count = 0U;
+    tm_frame_transmitter._lock_type.type = termina__resource_lock_type__none;
+    tm_frame_transmitter.char_dev._that = &uart_drv;
+    tm_frame_transmitter.char_dev.tx_ready = &CAPBUARTDriver__tx_ready;
+    tm_frame_transmitter.char_dev.write_byte = &CAPBUARTDriver__write_byte;
+    tm_frame_transmitter.char_dev.stop_tx = &CAPBUARTDriver__stop_tx;
+    tm_frame_transmitter.sync_word[0U] = 0xBEU;
+    tm_frame_transmitter.sync_word[1U] = 0xBAU;
+    tm_frame_transmitter.sync_word[2U] = 0xBEU;
+    tm_frame_transmitter.sync_word[3U] = 0xEFU;
+    tm_frame_transmitter.tm_counter._that = &tm_counter;
+    tm_frame_transmitter.tm_counter.count_lost_tm = &CTMCounter__count_lost_tm;
+    tm_frame_transmitter.tm_frames = &tm_frame_deque;
+    tm_frame_transmitter.tm_handler_pool._that = &tm_pool;
+    tm_frame_transmitter.tm_handler_pool.alloc = termina__pool__alloc;
+    tm_frame_transmitter.tm_handler_pool.free = termina__pool__free;
+    tm_frame_transmitter.tx_index = 0U;
     obt_manager._lock_type.type = termina__resource_lock_type__none;
     obt_manager.ref_obt.finetime = 0U;
     obt_manager.ref_obt.seconds = 0U;
@@ -93,20 +97,15 @@ void termina__app__init_globals(void) {
     pus_service_1._lock_type.type = termina__resource_lock_type__none;
     pus_service_1.obt_manager._that = &obt_manager;
     pus_service_1.obt_manager.get_current_obt = &COBTManager__get_current_obt;
-    pus_service_1.tm_channel._that = &tm_channel;
-    pus_service_1.tm_channel.send_tm = &CTMChannel__send_tm;
+    pus_service_1.tm_channel._that = &tm_frame_transmitter;
+    pus_service_1.tm_channel.send_tm = &CTMFrameTransmitter__send_tm;
     pus_service_1.tm_counter._that = &tm_counter;
     pus_service_1.tm_counter.get_next_tm_count = &CTMCounter__get_next_tm_count;
+    pus_service_1.tm_counter.count_lost_tm = &CTMCounter__count_lost_tm;
     pus_service_1.tm_handler_pool._that = &tm_pool;
     pus_service_1.tm_handler_pool.alloc = termina__pool__alloc;
     pus_service_1.tm_handler_pool.free = termina__pool__free;
     pus_service_9._lock_type.type = termina__resource_lock_type__none;
-    pus_service_9.exec_tc_req_status_update.flags_ack = 0U;
-    pus_service_9.exec_tc_req_status_update.next_OBT.finetime = 0U;
-    pus_service_9.exec_tc_req_status_update.next_OBT.seconds = 0U;
-    pus_service_9.exec_tc_req_status_update.packet_id = 0U;
-    pus_service_9.exec_tc_req_status_update.packet_seq_ctrl = 0U;
-    pus_service_9.exec_tc_req_status_update.tc_num_bytes = 0U;
     pus_service_9.obt_manager._that = &obt_manager;
     pus_service_9.obt_manager.set_obt = &COBTManager__set_obt;
     pus_service_9.pus_service_1._that = &pus_service_1;
@@ -114,18 +113,11 @@ void termina__app__init_globals(void) {
     pus_service_9.pus_service_1.send_tm_1_4_short_pack_length = &CPUSService1__send_tm_1_4_short_pack_length;
     pus_service_9.pus_service_1.send_tm_1_4_error_in_acceptance = &CPUSService1__send_tm_1_4_error_in_acceptance;
     pus_service_9.pus_service_1.notify_tm_1_7 = &CPUSService1__notify_tm_1_7;
-    pus_service_9.pus_service_1.send_tm_1_8_tm_exceed_limit_appdata = &CPUSService1__send_tm_1_8_tm_exceed_limit_appdata;
     pus_service_5._lock_type.type = termina__resource_lock_type__none;
     pus_service_5.Ev_ID_enable_config[0U] = 0x7U;
     pus_service_5.Ev_ID_enable_config[1U] = 0x0U;
     pus_service_5.Ev_ID_enable_config[2U] = 0x0U;
     pus_service_5.Ev_ID_enable_config[3U] = 0x7U;
-    pus_service_5.exec_tc_req_status_update.EvID = 0U;
-    pus_service_5.exec_tc_req_status_update.N = 0U;
-    pus_service_5.exec_tc_req_status_update.flags_ack = 0U;
-    pus_service_5.exec_tc_req_status_update.packet_id = 0U;
-    pus_service_5.exec_tc_req_status_update.packet_seq_ctrl = 0U;
-    pus_service_5.exec_tc_req_status_update.tc_num_bytes = 0U;
     pus_service_5.obt_manager._that = &obt_manager;
     pus_service_5.obt_manager.get_current_obt = &COBTManager__get_current_obt;
     pus_service_5.pus_service_1._that = &pus_service_1;
@@ -135,11 +127,11 @@ void termina__app__init_globals(void) {
     pus_service_5.pus_service_1.send_tm_1_4_EvID_not_valid = &CPUSService1__send_tm_1_4_EvID_not_valid;
     pus_service_5.pus_service_1.send_tm_1_4_error_in_acceptance = &CPUSService1__send_tm_1_4_error_in_acceptance;
     pus_service_5.pus_service_1.notify_tm_1_7 = &CPUSService1__notify_tm_1_7;
-    pus_service_5.pus_service_1.send_tm_1_8_tm_exceed_limit_appdata = &CPUSService1__send_tm_1_8_tm_exceed_limit_appdata;
-    pus_service_5.tm_channel._that = &tm_channel;
-    pus_service_5.tm_channel.send_tm = &CTMChannel__send_tm;
+    pus_service_5.tm_channel._that = &tm_frame_transmitter;
+    pus_service_5.tm_channel.send_tm = &CTMFrameTransmitter__send_tm;
     pus_service_5.tm_counter._that = &tm_counter;
     pus_service_5.tm_counter.get_next_tm_count = &CTMCounter__get_next_tm_count;
+    pus_service_5.tm_counter.count_lost_tm = &CTMCounter__count_lost_tm;
     pus_service_5.tm_handler_pool._that = &tm_pool;
     pus_service_5.tm_handler_pool.alloc = termina__pool__alloc;
     pus_service_5.tm_handler_pool.free = termina__pool__free;
@@ -321,49 +313,20 @@ void termina__app__init_globals(void) {
     pus_service_3.pus_service_1.send_tm_1_4_SID_not_valid = &CPUSService1__send_tm_1_4_SID_not_valid;
     pus_service_3.pus_service_1.send_tm_1_4_error_in_acceptance = &CPUSService1__send_tm_1_4_error_in_acceptance;
     pus_service_3.pus_service_1.notify_tm_1_7 = &CPUSService1__notify_tm_1_7;
-    pus_service_3.pus_service_1.send_tm_1_8_tm_exceed_limit_appdata = &CPUSService1__send_tm_1_8_tm_exceed_limit_appdata;
     pus_service_3.pus_service_5._that = &pus_service_5;
     pus_service_3.pus_service_5.send_tm_5_2 = &CPUSService5__send_tm_5_2;
     pus_service_3.random_seed = 42U;
     pus_service_3.system_data_pool_u32 = u32_system_data_pool;
     pus_service_3.system_data_pool_u8 = u8_system_data_pool;
-    pus_service_3.tm_channel._that = &tm_channel;
-    pus_service_3.tm_channel.send_tm = &CTMChannel__send_tm;
+    pus_service_3.tm_channel._that = &tm_frame_transmitter;
+    pus_service_3.tm_channel.send_tm = &CTMFrameTransmitter__send_tm;
     pus_service_3.tm_counter._that = &tm_counter;
     pus_service_3.tm_counter.get_next_tm_count = &CTMCounter__get_next_tm_count;
+    pus_service_3.tm_counter.count_lost_tm = &CTMCounter__count_lost_tm;
     pus_service_3.tm_handler_pool._that = &tm_pool;
     pus_service_3.tm_handler_pool.alloc = termina__pool__alloc;
     pus_service_3.tm_handler_pool.free = termina__pool__free;
     pus_service_12._lock_type.type = termina__resource_lock_type__none;
-    pus_service_12.do_monitoring_req_status._variant = DoMonitoringReqStatus__Init;
-    pus_service_12.do_monitoring_req_status_update.EvID = 0U;
-    pus_service_12.do_monitoring_req_status_update.PMONID = 0U;
-    pus_service_12.do_monitoring_req_status_update.current_monitor_definition._variant = MonitorDefinition__Unselected;
-    pus_service_12.do_monitoring_req_status_update.event_triggered = false;
-    pus_service_12.do_monitoring_req_status_update.fault_info._variant = FaultInfo__Empty;
-    pus_service_12.do_monitoring_req_status_update.new_status._variant = CheckState__Unselected;
-    pus_service_12.do_monitoring_req_status_update.prev_status._variant = CheckState__Unselected;
-    pus_service_12.do_monitoring_req_status_update.status._variant = Status__Success;
-    pus_service_12.exec_tc_req_status_update.flags_ack = 0U;
-    pus_service_12.exec_tc_req_status_update.packet_id = 0U;
-    pus_service_12.exec_tc_req_status_update.packet_seq_ctrl = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_1_2_6.N = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_1_2_6.PMONID = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.N = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.PMONID = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.PID = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.current_state._variant = CheckState__Unselected;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.definition._variant = MonitorDefinition__Unselected;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.enabled = false;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.interval = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.interval_control = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.repetition = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.repetition_control = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.temp_state._variant = CheckState__Unselected;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.transition_obt.finetime = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.transition_obt.seconds = 0U;
-    pus_service_12.exec_tc_req_status_update.tc_data_5.mon_config.type._variant = MonitorCheckType__Free;
-    pus_service_12.exec_tc_req_status_update.tc_num_bytes = 0U;
     pus_service_12.monitoring_transition_counter = 0U;
     pus_service_12.obt_manager._that = &obt_manager;
     pus_service_12.obt_manager.get_current_obt = &COBTManager__get_current_obt;
@@ -408,13 +371,13 @@ void termina__app__init_globals(void) {
     pus_service_12.pus_service_1.send_tm_1_4_PMON_definition_invalid = &CPUSService1__send_tm_1_4_PMON_definition_invalid;
     pus_service_12.pus_service_1.send_tm_1_4_error_in_acceptance = &CPUSService1__send_tm_1_4_error_in_acceptance;
     pus_service_12.pus_service_1.notify_tm_1_7 = &CPUSService1__notify_tm_1_7;
-    pus_service_12.pus_service_1.send_tm_1_8_tm_exceed_limit_appdata = &CPUSService1__send_tm_1_8_tm_exceed_limit_appdata;
     pus_service_12.system_data_pool_u32 = u32_system_data_pool;
     pus_service_12.system_data_pool_u8 = u8_system_data_pool;
-    pus_service_12.tm_channel._that = &tm_channel;
-    pus_service_12.tm_channel.send_tm = &CTMChannel__send_tm;
+    pus_service_12.tm_channel._that = &tm_frame_transmitter;
+    pus_service_12.tm_channel.send_tm = &CTMFrameTransmitter__send_tm;
     pus_service_12.tm_counter._that = &tm_counter;
     pus_service_12.tm_counter.get_next_tm_count = &CTMCounter__get_next_tm_count;
+    pus_service_12.tm_counter.count_lost_tm = &CTMCounter__count_lost_tm;
     pus_service_12.tm_handler_pool._that = &tm_pool;
     pus_service_12.tm_handler_pool.alloc = termina__pool__alloc;
     pus_service_12.tm_handler_pool.free = termina__pool__free;
@@ -444,21 +407,6 @@ void termina__app__init_globals(void) {
         }
         pus_service_19.event_action_packets[termina__i0].tc_descriptor.tc_num_bytes = 0U;
     }
-    for (size_t termina__i0 = 0U;
-         termina__i0 < 256U;
-         termina__i0 = termina__i0 + 1U) {
-        pus_service_19.exec_tc_req_status_update.action_tc_packet.tc_bytes[termina__i0] = 0U;
-    }
-    pus_service_19.exec_tc_req_status_update.action_tc_packet.tc_num_bytes = 0U;
-    pus_service_19.exec_tc_req_status_update.ev_action_ID.enabled = false;
-    pus_service_19.exec_tc_req_status_update.ev_action_ID.ev_action_index = 0U;
-    pus_service_19.exec_tc_req_status_update.ev_action_ID.found = false;
-    pus_service_19.exec_tc_req_status_update.tc_data.EvID = 0U;
-    pus_service_19.exec_tc_req_status_update.tc_data.N = 0U;
-    pus_service_19.exec_tc_req_status_update.tc_data.flags_ack = 0U;
-    pus_service_19.exec_tc_req_status_update.tc_data.packet_id = 0U;
-    pus_service_19.exec_tc_req_status_update.tc_data.packet_seq_ctrl = 0U;
-    pus_service_19.exec_tc_req_status_update.tc_data.tc_num_bytes = 0U;
     for (size_t termina__i0 = 0U;
          termina__i0 < 4U;
          termina__i0 = termina__i0 + 1U) {
@@ -556,16 +504,7 @@ void termina__app__init_globals(void) {
     pus_service_19.pus_service_1.send_tm_1_4_error_in_acceptance = &CPUSService1__send_tm_1_4_error_in_acceptance;
     pus_service_19.pus_service_1.notify_tm_1_7 = &CPUSService1__notify_tm_1_7;
     pus_service_19.pus_service_1.send_tm_1_8_max_ev_actions_defined = &CPUSService1__send_tm_1_8_max_ev_actions_defined;
-    pus_service_19.pus_service_1.send_tm_1_8_tm_exceed_limit_appdata = &CPUSService1__send_tm_1_8_tm_exceed_limit_appdata;
     pus_service_20._lock_type.type = termina__resource_lock_type__none;
-    pus_service_20.exec_tc_req_status_update.N = 0U;
-    pus_service_20.exec_tc_req_status_update.PID = 0U;
-    pus_service_20.exec_tc_req_status_update.flags_ack = 0U;
-    pus_service_20.exec_tc_req_status_update.packet_id = 0U;
-    pus_service_20.exec_tc_req_status_update.packet_seq_ctrl = 0U;
-    pus_service_20.exec_tc_req_status_update.tc_20_3_data.PID_value_u32 = 0U;
-    pus_service_20.exec_tc_req_status_update.tc_20_3_data.PID_value_u8 = 0U;
-    pus_service_20.exec_tc_req_status_update.tc_num_bytes = 0U;
     pus_service_20.obt_manager._that = &obt_manager;
     pus_service_20.obt_manager.get_current_obt = &COBTManager__get_current_obt;
     pus_service_20.pus_service_1._that = &pus_service_1;
@@ -576,44 +515,34 @@ void termina__app__init_globals(void) {
     pus_service_20.pus_service_1.send_tm_1_4_PID_read_only_via_TC = &CPUSService1__send_tm_1_4_PID_read_only_via_TC;
     pus_service_20.pus_service_1.send_tm_1_4_error_in_acceptance = &CPUSService1__send_tm_1_4_error_in_acceptance;
     pus_service_20.pus_service_1.notify_tm_1_7 = &CPUSService1__notify_tm_1_7;
-    pus_service_20.pus_service_1.send_tm_1_8_tm_exceed_limit_appdata = &CPUSService1__send_tm_1_8_tm_exceed_limit_appdata;
     pus_service_20.system_data_pool_u32 = u32_system_data_pool;
     pus_service_20.system_data_pool_u8 = u8_system_data_pool;
-    pus_service_20.tm_channel._that = &tm_channel;
-    pus_service_20.tm_channel.send_tm = &CTMChannel__send_tm;
+    pus_service_20.tm_channel._that = &tm_frame_transmitter;
+    pus_service_20.tm_channel.send_tm = &CTMFrameTransmitter__send_tm;
     pus_service_20.tm_counter._that = &tm_counter;
     pus_service_20.tm_counter.get_next_tm_count = &CTMCounter__get_next_tm_count;
+    pus_service_20.tm_counter.count_lost_tm = &CTMCounter__count_lost_tm;
     pus_service_20.tm_handler_pool._that = &tm_pool;
     pus_service_20.tm_handler_pool.alloc = termina__pool__alloc;
     pus_service_20.tm_handler_pool.free = termina__pool__free;
     pus_service_17._lock_type.type = termina__resource_lock_type__none;
-    pus_service_17.exec_tc_req_status_update.flags_ack = 0U;
-    pus_service_17.exec_tc_req_status_update.packet_id = 0U;
-    pus_service_17.exec_tc_req_status_update.packet_seq_ctrl = 0U;
     pus_service_17.obt_manager._that = &obt_manager;
     pus_service_17.obt_manager.get_current_obt = &COBTManager__get_current_obt;
     pus_service_17.pus_service_1._that = &pus_service_1;
     pus_service_17.pus_service_1.notify_tm_1_3 = &CPUSService1__notify_tm_1_3;
     pus_service_17.pus_service_1.send_tm_1_4_error_in_acceptance = &CPUSService1__send_tm_1_4_error_in_acceptance;
     pus_service_17.pus_service_1.notify_tm_1_7 = &CPUSService1__notify_tm_1_7;
-    pus_service_17.pus_service_1.send_tm_1_8_tm_exceed_limit_appdata = &CPUSService1__send_tm_1_8_tm_exceed_limit_appdata;
-    pus_service_17.tm_channel._that = &tm_channel;
-    pus_service_17.tm_channel.send_tm = &CTMChannel__send_tm;
+    pus_service_17.tm_channel._that = &tm_frame_transmitter;
+    pus_service_17.tm_channel.send_tm = &CTMFrameTransmitter__send_tm;
     pus_service_17.tm_counter._that = &tm_counter;
     pus_service_17.tm_counter.get_next_tm_count = &CTMCounter__get_next_tm_count;
+    pus_service_17.tm_counter.count_lost_tm = &CTMCounter__count_lost_tm;
     pus_service_17.tm_handler_pool._that = &tm_pool;
     pus_service_17.tm_handler_pool.alloc = termina__pool__alloc;
     pus_service_17.tm_handler_pool.free = termina__pool__free;
     pus_service_128._lock_type.type = termina__resource_lock_type__none;
-    pus_service_128.exec_tc_req_status_update.flags_ack = 0U;
-    pus_service_128.exec_tc_req_status_update.packet_id = 0U;
-    pus_service_128.exec_tc_req_status_update.packet_seq_ctrl = 0U;
-    pus_service_128.exec_tc_req_status_update.reebot_flag = false;
     pus_service_128.pus_service_1._that = &pus_service_1;
-    pus_service_128.pus_service_1.notify_tm_1_3 = &CPUSService1__notify_tm_1_3;
     pus_service_128.pus_service_1.send_tm_1_4_error_in_acceptance = &CPUSService1__send_tm_1_4_error_in_acceptance;
-    pus_service_128.pus_service_1.notify_tm_1_7 = &CPUSService1__notify_tm_1_7;
-    pus_service_128.pus_service_1.send_tm_1_8_tm_exceed_limit_appdata = &CPUSService1__send_tm_1_8_tm_exceed_limit_appdata;
     pus_service_2._lock_type.type = termina__resource_lock_type__none;
     pus_service_2.gpio_driver._that = &gpio_drv;
     pus_service_2.gpio_driver.write_led = &CGPIODriver__write_led;
@@ -624,31 +553,23 @@ void termina__app__init_globals(void) {
     pus_service_2.pus_service_1.send_tm_1_4_device_address_not_valid = &CPUSService1__send_tm_1_4_device_address_not_valid;
     pus_service_2.pus_service_1.send_tm_1_4_error_in_acceptance = &CPUSService1__send_tm_1_4_error_in_acceptance;
     pus_service_2.pus_service_1.notify_tm_1_7 = &CPUSService1__notify_tm_1_7;
-    pus_service_2.pus_service_1.send_tm_1_8_tm_exceed_limit_appdata = &CPUSService1__send_tm_1_8_tm_exceed_limit_appdata;
     pus_service_2.pus_service_1.send_tm_1_8_device_command_exec_error = &CPUSService1__send_tm_1_8_device_command_exec_error;
+    memory_drv._lock_type.type = termina__resource_lock_type__none;
+    memory_drv.ddr2 = (volatile uint8_t (*)[16777216U])0x40000000U;
+    memory_drv.write_enabled[0U] = false;
+    memory_drv.write_enabled[1U] = true;
+    memory_drv.write_enabled[2U] = true;
+    memory_drv.write_enabled[3U] = true;
+    memory_drv.write_enabled[4U] = true;
+    memory_drv.write_enabled[5U] = true;
+    memory_drv.write_enabled[6U] = true;
+    memory_drv.write_enabled[7U] = false;
     pus_service_6._lock_type.type = termina__resource_lock_type__none;
-    pus_service_6.exec_tc_req_status_update.N = 0U;
-    pus_service_6.exec_tc_req_status_update.address = 0U;
-    for (size_t termina__i0 = 0U;
-         termina__i0 < 256U;
-         termina__i0 = termina__i0 + 1U) {
-        pus_service_6.exec_tc_req_status_update.data[termina__i0] = 0U;
-    }
-    pus_service_6.exec_tc_req_status_update.flags_ack = 0U;
-    pus_service_6.exec_tc_req_status_update.length = 0U;
-    pus_service_6.exec_tc_req_status_update.mem_id = 0U;
-    pus_service_6.exec_tc_req_status_update.packet_id = 0U;
-    pus_service_6.exec_tc_req_status_update.packet_seq_ctrl = 0U;
-    pus_service_6.exec_tc_req_status_update.tc_num_bytes = 0U;
-    pus_service_6.mem_id_write_permissions[0U] = false;
-    pus_service_6.mem_id_write_permissions[1U] = true;
-    pus_service_6.mem_id_write_permissions[2U] = true;
-    pus_service_6.mem_id_write_permissions[3U] = true;
-    pus_service_6.mem_id_write_permissions[4U] = true;
-    pus_service_6.mem_id_write_permissions[5U] = true;
-    pus_service_6.mem_id_write_permissions[6U] = true;
-    pus_service_6.mem_id_write_permissions[7U] = false;
-    pus_service_6.memory = (volatile uint8_t (*)[16777216U])0x40000000U;
+    pus_service_6.memory._that = &memory_drv;
+    pus_service_6.memory.check_access = &CNexysA7Memory__check_access;
+    pus_service_6.memory.read = &CNexysA7Memory__read;
+    pus_service_6.memory.write = &CNexysA7Memory__write;
+    pus_service_6.memory.checksum = &CNexysA7Memory__checksum;
     pus_service_6.obt_manager._that = &obt_manager;
     pus_service_6.obt_manager.get_current_obt = &COBTManager__get_current_obt;
     pus_service_6.pus_service_1._that = &pus_service_1;
@@ -660,22 +581,15 @@ void termina__app__init_globals(void) {
     pus_service_6.pus_service_1.send_tm_1_4_error_in_acceptance = &CPUSService1__send_tm_1_4_error_in_acceptance;
     pus_service_6.pus_service_1.notify_tm_1_7 = &CPUSService1__notify_tm_1_7;
     pus_service_6.pus_service_1.send_tm_1_8_tm_exceed_limit_appdata = &CPUSService1__send_tm_1_8_tm_exceed_limit_appdata;
-    pus_service_6.pus_service_1.send_tm_1_8_mem_access_error = &CPUSService1__send_tm_1_8_mem_access_error;
-    pus_service_6.tm_channel._that = &tm_channel;
-    pus_service_6.tm_channel.send_tm = &CTMChannel__send_tm;
+    pus_service_6.tm_channel._that = &tm_frame_transmitter;
+    pus_service_6.tm_channel.send_tm = &CTMFrameTransmitter__send_tm;
     pus_service_6.tm_counter._that = &tm_counter;
     pus_service_6.tm_counter.get_next_tm_count = &CTMCounter__get_next_tm_count;
+    pus_service_6.tm_counter.count_lost_tm = &CTMCounter__count_lost_tm;
     pus_service_6.tm_handler_pool._that = &tm_pool;
     pus_service_6.tm_handler_pool.alloc = termina__pool__alloc;
     pus_service_6.tm_handler_pool.free = termina__pool__free;
     pus_service_4._lock_type.type = termina__resource_lock_type__none;
-    pus_service_4.exec_tc_req_status_update.N = 0U;
-    pus_service_4.exec_tc_req_status_update.PID = 0U;
-    pus_service_4.exec_tc_req_status_update.flags_ack = 0U;
-    pus_service_4.exec_tc_req_status_update.packet_id = 0U;
-    pus_service_4.exec_tc_req_status_update.packet_seq_ctrl = 0U;
-    pus_service_4.exec_tc_req_status_update.tc_num_bytes = 0U;
-    pus_service_4.exec_tc_req_status_update.valid_index = 0U;
     pus_service_4.obt_manager._that = &obt_manager;
     pus_service_4.obt_manager.get_current_obt = &COBTManager__get_current_obt;
     for (size_t termina__i0 = 0U;
@@ -698,7 +612,6 @@ void termina__app__init_globals(void) {
     pus_service_4.pus_service_1.send_tm_1_4_PID_stats_undefined = &CPUSService1__send_tm_1_4_PID_stats_undefined;
     pus_service_4.pus_service_1.send_tm_1_4_error_in_acceptance = &CPUSService1__send_tm_1_4_error_in_acceptance;
     pus_service_4.pus_service_1.notify_tm_1_7 = &CPUSService1__notify_tm_1_7;
-    pus_service_4.pus_service_1.send_tm_1_8_tm_exceed_limit_appdata = &CPUSService1__send_tm_1_8_tm_exceed_limit_appdata;
     pus_service_4.pus_service_1.send_tm_1_8_not_free_stats_config = &CPUSService1__send_tm_1_8_not_free_stats_config;
     for (size_t termina__i0 = 0U;
          termina__i0 < 4U;
@@ -718,10 +631,11 @@ void termina__app__init_globals(void) {
     }
     pus_service_4.system_data_pool_u32 = u32_system_data_pool;
     pus_service_4.system_data_pool_u8 = u8_system_data_pool;
-    pus_service_4.tm_channel._that = &tm_channel;
-    pus_service_4.tm_channel.send_tm = &CTMChannel__send_tm;
+    pus_service_4.tm_channel._that = &tm_frame_transmitter;
+    pus_service_4.tm_channel.send_tm = &CTMFrameTransmitter__send_tm;
     pus_service_4.tm_counter._that = &tm_counter;
     pus_service_4.tm_counter.get_next_tm_count = &CTMCounter__get_next_tm_count;
+    pus_service_4.tm_counter.count_lost_tm = &CTMCounter__count_lost_tm;
     pus_service_4.tm_handler_pool._that = &tm_pool;
     pus_service_4.tm_handler_pool.alloc = termina__pool__alloc;
     pus_service_4.tm_handler_pool.free = termina__pool__free;
@@ -744,15 +658,13 @@ void termina__app__init_globals(void) {
     init_hdlr.system_data_pool_u8 = u8_system_data_pool;
     init_hdlr.uart_drv._that = &uart_drv;
     init_hdlr.uart_drv.initialize = &CAPBUARTDriver__initialize;
-    uart_hdlr.frame_ready_output = &rx_task_message_queue;
-    uart_hdlr.uart_drv._that = &uart_drv;
-    uart_hdlr.uart_drv.notify_irq = &CAPBUARTDriver__notify_irq;
-    tc_rx_bottom_half_task.tc_channel._that = &tc_channel;
-    tc_rx_bottom_half_task.tc_channel.dequeue = &CTCChannel__dequeue;
-    tc_rx_bottom_half_task.tc_handler_pool._that = &tc_pool;
-    tc_rx_bottom_half_task.tc_handler_pool.alloc = termina__pool__alloc;
-    tc_rx_bottom_half_task.tc_handler_pool.free = termina__pool__free;
-    tc_rx_bottom_half_task.tc_message_queue_output = &tc_message_queue;
+    uart_hdlr.char_dev._that = &uart_drv;
+    uart_hdlr.char_dev.read_byte = &CAPBUARTDriver__read_byte;
+    uart_hdlr.tc_frame_receiver._that = &tc_frame_receiver;
+    uart_hdlr.tc_frame_receiver.receive = &CTCFrameReceiver__receive;
+    uart_hdlr.tc_message_queue_output = &tc_message_queue;
+    uart_hdlr.tm_frame_transmitter._that = &tm_frame_transmitter;
+    uart_hdlr.tm_frame_transmitter.transmit = &CTMFrameTransmitter__transmit;
     obdh_manager.bkg_message_queue_output = &bkg_message_queue;
     obdh_manager.hkfdir_message_queue_output = &hkfdir_message_queue;
     obdh_manager.mng_tc_executor._that = &mng_tc_executor;

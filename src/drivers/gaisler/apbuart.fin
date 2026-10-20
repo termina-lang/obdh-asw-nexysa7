@@ -1,0 +1,183 @@
+import drivers.char_dev;
+
+/**
+ * @file uart.fin
+ * @brief UART driver implementation using memory-mapped register access.
+ */
+
+constexpr uart_dr : u32 = 0x01;
+constexpr uart_te : u32 = 0x04;
+
+
+
+/**
+ * @struct APBUARTRegs
+ * @brief Memory-mapped UART register block.
+ *
+ * This structure represents the UART hardware registers.
+ */
+//#[packed]
+struct APBUARTRegs {
+    /** Data register (read/write). */
+    data : u32;
+    /** Status register (read-only). */
+    status : u32;
+    /** Control register (read/write). */
+    control :  u32;
+    /** Clock scaler register (read/write). */
+    scaler : u32;
+};
+
+
+/**
+ * @interface CharDevInit
+ * @brief Interface for initializing a character device.
+ */
+interface IAPBUARTInit {
+    procedure initialize(&mut self);
+};
+
+
+/**
+ * @class UARTDriver
+ * @brief UART driver implementing the character device interface.
+ *
+ * This class reads and writes the hardware memory-mapped registers, one
+ * byte at a time.
+ */
+resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
+
+    // UART registers
+    registers : loc APBUARTRegs;
+
+
+    /**
+     * @brief Enables UART transmission.
+     */
+    method enable_TX(&priv self) {
+        let riscv_uart_txe : u32 = 0x00000002 : u32;
+        self->registers.control = self->registers.control | riscv_uart_txe;
+        return;
+    }
+
+
+    /**
+     * @brief Enables UART reception.
+     */
+    method enable_RX(&priv self) {
+        let riscv_uart_rxe : u32 = 0x00000001 : u32;
+        self->registers.control = self->registers.control | riscv_uart_rxe;
+        return;
+    }
+
+
+    /**
+     * @brief Enables reception interrupts.
+     */
+    method enable_RI(&priv self) {
+        let riscv_uart_ri : u32 = 0x00000004 : u32;
+        self->registers.control = self->registers.control | riscv_uart_ri;
+        return;
+    }
+
+
+    /**
+     * @brief Enables transmission interrupts.
+     */
+    method enable_TI(&priv self) {
+        let riscv_uart_ti : u32 = 0x00000008 : u32;
+        self->registers.control = self->registers.control | riscv_uart_ti;
+        return;
+    }
+
+
+    /**
+     * @brief Disables transmission interrupts.
+     */
+    method disable_TI(&priv self) {
+        let riscv_uart_ti : u32 = 0xFFFFFFF7 : u32;
+        self->registers.control = self->registers.control & riscv_uart_ti;
+        return;
+    }
+
+
+    /**
+     * @brief Disables transmission FIFO.
+     */
+    method disable_TF(&priv self) {
+        let riscv_uart_tf : u32 = 0xFFFFFCFF : u32;
+        self->registers.control = self->registers.control & riscv_uart_tf;
+        return;
+    }
+
+
+    /**
+     * @brief Disables reception FIFO.
+     */
+    method disable_RF(&priv self) {
+        let riscv_uart_rf : u32 = 0xFFFFFBFF : u32;
+        self->registers.control = self->registers.control & riscv_uart_rf;
+        return;
+    }
+
+
+    procedure read_byte(&mut self, byte : &mut Option<u8>) {
+
+        if ((self->registers.status & uart_dr) != 0 : u32) {
+            *byte = Some(self->registers.data as u8);
+        } else {
+            *byte = None;
+        }
+
+        return;
+
+    }
+
+
+    procedure tx_ready(&mut self, ready : &mut bool) {
+
+        *ready = ((self->registers.status & uart_te) != 0 : u32);
+
+        return;
+
+    }
+
+
+    procedure write_byte(&mut self, byte : u8) {
+
+        self->registers.data = byte as u32;
+        self->enable_TI();
+
+        return;
+
+    }
+
+
+    procedure stop_tx(&mut self) {
+
+        self->disable_TI();
+
+        return;
+
+    }
+
+
+    /**
+     * @brief Initializes the UART module.
+     *
+     * Enables TX, RX, and the reception interrupt. The transmission
+     * interrupt is enabled with each byte written.
+     */
+    procedure initialize(&mut self) {
+
+        self->enable_RX();
+        self->enable_TX();
+        self->enable_RI();
+        self->disable_TF();
+        self->disable_RF();
+
+        return;
+
+    }
+
+};

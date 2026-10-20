@@ -1,0 +1,124 @@
+import obdh.pus.tc_packet;
+import obdh.pus.tm_packet;
+import obdh.pus.services.service1;
+import obdh.pus.services.service2;
+import obdh.pus.services.service9;
+import obdh.pus.services.service17;
+import obdh.pus.services.service128;
+
+
+/**
+ * @interface IMngTCExecutor
+ * @brief Interface for managing the execution and processing of telecommands.
+ * 
+ * This interface provides procedures to handle priority execution, 
+ * telecommand acceptance, and telecommand rejection.
+ */
+interface IMngTCExecutor {
+  procedure PUS_prio_exec_tc (&mut self, tc_handler : &mut TCHandler, reboot_requested: &mut bool);
+  procedure mng_tc_acceptation (&mut self, tc_handler: &TCHandler);
+  procedure mng_tc_rejection (&mut self, tc_handler: &TCHandler, tc_status : &TCStatus);
+};
+
+
+/**
+ * @class CManagerTExecutor
+ * @brief Resource class that implements the telecommand management interface.
+ * 
+ * Manages the execution of priority telecommands and generates telemetry packets for
+ * acceptance and rejection. Supports error reporting in case of unhandled telecommands.
+ */
+resource class CManagerTExecutor provides IMngTCExecutor {
+
+    /// @brief Interface to PUS Service 17 (Alive check service).
+    pus_service_17 : access IPUSService17;
+
+    /// @brief Interface to PUS Service 2 (Device management service).
+    pus_service_2 : access IPUSService2;
+
+    /// @brief Interface to PUS Service 9 (On-board time management service).
+    pus_service_9 : access IPUSService9;
+
+    /// @brief Interface to PUS Service 128.
+    pus_service_128 : access IPUSService128; 
+    
+    /// @brief Interface to PUS service 1 (Telemetry service).
+    pus_service_1 : access IPUSService1;
+
+
+    /**
+     * @brief Executes the telecommand with priority routing.
+     * 
+     * Routes the telecommand to the appropriate PUS service based on its type.
+     * If the type is unknown, an error acceptance report is generated.
+     * 
+     * @param[in,out] tc_handler Pointer to the telecommand handler.
+     * @param[out] reboot_requested Flag to indicate if a reboot is required.
+     */
+    procedure PUS_prio_exec_tc (&mut self, tc_handler : &mut TCHandler, reboot_requested: &mut bool) {
+
+        var tc_type : u8 = tc_handler->df_header.type;
+
+        if (tc_type == 17){
+
+            self->pus_service_17.exec_tc(tc_handler);
+
+        } else if (tc_type == 2){
+
+            self->pus_service_2.exec_tc(tc_handler);
+
+        } else if (tc_type == 9){
+
+            self->pus_service_9.exec_tc(tc_handler);
+
+        } else if (tc_type == 128){
+
+            self->pus_service_128.exec_tc(tc_handler, reboot_requested);
+
+        } else {
+
+            self->pus_service_1.send_tm_1_4_error_in_acceptance(
+                    tc_handler->packet_header.packet_id,
+                    tc_handler->packet_header.packet_seq_ctrl);
+
+        }
+        
+        return;
+    }
+
+
+    /**
+     * @brief Sends an acceptance telemetry message.
+     * 
+     * If telemetry handler allocation is successful and acknowledgement is enabled,
+     * a TM[1,1] acceptance packet is built and sent through the TM channel.
+     * 
+     * @param[in] tc_handler Pointer to the telecommand handler.
+    */
+    procedure mng_tc_acceptation (&mut self, tc_handler: &TCHandler) {
+
+        self->pus_service_1.notify_tm_1_1(
+                tc_handler->packet_header.packet_id,
+                tc_handler->packet_header.packet_seq_ctrl,
+                tc_handler->df_header.flag_ver_ack);
+
+        return;
+    }
+
+
+    /**
+     * @brief Sends a rejection telemetry message.
+     * 
+     * If telemetry handler allocation is successful, a TM[1,2] rejection packet is built
+     * and sent through the TM channel. The acceptance status is evaluated before building the packet.
+     * 
+     * @param[in] tc_handler Pointer to the telecommand handler.
+    */
+    procedure mng_tc_rejection (&mut self, tc_handler: &TCHandler, tc_status : &TCStatus) {
+
+        self->pus_service_1.send_tm_1_2(tc_status, tc_handler);
+
+        return;
+    }
+
+};

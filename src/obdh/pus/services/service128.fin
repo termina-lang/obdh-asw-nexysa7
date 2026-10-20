@@ -1,0 +1,74 @@
+/*
+PUS SERVICE 128 : PRIVATE SERVICE, REBOOT
+*/
+
+import obdh.pus.tc_handler;
+import obdh.pus.services.service1;
+
+import obdh.pus.services.service128.types;
+
+interface IPUSService128 {
+    procedure exec_tc (&mut self, tc_handler : &mut TCHandler, reboot_requested : &mut bool);
+};
+
+function exec128_1TC(tc_request : &mut PS128TCRequest) {
+
+    // No TM[1,3] or TM[1,7]: the reboot comes before the transmitter sends them
+    tc_request->reboot_requested = true;
+
+    return;
+
+}
+
+resource class CPUSService128 provides IPUSService128 {
+
+    pus_service_1 : access IPUSService1;
+
+    procedure exec_tc (&mut self, tc_handler : &mut TCHandler, reboot_requested : &mut bool) {
+
+        var status : Status<PUSService128Error> = Success;
+        var subtype : u8 = tc_handler->df_header.subtype;
+        var tc_request : PS128TCRequest = ps128_init_tc_request;
+
+        tc_request.packet_id = tc_handler->packet_header.packet_id;
+        tc_request.packet_seq_ctrl = tc_handler->packet_header.packet_seq_ctrl;
+        tc_request.flags_ack = tc_handler->df_header.flag_ver_ack;
+
+        if (subtype == 1) {
+
+            exec128_1TC(&mut tc_request);
+
+        } else {
+
+            status = Failure(PUSService128Error::ErrorInAcceptance);
+
+        }
+
+        match status {
+
+            case Success => {
+
+            }
+            case Failure(error) => {
+
+                match error {
+
+                    case ErrorInAcceptance => {
+
+                        self->pus_service_1.send_tm_1_4_error_in_acceptance(
+                                tc_request.packet_id,
+                                tc_request.packet_seq_ctrl);
+
+                    }
+                }
+
+            }
+        }
+
+        *reboot_requested = tc_request.reboot_requested;
+        
+        return;
+    
+    }
+
+};

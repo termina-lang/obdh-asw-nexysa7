@@ -1,0 +1,172 @@
+/**
+ * @file tm_frame_transmitter.fin
+ * @brief Telemetry channel that sends each TM as a frame over a character device.
+ */
+
+import drivers.char_dev;
+import obdh.tmtc.tm_channel;
+import encoding.binary;
+import obdh.tm_counter;
+import obdh.pus.tm_packet;
+import obdh.pus.tm_handler;
+
+
+/** @brief Bytes of the frame header: sync word and 2-byte length */
+constexpr tm_frame_header_size : usize = 6;
+
+
+/**
+ * @interface ITMFrameTransmitter
+ * @brief Interface for the interrupt that moves the TM frames out byte by byte.
+ */
+interface ITMFrameTransmitter {
+    procedure transmit(&mut self);
+};
+
+
+/**
+ * @class CTMFrameTransmitter
+ * @brief Sends each TM packet as a frame made of a sync word (0xBEBA BEEF),
+ * a 2-byte length and the bytes of the packet.
+ *
+ * Each TM stays in its handler, parked in the deque of the transmitter, until
+ * the last byte of its frame is written. The frame at the front is the one
+ * being transmitted.
+ */
+resource class CTMFrameTransmitter provides ITMChannel, ITMFrameTransmitter {
+
+    sync_word : [u8; 4]; //{0xBE, 0xBA, 0xBE, 0xEF}
+
+    char_dev : access ICharDev;
+
+    tm_handler_pool : access Allocator<TMHandler>;
+
+    /** @brief Counter of the TMs lost when the deque of frames is full */
+    tm_counter : access ITMCounter;
+
+    /** @brief TMs waiting to be sent, the one at the front in transmission */
+    tm_frames : access DequeAccess<TMHandler>;
+
+    /** @brief Next byte of the frame at the front */
+    tx_index : usize;
+
+    /**
+     * @brief Gives the next byte of the frame at the front.
+     *
+     * Puts the TM back at the front while bytes remain, and frees it after
+     * the last byte of its frame.
+     *
+     * @param[out] byte Next byte, or None if there is no frame to send.
+     */
+    method next_byte(&mut self, byte : &mut Option<u8>) {
+
+        var current : Option<box TMHandler> = None;
+        self->tm_frames.take(&mut current);
+
+        match current {
+
+            case Some(tm_handler) => {
+
+                let num_bytes : usize = tm_handler.tm_descriptor.tm_num_bytes;
+
+                if (self->tx_index < 4) {
+
+                    *byte = Some(self->sync_word[self->tx_index]);
+
+                } else if (self->tx_index < tm_frame_header_size) {
+
+                    var length : [u8; 2] = [0; 2];
+                    serialize_uint16(num_bytes as u16, &mut length);
+                    *byte = Some(length[self->tx_index - 4]);
+
+                } else {
+
+                    *byte = Some(tm_handler.tm_descriptor.tm_bytes[self->tx_index - tm_frame_header_size]);
+
+                }
+
+                self->tx_index = self->tx_index + 1;
+
+                if (self->tx_index == tm_frame_header_size + num_bytes) {
+                    self->tx_index = 0;
+                    self->tm_handler_pool.free(tm_handler);
+                } else {
+                    self->tm_frames.put_front(tm_handler);
+                }
+            }
+
+            case None => {
+                *byte = None;
+            }
+        }
+
+        return;
+    }
+
+    /**
+     * @brief Writes the next byte if the transmitter is free, or stops the
+     * transmit interrupt when there is nothing left to send.
+     */
+    method pump(&mut self) {
+
+        var ready : bool = false;
+        self->char_dev.tx_ready(&mut ready);
+
+        if (ready) {
+
+            var byte : Option<u8> = None;
+            self->next_byte(&mut byte);
+
+            match byte {
+                case Some(tx_byte) => {
+                    self->char_dev.write_byte(tx_byte);
+                }
+                case None => {
+                    self->char_dev.stop_tx();
+                }
+            }
+        }
+
+        return;
+    }
+
+    /**
+     * @brief Queues a TM packet for transmission and starts the transmitter
+     * if it is idle.
+     *
+     * A TM that does not fit in the queue of frames is freed and counted as lost.
+     *
+     * @param[in] tm_handler  Boxed telemetry handler containing the TM packet to send.
+     */
+    procedure send_tm(&mut self, tm_handler : box TMHandler) {
+
+        var rejected : Option<box TMHandler> = None;
+        self->tm_frames.try_put(tm_handler, &mut rejected);
+
+        match rejected {
+            case Some(rejected_tm) => {
+                self->tm_handler_pool.free(rejected_tm);
+                self->tm_counter.count_lost_tm();
+            }
+            case None => {
+            }
+        }
+
+        self->pump();
+
+        return;
+
+    }
+
+    /**
+     * @brief Moves the next byte out. Called from the interrupt handler.
+     */
+    procedure transmit(&mut self) {
+
+        self->pump();
+
+        return;
+
+    }
+
+};

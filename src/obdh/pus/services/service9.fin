@@ -1,0 +1,144 @@
+/**
+ * @file pus_service9.fin
+ * @brief Implementation of PUS Service 9: Time Management.
+ */
+
+import obdh.pus.tm_handler;
+import obdh.tmtc.tm_channel;
+import obdh.pus.services.service1;
+import obdh.pus.services.service9.types;
+
+
+/**
+ * @interface IPUSService9
+ * @brief Interface for PUS Service 9 Time Management.
+ *
+ * Defines the methods required to get the current on-board time (OBT) and
+ * to execute telecommands related to time managemen service.
+ */
+interface IPUSService9 {
+
+    procedure exec_tc (&mut self, tc_handler : &mut TCHandler);
+
+};
+
+/**
+ * @resourceclass CPUSService9
+ * @brief Resource class implementing PUS Service 9: Time Management.
+ *
+ * Provides on-board time tracking, telecommand execution, and telemetry generation
+ * for time management telecommands according to PUS specifications. It implements
+ * the IPUSService9 interface.
+ */
+resource class CPUSService9 provides IPUSService9 {
+
+    obt_manager : access IOBTManager;
+
+    pus_service_1 : access IPUSService1;
+
+    /**
+     * @brief Execute TC subtype 129 (specific time management TC - set current OBT).
+     *
+     * Handles execution of the TC with subtype 129 by generating telemetry
+     * reports TM[1,3] and TM[1,7] as acknowledgments, updating internal status,
+     * and managing telemetry handler resources.
+     *
+     * @param[in] tc_request Fields decoded from the TC.
+     */
+    method exec9_129TC (&priv self, tc_request : &PS9TCRequest) {
+
+        self->pus_service_1.notify_tm_1_3(
+                tc_request->packet_id,
+                tc_request->packet_seq_ctrl,
+                tc_request->flags_ack);
+
+        self->obt_manager.set_obt(tc_request->next_OBT);
+
+        self->pus_service_1.notify_tm_1_7(
+                tc_request->packet_id,
+                tc_request->packet_seq_ctrl,
+                tc_request->flags_ack);
+
+        return;
+
+    }
+
+    /**
+     * @brief Execute a time management telecommand.
+     *
+     * Main telecommand execution procedure that manages the TC lifecycle,
+     * including parameter extraction, execution based on subtype, and error handling.
+     *
+     * @param[in,out] tc_handler Reference to the telecommand handler.
+    */
+    procedure exec_tc (&mut self, tc_handler : &mut TCHandler){
+
+        var status : Status<PUSService9Error> = Success;
+        var subtype : u8 = tc_handler->df_header.subtype;
+        var tc_request : PS9TCRequest = ps9_init_tc_request;
+
+        tc_request.packet_id = tc_handler->packet_header.packet_id;
+        tc_request.packet_seq_ctrl = tc_handler->packet_header.packet_seq_ctrl;
+        tc_request.flags_ack = tc_handler->df_header.flag_ver_ack;
+        tc_request.tc_num_bytes = tc_handler->tc_descriptor.tc_num_bytes;
+
+        var tc_data_status : Status<TCHandlerError> = tc_handler_get_u32_appdata_field(tc_handler, &mut (tc_request.next_OBT.seconds));
+
+        if (tc_data_status is Success) {
+            tc_data_status = tc_handler_get_u16_appdata_field(tc_handler, &mut (tc_request.next_OBT.finetime));
+        }
+
+        if (tc_data_status is Failure) {
+            status = Failure(PUSService9Error::AppDataOutOfRange(tc_request.tc_num_bytes));
+        }
+
+        if (status is Success) {
+
+            if (subtype == 129) {
+
+                self->exec9_129TC(&tc_request);
+
+            } else {
+
+                status = Failure(PUSService9Error::ErrorInAcceptance);
+
+            }
+
+        }
+
+        match status {
+
+            case Success => {
+
+            }
+            case Failure(error) => {
+
+                match error {
+
+                    case ErrorInAcceptance => {
+
+                        self->pus_service_1.send_tm_1_4_error_in_acceptance(
+                                tc_request.packet_id,
+                                tc_request.packet_seq_ctrl);
+
+                    }
+                    case AppDataOutOfRange(tc_num_bytes) => {
+
+                        self->pus_service_1.send_tm_1_4_short_pack_length(
+                                tc_request.packet_id,
+                                tc_request.packet_seq_ctrl,
+                                tc_num_bytes);
+
+                    }
+                }
+
+            }
+        }
+
+        return;
+    
+    }
+
+
+};
+

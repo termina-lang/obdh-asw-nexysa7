@@ -1,0 +1,60 @@
+import obdh.pus.tc_packet;
+
+/**
+ * @brief Initial value of the CRC-16-CCITT.
+ */
+constexpr crc16_initial : u16 = 0xFFFF : u16;
+
+/**
+ * @brief Adds one byte to a CRC-16-CCITT (polynomial 0x1021).
+ *
+ * @param[in] crc_value CRC of the bytes before, or crc16_initial for the first one
+ * @param[in] byte      Next byte
+ *
+ * @return The CRC including the byte
+ */
+function crc16_update (crc_value : u16, byte : u8) -> u16 {
+
+    var crc : u16 = crc_value ^ (byte as u16 << 8 : u16);
+
+    for j : u16 in 0 : u16 .. 8 : u16 {
+
+        if ((crc & 0x8000 : u16) != 0 : u16) {
+            crc = (crc << 1 : u16) ^ 0x1021;
+        } else {
+            crc = crc << 1 : u16;
+        }
+    }
+
+    return crc;
+}
+
+/**
+ * @brief Computes the CRC-16 checksum of a byte array
+ * 
+ * This function implements the CRC-16-CCITT algorithm with the polynomial 0x1021 
+ * and initial value 0xFFFF. It is commonly used in CCSDS packet error detection.
+ * 
+ * @param[in] data     Reference to the array containing the bytes to be processed
+ * @param[in] nbytes   Number of bytes to process from the data array
+ * 
+ * @return The computed 16-bit CRC value
+ */
+
+
+ 
+
+function cal_crc_16 (data : & [u8; max_tc_size], nbytes : usize) -> u16  {
+
+    var crc_value : u16 = crc16_initial;
+
+    for i : usize in 0 : usize .. max_tc_size while i < nbytes {
+
+        crc_value = crc16_update(crc_value, (*data)[i]);
+
+    }
+
+    return crc_value;
+}
+
+

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE test_proc SYSTEM "../../DTDs/test_proc.dtd">
+
+<!--
+
+ID: TP_0085_ASW_PUS_TC_20_3_TC_20_1_SET_PID_20_TO_66
+Description:
+
+The test checks that telecommand TC(20,3) to set Parameter 20, of type u8, to
+value 66 is executed correctly, and then TC(20,1) retrieves the parameter value
+confirming it was set to 66.
+
+-->
+
+<test_proc name="TP_0085_ASW_PUS_TC_20_3_TC_20_1_SET_PID_20_TO_66">
+	<step name="tc_20_3_set_pid_20_to_66" id="0" prev_step_idref="NULL" output_idref_from_prev_step="NULL" mode="continuous">
+		<inputs>
+			<input_level_2 name="tc_20_3" ifRef="0" delay_value="100" delay_unit="miliseconds">
+				<level2 format="TC_Formats/Level2/st20/asw_pus_tc_20_3_uint8_format.xml"/>
+				<app_to_level2 export="STEPS_XML/INPUTS/tc_20_3/tc_20_3_set_pid_20_to_66.xml"/>
+				<level1 format="DEFAULT"/>
+				<level2_to_level1 export="TC_Formats/Lv2_To_Lv1/st20/asw_pus_tc_20_3_uint8_to_asw_pus_tc_ack_0b1001.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_to_level0 export="DEFAULT"/>
+			</input_level_2>
+		</inputs>
+		<outputs checkmode="all" valid_time_interval_value="500" valid_time_interval_unit="miliseconds">
+			<output_level_1 name="tm_1_1" id="0" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_1_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+			<output_level_1 name="tm_1_7" id="1" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_7_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+		</outputs>
+	</step>
+	<step name="tc_20_1_get_pid20_equal_66" id="1" prev_step_idref="NULL" output_idref_from_prev_step="NULL" mode="continuous">
+		<inputs>
+			<input_level_2 name="tc_20_1" ifRef="0" delay_value="1000" delay_unit="miliseconds">
+				<level2 format="TC_Formats/Level2/st20/asw_pus_tc_20_1_format.xml"/>
+				<app_to_level2 export="STEPS_XML/INPUTS/tc_20_1/tc_20_1_get_pid20.xml"/>
+				<level1 format="DEFAULT"/>
+				<level2_to_level1 export="TC_Formats/Lv2_To_Lv1/st20/asw_pus_tc_20_1_to_asw_pus_tc_ack_0b1001.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_to_level0 export="DEFAULT"/>
+			</input_level_2>
+		</inputs>
+		<outputs checkmode="all" valid_time_interval_value="500" valid_time_interval_unit="miliseconds">
+			<output_level_1 name="tm_1_1" id="0" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_1_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+			<output_level_2 name="tm_20_2_pid20_equal_66" id="1" ifRef="0">
+				<level2 format="TM_Formats/Level2/st20/asw_pus_tm_20_2_uint8_format.xml"/>
+				<level2_filter apply_def_filter="no" extra_filter="TM_Filters/Level2/st20/asw_pus_tm_20_2_pid20_uint8_equal_66_filter.xml"/>
+				<level1 format="DEFAULT"/>
+ 				<level2_from_level1 import="TM_Formats/Lv2_From_Lv1/st20/asw_pus_tm_20_2_uint8_from_asw_pus_v2_tm.xml"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st20/asw_pus_v2_tm_20_2_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_2>
+			<output_level_1 name="tm_1_7" id="2" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_7_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+		</outputs>
+	</step>
+</test_proc>

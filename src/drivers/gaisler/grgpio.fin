@@ -1,0 +1,94 @@
+/**
+ * @enum GPIODriverError
+ * @brief Errors of the GPIO driver.
+ */
+enum GPIODriverError {
+    InvalidLEDIndex     /**< The LED index does not correspond to any LED */
+};
+
+/**
+ * @brief Structure representing the GPIO hardware registers.
+ * 
+ * Contains the registers for data, output, and direction control of GPIO pins.
+ */
+struct GPIO_registers {
+    /// Data register (32-bit)
+    Data : u32;
+    /// Output register (32-bit)
+    Output : u32;
+    /// Direction register (32-bit), defines pin direction (input/output)
+    Direction : u32;
+};
+
+
+
+/**
+ * @brief Interface defining the GPIO driver functionality.
+ * 
+ * Provides procedures to initialize GPIO and control LED states.
+ */
+interface IGPIODriver {
+    procedure init_gpio (&mut self);
+    procedure write_led (&mut self, led : u8, value : u8, status : &mut Status<GPIODriverError>);
+};
+
+
+/**
+ * @brief Resource class implementing the GPIO driver interface.
+ * 
+ * Manages GPIO registers and provides functionality to initialize GPIO pins
+ * and control LEDs connected to specific GPIO outputs.
+ */
+resource class CGPIODriver provides IGPIODriver {
+
+    /// Memory-mapped access to GPIO registers (e.g., 0xfc083000)
+    registers: loc GPIO_registers;
+
+    /**
+     * @brief Initialize GPIO pins 16 to 19 as outputs for LEDs.
+     * 
+     * Sets the direction bits for pins 16 to 19 to configure them as output pins.
+    */
+    procedure init_gpio (&mut self) {
+
+        self->registers.Direction = self->registers.Direction | ((1 << 16 : u32) | (1 << 17 : u32) | (1 << 18 : u32) | (1 << 19 : u32));
+
+        return;
+    }
+
+    /**
+     * @brief Set the state of a specified LED.
+     * 
+     * Turns on or off the LED specified by the led index by setting or clearing
+     * the corresponding bit in the output register.
+     * 
+     * @param led Index of the LED to control (valid range: 0 to 3)
+     * @param value Value to set the LED (0 = off, non-zero = on)
+     * @param status Output parameter indicating Success or Failure (Error) if led index is invalid
+     */
+    procedure write_led (&mut self, led : u8, value : u8, status : &mut Status<GPIODriverError>) {
+
+        if ((led) > 5 && (led < 10)) {
+           
+            *status = Success;
+            
+            let bit : u8 = led + 17;
+            if (value == 0) {
+                let mask : u32 = 0xFFFFFFFF ^ (1 << bit);
+                self->registers.Output = self->registers.Output & mask;
+            } else {
+                self->registers.Output = self->registers.Output | (1 << bit);
+            }
+        }
+        else {
+
+            *status = Failure(GPIODriverError::InvalidLEDIndex);
+    
+        }
+
+        return; 
+    }
+
+
+
+};

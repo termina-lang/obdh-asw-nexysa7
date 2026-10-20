@@ -1,0 +1,85 @@
+/**
+ * @brief Total number of parameters of type u32 in the system data pool.
+ */
+constexpr sdp_num_u32_params : usize = 12;
+
+/**
+ * @brief Total number of parameters of type u8 in the system data pool.
+ */
+constexpr sdp_num_u8_params : usize = 18;
+
+/**
+ * @brief First parameter ID for u8-type parameters. The u32 parameters take PIDs 0 to sdp_num_u32_params - 1.
+ */
+constexpr sdp_first_u8_param_id : usize = sdp_num_u32_params;
+
+/**
+ * @brief Number of valid PIDs (u32 + u8).
+ */
+constexpr sdp_num_params : usize = sdp_num_u32_params + sdp_num_u8_params;
+
+/**
+ * @enum DataPoolItem
+ * @brief Item of the system data pool that a PID designates, with its index in the array of its type.
+ */
+enum DataPoolItem {
+    U32Item(usize),   /**< 32-bit unsigned integer parameter, index in the u32 array */
+    U8Item(usize),    /**< 8-bit unsigned integer parameter, index in the u8 array */
+    NoValidPID        /**< Invalid parameter ID */
+};
+
+/**
+ * @brief Returns the item of the system data pool that a PID designates.
+ *
+ * @param PID Parameter identifier (PID).
+ * @return DataPoolItem U32Item or U8Item with the index in its array, or NoValidPID if the ID is out of range.
+ */
+function sys_data_pool_get_item (PID : u16) -> DataPoolItem {
+
+    var item : DataPoolItem;
+
+    if (PID as usize < sdp_first_u8_param_id) {
+
+        item = DataPoolItem::U32Item(PID as usize);
+
+    } else if (PID as usize < sdp_num_params) {
+
+        item = DataPoolItem::U8Item((PID as usize) - sdp_first_u8_param_id);
+
+    } else {
+
+        item = DataPoolItem::NoValidPID;
+
+    }
+
+    return item;
+}
+
+/**
+ * @brief Checks whether a PID is valid in the system data pool.
+ *
+ * @param PID Parameter identifier.
+ * @return bool True if the PID is valid, false otherwise.
+ */
+function sys_data_pool_is_valid_PID (PID : u16) -> bool {
+
+    var is_valid : bool = PID as usize < sdp_num_params;
+    return is_valid;
+
+}
+
+
+/**
+ * @brief Determines if a PID can be updated via telecommands.
+ *
+ * This function returns true for PIDs greater than or equal to 5.
+ *
+ * @param PID Parameter identifier.
+ * @return bool True if the PID can be updated via telecommand, false otherwise.
+ */
+function sys_data_pool_is_PID_update_via_TC_enabled (PID : u16) -> bool {
+
+    var is_enable : bool = PID >= 5;
+    return is_enable;
+
+}

@@ -1,0 +1,177 @@
+/*
+PUS SERVICE 2 : DEVICE ACCESS
+*/
+
+import drivers.gaisler.grgpio;
+import obdh.pus.services.service1;
+import encoding.binary;
+import obdh.pus.tc_packet;
+import obdh.pus.tm_packet;
+import obdh.pus.services.service2.types;
+import obdh.pus.services.service2.internal;
+import obdh.pus.services.service12;
+
+
+
+// DISP <--> LED <--> address ON, OFF
+// DISP 1 <--> LED 0 <--> 0x00000001, 0x00000000
+// DISP 2 <--> LED 1 <--> 0x10000001, 0x10000000
+// DISP 3 <--> LED 2 <--> 0x20000001, 0x20000000
+// DISP 4 <--> LED 3 <--> 0x30000001, 0x30000000
+
+interface IPUSService2 {
+
+    procedure exec_tc (&mut self, tc_handler : &mut TCHandler);
+
+};
+
+
+resource class CPUSService2 provides IPUSService2 {
+
+    pus_service_1 : access IPUSService1;
+
+    gpio_driver : access IGPIODriver;
+
+    method exec2_1TC(&mut self, tc_request : &PS2TCRequest) -> Status<PUSService2Error> {
+
+        var status : Status<PUSService2Error> = Success;
+
+        if tc_request->N != 1 {
+
+            status = Failure(PUSService2Error::NumOfInstrNotValid(tc_request->N));
+
+        } else if device_drv_is_on_off_address_valid(tc_request) == false {
+
+            status = Failure(PUSService2Error::DeviceAddressNotValid(tc_request->dev_address));
+
+        } else {
+
+            self->pus_service_1.notify_tm_1_3(
+                        tc_request->packet_id,
+                        tc_request->packet_seq_ctrl,
+                        tc_request->flags_ack);
+
+            let led_status : Status<GPIODriverError> = self->dev_drv_on_off(tc_request);
+
+            if (led_status is Success) {
+
+                self->pus_service_1.notify_tm_1_7(
+                            tc_request->packet_id,
+                            tc_request->packet_seq_ctrl,
+                            tc_request->flags_ack);
+
+            } else {
+
+                status = Failure(PUSService2Error::DeviceCommandExecError(tc_request->dev_address));
+
+            }
+
+        }
+
+        return status;
+    }
+
+    method dev_drv_on_off(&priv self, tc_request: &PS2TCRequest) -> Status<GPIODriverError> {
+
+        var status : Status<GPIODriverError> = Success;
+
+        var led: u8 = ((tc_request->dev_address & 0xF0000000) >> 28 : u32) as u8;
+        var on_off : u8 = (tc_request->dev_address & 0x0000000F) as u8;
+
+        self->gpio_driver.write_led(led, on_off, &mut status);
+
+        return status;
+    }
+
+    procedure exec_tc (&mut self, tc_handler : &mut TCHandler){
+
+        var status : Status<PUSService2Error> = Success;
+        var subtype : u8 = tc_handler->df_header.subtype;
+        var tc_request : PS2TCRequest = ps2_init_tc_request;
+
+        tc_request.packet_id = tc_handler->packet_header.packet_id;
+        tc_request.packet_seq_ctrl = tc_handler->packet_header.packet_seq_ctrl;
+        tc_request.flags_ack = tc_handler->df_header.flag_ver_ack;
+        tc_request.tc_num_bytes = tc_handler->tc_descriptor.tc_num_bytes;
+
+        var tc_data_status : Status<TCHandlerError> = tc_handler_get_u8_appdata_field(tc_handler, &mut tc_request.N);
+
+        if (tc_data_status is Success) {
+            tc_data_status = tc_handler_get_u32_appdata_field(tc_handler, &mut tc_request.dev_address);
+        }
+
+        if (tc_data_status is Failure) {
+            status = Failure(PUSService2Error::AppDataOutOfRange(tc_request.tc_num_bytes));
+        }
+
+        if (status is Success) {
+
+            if (subtype == 1) {
+
+                status = self->exec2_1TC(&tc_request);
+
+            } else {
+
+                status = Failure(PUSService2Error::ErrorInAcceptance);
+            }
+
+        }
+
+        match status {
+
+            case Success => {
+
+            }
+            case Failure(error) => {
+
+                match error {
+
+                    case ErrorInAcceptance => {
+
+                        self->pus_service_1.send_tm_1_4_error_in_acceptance(
+                                        tc_request.packet_id,
+                                        tc_request.packet_seq_ctrl);
+
+                    }
+                    case AppDataOutOfRange(tc_num_bytes) => {
+
+                        self->pus_service_1.send_tm_1_4_short_pack_length(
+                                        tc_request.packet_id,
+                                        tc_request.packet_seq_ctrl,
+                                        tc_num_bytes);
+
+                    }
+                    case NumOfInstrNotValid(N) => {
+
+                        self->pus_service_1.send_tm_1_4_num_of_instr_not_valid(
+                                        tc_request.packet_id,
+                                        tc_request.packet_seq_ctrl,
+                                        N);
+
+                    }
+                    case DeviceAddressNotValid(dev_address) => {
+
+                        self->pus_service_1.send_tm_1_4_device_address_not_valid(
+                                        tc_request.packet_id,
+                                        tc_request.packet_seq_ctrl,
+                                        dev_address);
+
+                    }
+                    case DeviceCommandExecError(dev_address) => {
+
+                        self->pus_service_1.send_tm_1_8_device_command_exec_error(
+                                        tc_request.packet_id,
+                                        tc_request.packet_seq_ctrl,
+                                        dev_address);
+
+                    }
+                }
+
+            }
+        }
+
+        return;
+    
+    }
+
+};

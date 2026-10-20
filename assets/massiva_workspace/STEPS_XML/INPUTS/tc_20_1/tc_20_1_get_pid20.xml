@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Export SYSTEM "../../../DTDs/export.dtd">
+<Export from="NULL" to="epd_pus_20_1.xml">
+	<settings>
+		<settingFromConst value="1" toFieldRef="N"/>
+		<settingFromConst value="0x14" toFieldRef="PID"/>
+	</settings>
+</Export>

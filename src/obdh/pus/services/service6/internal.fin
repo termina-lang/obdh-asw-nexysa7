@@ -1,0 +1,87 @@
+import obdh.pus.services.service1;
+import obdh.pus.tm_handler;
+import obdh.obt_manager;
+import obdh.tmtc.tm_channel;
+import drivers.memory;
+
+
+/**
+ * @struct PS6TCRequest
+ * @brief Fields of a TC[6,x] that its execution needs, decoded by exec_tc, and the memory data written by a TC[6,2] or read by a TC[6,5].
+ */
+struct PS6TCRequest {
+    packet_id : u16;
+    packet_seq_ctrl : u16;
+    flags_ack : u8;
+    tc_num_bytes : usize;
+    mem_id : u8;
+    N : u8;
+    address: u32;
+    length: u16;
+    data: [u8; max_memory_access_length];
+};
+
+constexpr ps6_init_tc_request : PS6TCRequest = {
+    packet_id = 0, packet_seq_ctrl = 0, flags_ack = 0, tc_num_bytes = 0, mem_id = 0, N = 0, address = 0, length = 0, data = [0; max_memory_access_length]
+};
+
+/**
+ * @enum PUSService6Error
+ * @brief Reasons why PUS service 6 rejects or fails a TC, with the data of the TM[1,4] or TM[1,8] that reports each one.
+ */
+enum PUSService6Error {
+    ErrorInAcceptance,              /**< Subtype not supported */
+    AppDataOutOfRange(usize),       /**< TC shorter than its fields, with its length in bytes */
+    AppDataOverflow,                /**< The data of a TM[6,6] or TM[6,10] does not fit in the packet */
+    NumOfInstrNotValid(u8),         /**< Number of instructions other than 1 */
+    MemAddressNotValid(u8, u32),    /**< Memory ID and address out of the memory banks */
+    MemIDReadOnly(u8)               /**< Memory ID without write permission */
+};
+
+
+function build_tm_6_6(p_tm_handler : &mut TMHandler, tm_seq_counter : u16, current_obt : CUCTime, mem_data : &PS6TCRequest) -> Status<TMHandlerError> {
+
+    startup_tm(p_tm_handler);
+    var status : Status<TMHandlerError> = append_u8_appdata_field(p_tm_handler, mem_data->mem_id);
+    if (status is Success) {
+        status = append_u8_appdata_field(p_tm_handler,1);
+    }
+    if (status is Success) {
+        status = append_u32_appdata_field(p_tm_handler, mem_data->address);
+    }
+    if (status is Success) {
+        status = append_u16_appdata_field(p_tm_handler, mem_data->length);
+    }
+    for i : usize in 0 .. max_memory_access_length while ((status is Success) && (i < mem_data->length as usize)) {
+        status = append_u8_appdata_field(p_tm_handler, mem_data->data[i]);
+    }
+    if (status is Success) {
+        close_tm(p_tm_handler, 6, 6, tm_seq_counter, current_obt);
+    }
+
+    return status;
+}
+
+
+function build_tm_6_10(p_tm_handler : &mut TMHandler, tm_seq_counter : u16, current_obt : CUCTime, mem_data : &PS6TCRequest, checksum : u16) -> Status<TMHandlerError> {
+
+    startup_tm(p_tm_handler);
+    var status : Status<TMHandlerError> = append_u8_appdata_field(p_tm_handler, mem_data->mem_id);
+    if (status is Success) {
+        status = append_u8_appdata_field(p_tm_handler,1);
+    }
+    if (status is Success) {
+        status = append_u32_appdata_field(p_tm_handler, mem_data->address);
+    }
+    if (status is Success) {
+        status = append_u16_appdata_field(p_tm_handler, mem_data->length);
+    }
+    if (status is Success) {
+        status = append_u16_appdata_field(p_tm_handler, checksum);
+    }
+    if (status is Success) {
+        close_tm(p_tm_handler, 6, 10, tm_seq_counter, current_obt);
+    }
+
+    return status;
+}

@@ -1,48 +1,33 @@
-
-
-enum CharDevIrqStatus {
-    RxComplete(usize),
-    IrqOk,
-    IrqError(i32)
-};
-
 /**
- * @interface ICharDevSend
- * @brief Interface for sending data through a character device.
+ * @interface ICharDev
+ * @brief Byte-level access to a character device.
+ *
+ * Every operation reads or writes the registers of the device and nothing
+ * else: the device keeps no buffer and knows nothing of what it carries.
  */
-interface ICharDevSend {
-    procedure send(&mut self,
-                   output_byte : u8, 
-                   status : &mut Status<i32>);
-};
+interface ICharDev {
 
+    /**
+     * @brief Reads the received byte, if there is one.
+     * @param[out] byte Received byte, or None.
+     */
+    procedure read_byte(&mut self, byte : &mut Option<u8>);
 
-/**
- * @interface CharDevRecv
- * @brief Interface for receiving data from a character device.
- */
-interface ICharDevEnqueue {
-    procedure enqueue(&mut self,
-                      byte : u8,
-                      status : &mut CharDevIrqStatus);
-};
+    /**
+     * @brief Tells whether the transmitter can take a new byte.
+     * @param[out] ready True if the transmit register is empty.
+     */
+    procedure tx_ready(&mut self, ready : &mut bool);
 
+    /**
+     * @brief Writes a byte and enables the transmit interrupt.
+     * @param[in] byte Byte to transmit.
+     */
+    procedure write_byte(&mut self, byte : u8);
 
-/**
- * @interface CharDevDequeue
- * @brief Interface for dequeuing received data from a character device.
- */
-interface ICharDevDequeue {
-    procedure dequeue(&mut self,
-                      byte : &mut Option<u8>);
-};
+    /**
+     * @brief Disables the transmit interrupt.
+     */
+    procedure stop_tx(&mut self);
 
-
-/**
- * @interface ICharDevNotifyIrq 
- * @brief Interface for handling UART-related IRQ operations.
- */
-interface ICharDevNotifyIrq {
-    procedure notify_irq(&mut self,
-                         result : &mut CharDevIrqStatus);
 };

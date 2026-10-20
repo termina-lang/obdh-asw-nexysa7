@@ -77,6 +77,9 @@
 	<TestCase name="TP_0080_ASW_PUS_TC_20_3_TC_20_1_SET_PID_10_TO_99" 							
 		procedure="FT_PROCS/st20/tp_0080_asw_pus_tc_20_3_tc_20_1_set_pid_10_to_99.xml"/>
 
+	<TestCase name="TP_0085_ASW_PUS_TC_20_3_TC_20_1_SET_PID_20_TO_66"
+		procedure="FT_PROCS/st20/tp_0085_asw_pus_tc_20_3_tc_20_1_set_pid_20_to_66.xml"/>
+
 	<TestCase name="TP_0090_ASW_PUS_TC_20_1_INVALID_PID" 						
 		procedure="FT_PROCS/st20/tp_0090_asw_pus_tc_20_1_invalid_pid.xml"/>
 		

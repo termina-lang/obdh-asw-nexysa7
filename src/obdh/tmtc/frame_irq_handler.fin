@@ -1,0 +1,54 @@
+import drivers.char_dev;
+import obdh.tmtc.tc_frame_receiver;
+import obdh.tmtc.tm_frame_transmitter;
+import obdh.pus.tc_handler;
+
+/**
+ * @brief Interrupt handler of the character device that carries the TM/TC frames
+ *
+ * Lets the TM frame transmitter write its next byte. Then hands the received
+ * byte, if any, to the TC frame receiver and sends the TC it completes to the
+ * TC queue.
+ */
+handler class CTMTCFrameIRQHandler {
+
+    irq_entry : sink u32 triggers irq_handler;
+
+    char_dev : access ICharDev;
+    tc_frame_receiver : access ITCFrameReceiver;
+    tm_frame_transmitter : access ITMFrameTransmitter;
+
+    tc_message_queue_output : out box TCHandler;
+
+    action irq_handler(&priv self, _vector : u32) {
+
+        // Transmission
+        self->tm_frame_transmitter.transmit();
+
+        // Reception
+        var byte : Option<u8> = None;
+        self->char_dev.read_byte(&mut byte);
+
+        match byte {
+            case Some(rx_byte) => {
+
+                var tc_handler : Option<box TCHandler> = None;
+                self->tc_frame_receiver.receive(rx_byte, &mut tc_handler);
+
+                match tc_handler {
+                    case Some(tc_handler_b) => {
+                        self->tc_message_queue_output.send(tc_handler_b);
+                    }
+                    case None => {
+                        // TC not complete yet
+                    }
+                }
+            }
+            case None => {
+                // No byte received
+            }
+        }
+
+        return;
+    }
+};

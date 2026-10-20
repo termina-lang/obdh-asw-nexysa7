@@ -1,0 +1,17 @@
+/**
+ * @file tm_channel.fin
+ * @brief Interface of the telemetry (TM) channel.
+ */
+
+import obdh.pus.tm_handler;
+
+
+/**
+ * @interface ITMChannel
+ * @brief Interface for sending telemetry data.
+ */
+interface ITMChannel {
+
+    procedure send_tm(&mut self, tm_handler : box TMHandler);
+
+};

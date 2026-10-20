@@ -1,0 +1,36 @@
+
+const num_params2 : usize = 64;
+
+/**
+ * @struct PS2TCRequest
+ * @brief Fields of a TC[2,x] that its execution needs, decoded by exec_tc.
+ */
+struct PS2TCRequest {
+    packet_id : u16;
+    packet_seq_ctrl : u16;
+    flags_ack : u8;
+    tc_num_bytes : usize;
+    N: u8;
+    dev_address : u32;
+};
+
+/**
+ * @enum PUSService2Error
+ * @brief Reasons why PUS service 2 rejects or fails a TC, with the data of the TM[1,4] or TM[1,8] that reports each one.
+ */
+enum PUSService2Error {
+    ErrorInAcceptance,              /**< Subtype not supported */
+    AppDataOutOfRange(usize),       /**< TC shorter than its fields, with its length in bytes */
+    NumOfInstrNotValid(u8),         /**< Number of instructions other than 1 */
+    DeviceAddressNotValid(u32),     /**< Device address not valid */
+    DeviceCommandExecError(u32)     /**< The device command failed, with the device address */
+};
+
+constexpr ps2_init_tc_request : PS2TCRequest = {
+    packet_id = 0,
+    packet_seq_ctrl = 0,
+    flags_ack = 0,
+    tc_num_bytes = 0,
+    N = 0,
+    dev_address = 0
+};

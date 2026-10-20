@@ -1,0 +1,227 @@
+import obdh.pus.tm_packet;
+import encoding.binary;
+import obdh.pus.time;
+
+
+/**
+ * @enum TMHandlerError
+ * @brief Errors when building a TM packet.
+ */
+enum TMHandlerError {
+    AppDataOverflow     /**< The application data does not fit in the TM packet */
+};
+
+
+/**
+ * @brief Structure for handling CCSDS/PUS TM packet construction
+ *
+ * This structure holds all necessary fields to build a complete TM packet,
+ * including CCSDS headers, PUS data field headers, and application data.
+ */
+struct TMHandler {
+    tm_descriptor : TMDescriptor;                  /**< TM descriptor containing byte array and length */
+    packet_header : CCSDSPUSTMPacketHeader;        /**< CCSDS TM packet header */
+    df_header : CCSDSPUSTMDFHeader;                /**< PUS data field header */
+    app_data_index : usize;                         /**< Index to current position in app data section */
+};
+
+
+
+
+/**
+ * @brief Application Process Identifier (APID) used in TM packet header
+ *
+ * Identifies the originating application or service of the telemetry.
+ */
+const APID : u16 = 0x32C;
+
+/**
+ * @brief Destination ID for the PUS data field header
+ *
+ * Used to indicate the recipient or logical destination of the TM packet.
+ */
+const DESTINATION_ID : u16 = 0x78;
+
+/**
+ * @brief Offset in the TM byte array where application data starts
+ *
+ * Points to the index immediately after the CCSDS and PUS headers.
+ */
+const tm_app_data_offset : usize = 19;
+
+
+
+
+/**
+ * @brief Appends an 8-bit unsigned integer to the application data field
+ *
+ * Updates the internal application data index accordingly.
+ *
+ * @param tm_handler Pointer to the TM handler
+ * @param data The 8-bit value to append
+ * @return Success, or Failure(TMHandlerError::AppDataOverflow) if the data does not fit in the packet
+ */
+function append_u8_appdata_field (tm_handler : &mut TMHandler, data : u8) -> Status<TMHandlerError> {
+
+    var status : Status<TMHandlerError> = Success;
+
+    if (tm_handler->app_data_index < max_send_size){
+
+        tm_handler->tm_descriptor.tm_bytes[tm_handler->app_data_index] = data;
+        tm_handler->app_data_index = tm_handler->app_data_index + 1;
+
+    } else {
+
+        status = Failure(TMHandlerError::AppDataOverflow);
+
+    }
+
+    return status;
+}
+
+/**
+ * @brief Appends a 16-bit unsigned integer to the application data field
+ *
+ * Serializes the value as big-endian and updates the index.
+ *
+ * @param tm_handler Pointer to the TM handler
+ * @param data The 16-bit value to append
+ * @return Success, or Failure(TMHandlerError::AppDataOverflow) if the data does not fit in the packet
+ */
+function append_u16_appdata_field (tm_handler : &mut TMHandler, data : u16) -> Status<TMHandlerError> {
+
+    var status : Status<TMHandlerError> = Success;
+
+    if (tm_handler->app_data_index + 1 < max_send_size){
+
+        serialize_uint16(data, &mut tm_handler->tm_descriptor.tm_bytes[tm_handler->app_data_index .. tm_handler->app_data_index + 2]);
+        tm_handler->app_data_index = tm_handler->app_data_index + 2;
+
+    } else {
+
+        status = Failure(TMHandlerError::AppDataOverflow);
+    }
+
+    return status;
+}
+
+/**
+ * @brief Appends a 32-bit unsigned integer to the application data field
+ *
+ * Serializes the value as big-endian and updates the index.
+ *
+ * @param tm_handler Pointer to the TM handler
+ * @param data The 32-bit value to append
+ * @return Success, or Failure(TMHandlerError::AppDataOverflow) if the data does not fit in the packet
+ */
+function append_u32_appdata_field (tm_handler : &mut TMHandler, data : u32) -> Status<TMHandlerError> {
+
+    var status : Status<TMHandlerError> = Success;
+
+    if (tm_handler->app_data_index + 3 < max_send_size){
+
+        serialize_uint32(data, &mut tm_handler->tm_descriptor.tm_bytes[tm_handler->app_data_index .. tm_handler->app_data_index + 4]);
+        tm_handler->app_data_index = tm_handler->app_data_index + 4;
+
+    } else {
+
+        status = Failure(TMHandlerError::AppDataOverflow);
+
+    }
+
+    return status;
+}
+
+
+/**
+ * @brief Builds the CCSDS packet header for the TM packet
+ *
+ * Sets the packet ID, sequence control, and computes the packet length based
+ * on the current position of the application data index.
+ *
+ * @param tm_handler Pointer to the TM handler
+ * @param tm_seq_counter The TM sequence counter to use in the header
+ */
+function tm_handler_build_packet_header (tm_handler : &mut TMHandler, tm_seq_counter : u16) {
+
+    tm_handler->packet_header.packet_id = ccsds_pus_tm_build_packet_id(APID);
+
+    tm_handler->packet_header.packet_seq_ctrl = tm_seq_counter & 0x3FFF;
+
+    tm_handler->packet_header.packet_length = ((tm_handler->app_data_index) - 7) as u16; 
+
+    return;
+}
+
+
+/**
+ * @brief Builds the PUS Data Field header for the TM packet
+ *
+ * Populates the PUS type, subtype, destination ID, and onboard time (OBT).
+ *
+ * @param tm_handler Pointer to the TM handler
+ * @param tm_type PUS service type
+ * @param tm_subtype PUS service subtype
+ * @param current_obt The current onboard time (OBT)
+ */
+function tm_handler_build_df_header (tm_handler : &mut TMHandler, tm_type : u8, tm_subtype : u8, current_obt: CUCTime) {
+
+    tm_handler->df_header.version = 0x20; 
+    tm_handler->df_header.type = tm_type;
+    tm_handler->df_header.subtype = tm_subtype;
+    tm_handler->df_header.msg_type_counter = 0; 
+    tm_handler->df_header.destinationID = DESTINATION_ID;
+    tm_handler->df_header.obt_secs = current_obt.seconds;
+    tm_handler->df_header.obt_finetime = current_obt.finetime;
+    
+    return;
+}
+
+
+/**
+ * @brief Finalizes the TM packet by setting headers and computing length
+ *
+ * This function completes the TM packet by calling the appropriate header
+ * build functions and copying the headers into the final TM byte array.
+ *
+ * @param tm_handler Pointer to the TM handler
+ * @param type PUS type of the TM
+ * @param subtype PUS subtype of the TM
+ * @param tm_count Telemetry packet sequence count
+ * @param current_obt Current onboard time to timestamp the packet
+ */
+function close_tm (tm_handler : &mut TMHandler, type : u8, subtype : u8, tm_count : u16, current_obt: CUCTime) {
+
+    tm_handler_build_packet_header(tm_handler, tm_count);
+    tm_handler_build_df_header(tm_handler, type, subtype, current_obt);
+
+    ccsds_pus_tm_set_fields(&mut (tm_handler->tm_descriptor.tm_bytes[0 .. 19]), &(tm_handler->packet_header), &(tm_handler->df_header));
+
+    tm_handler->tm_descriptor.tm_num_bytes = tm_handler->packet_header.packet_length as usize + 7;
+
+    return;
+}
+
+
+/**
+ * @brief Initializes the TM handler before building a packet
+ *
+ * Sets up the TM descriptor length and resets the app data index
+ * to the start of the application data section.
+ *
+ * @param tm_handler Pointer to the TM handler
+ */
+function startup_tm (tm_handler : &mut TMHandler){
+
+    tm_handler->tm_descriptor.tm_num_bytes = max_send_size;
+    tm_handler->app_data_index = tm_app_data_offset;
+
+    return;
+}
+
+
+
+
+
+
+

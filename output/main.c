@@ -36,16 +36,6 @@ static void termina__app__init_tasks(termina__error_code_t * const status) {
 
     }
 
-    if (termina__error__none == *status) {
-        
-        tc_rx_bottom_half_task._task_id = tc_rx_bottom_half_task__task_id;
-
-        tc_rx_bottom_half_task._task_msg_queue_id = tc_rx_bottom_half_task__task_msg_queue_id;
-
-        termina__task__init(tc_rx_bottom_half_task__task_id, 4, 4096U, &termina__task_entry__CTXRxBottomHalfTask, &tc_rx_bottom_half_task, status);
-
-    }
-
 }
 
 static void termina__app__init_handlers(void) {
@@ -78,7 +68,7 @@ static void termina__app__init_emitters(termina__error_code_t * const status) {
         interrupt_connection.type = termina__emitter_connection_type__handler;
         interrupt_connection.handler.handler_object = (void *)&uart_hdlr;
         interrupt_connection.handler.handler_id = uart_hdlr__handler_id;
-        interrupt_connection.handler.handler_action = &CCharDevIRQHandler__irq_handler;
+        interrupt_connection.handler.handler_action = &CTMTCFrameIRQHandler__irq_handler;
 
         termina__interrupt__init(2, irq_2__emitter_id, &interrupt_connection, status);
 
@@ -96,42 +86,6 @@ static void termina__app__init_mutexes(termina__error_code_t * const status) {
     protocol.Ceiling._0 = 5;
 
     termina__mutex__init(obt_manager__mutex_id, protocol, status);
-
-    if (termina__error__none == *status) {
-        
-        protocol._variant = MutexProtocol__Ceiling;
-        protocol.Ceiling._0 = 4;
-
-        termina__mutex__init(tc_pool__mutex_id, protocol, status);
-
-    }
-
-    if (termina__error__none == *status) {
-        
-        protocol._variant = MutexProtocol__Ceiling;
-        protocol.Ceiling._0 = 5;
-
-        termina__mutex__init(tm_channel__mutex_id, protocol, status);
-
-    }
-
-    if (termina__error__none == *status) {
-        
-        protocol._variant = MutexProtocol__Ceiling;
-        protocol.Ceiling._0 = 5;
-
-        termina__mutex__init(tm_counter__mutex_id, protocol, status);
-
-    }
-
-    if (termina__error__none == *status) {
-        
-        protocol._variant = MutexProtocol__Ceiling;
-        protocol.Ceiling._0 = 5;
-
-        termina__mutex__init(tm_pool__mutex_id, protocol, status);
-
-    }
 
 }
 
@@ -157,13 +111,7 @@ static void termina__app__init_msg_queues(termina__error_code_t * const status) 
     
     *status = termina__error__none;
 
-    termina__msg_queue__init(tc_rx_bottom_half_task__task_msg_queue_id, sizeof(termina__event_t), 10U, status);
-
-    if (termina__error__none == *status) {
-        
-        termina__msg_queue__init(obdh_manager__task_msg_queue_id, sizeof(termina__event_t), 10U + 5U, status);
-
-    }
+    termina__msg_queue__init(obdh_manager__task_msg_queue_id, sizeof(termina__event_t), 10U + 5U, status);
 
     if (termina__error__none == *status) {
         
@@ -186,12 +134,6 @@ static void termina__app__init_msg_queues(termina__error_code_t * const status) 
     if (termina__error__none == *status) {
         
         termina__msg_queue__init(tc_message_queue__channel_msg_queue_id, sizeof(termina__box_t), 10U, status);
-
-    }
-
-    if (termina__error__none == *status) {
-        
-        termina__msg_queue__init(rx_task_message_queue__channel_msg_queue_id, sizeof(size_t), 10U, status);
 
     }
 
@@ -220,21 +162,15 @@ static void termina__app__enable_protection(void) {
     obt_manager._lock_type.type = termina__resource_lock_type__mutex;
     obt_manager._lock_type.mutex.mutex_id = obt_manager__mutex_id;
 
-    tc_channel._lock_type.type = termina__resource_lock_type__irq;
+    tm_counter._lock_type.type = termina__resource_lock_type__irq;
 
-    tm_channel._lock_type.type = termina__resource_lock_type__mutex;
-    tm_channel._lock_type.mutex.mutex_id = tm_channel__mutex_id;
-
-    tm_counter._lock_type.type = termina__resource_lock_type__mutex;
-    tm_counter._lock_type.mutex.mutex_id = tm_counter__mutex_id;
+    tm_frame_transmitter._lock_type.type = termina__resource_lock_type__irq;
 
     uart_drv._lock_type.type = termina__resource_lock_type__irq;
 
-    tc_pool._lock_type.type = termina__resource_lock_type__mutex;
-    tc_pool._lock_type.mutex.mutex_id = tc_pool__mutex_id;
+    tc_pool._lock_type.type = termina__resource_lock_type__irq;
 
-    tm_pool._lock_type.type = termina__resource_lock_type__mutex;
-    tm_pool._lock_type.mutex.mutex_id = tm_pool__mutex_id;
+    tm_pool._lock_type.type = termina__resource_lock_type__irq;
 
 }
 
@@ -260,13 +196,6 @@ static void termina__app__init_channel_connections(void) {
     hkfdir_message_queue.port_id = CHousekeepingFDIRTask__hkfdir_message_queue_input;
 
     hk_fdir.hkfdir_message_queue_input = hkfdir_message_queue__channel_msg_queue_id;
-
-    rx_task_message_queue.task_id = tc_rx_bottom_half_task__task_id;
-    rx_task_message_queue.task_msg_queue_id = tc_rx_bottom_half_task__task_msg_queue_id;
-    rx_task_message_queue.channel_msg_queue_id = rx_task_message_queue__channel_msg_queue_id;
-    rx_task_message_queue.port_id = CTXRxBottomHalfTask__frame_ready_input;
-
-    tc_rx_bottom_half_task.frame_ready_input = rx_task_message_queue__channel_msg_queue_id;
 
     tc_message_queue.task_id = obdh_manager__task_id;
     tc_message_queue.task_msg_queue_id = obdh_manager__task_msg_queue_id;

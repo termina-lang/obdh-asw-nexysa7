@@ -3,8 +3,6 @@
 
 PeriodicTimer hk_fdir_timer;
 
-termina__msg_queue_t rx_task_message_queue;
-
 termina__msg_queue_t tc_message_queue;
 
 termina__msg_queue_t hkfdir_message_queue;
@@ -17,19 +15,25 @@ termina__pool_t tm_pool;
 
 termina__pool_t tc_pool;
 
+termina__box_t termina__deque_items__tc_frame_deque[1U];
+termina__deque_t tc_frame_deque;
+
+termina__box_t termina__deque_items__tm_frame_deque[10U];
+termina__deque_t tm_frame_deque;
+
 _Atomic uint32_t u32_system_data_pool[12U];
 
 _Atomic uint8_t u8_system_data_pool[18U];
 
-CTCChannel tc_channel;
+CTCFrameReceiver tc_frame_receiver;
 
 CAPBUARTDriver uart_drv;
 
 CGPIODriver gpio_drv;
 
-CTMChannel tm_channel;
-
 CTMCounter tm_counter;
+
+CTMFrameTransmitter tm_frame_transmitter;
 
 COBTManager obt_manager;
 
@@ -53,6 +57,8 @@ CPUSService128 pus_service_128;
 
 CPUSService2 pus_service_2;
 
+CNexysA7Memory memory_drv;
+
 CPUSService6 pus_service_6;
 
 CPUSService4 pus_service_4;
@@ -61,9 +67,7 @@ CManagerTExecutor mng_tc_executor;
 
 CInitHandler init_hdlr;
 
-CCharDevIRQHandler uart_hdlr;
-
-CTXRxBottomHalfTask tc_rx_bottom_half_task;
+CTMTCFrameIRQHandler uart_hdlr;
 
 COBDHManagerTask obdh_manager;
 

@@ -1,0 +1,368 @@
+/** @file pus_service1_help.fin
+ *  @brief Functions and structures related to TC (Telecommand) packet validation and TM[1,x] failure report generation.
+ */
+
+import checksum.crc16;
+import obdh.pus.tm_handler;
+
+/** @brief Acknowledgement flag for TC[1,x] Accept Acknowledgement. */
+const ACCEPT_ACK_ENABLED_MASK : u8 = 0x01;
+/** @brief Acknowledgement flag for TC[1,x] Execution Start Acknowledgement. */
+const EXEC_START_ACK_ENABLED_MASK : u8 = 0x02;
+/** @brief Acknowledgement flag for TC[1,x] Execution Progress Acknowledgement. */
+const EXEC_PROGRESS_ACK_ENABLED_MASK : u8 = 0x04;
+/** @brief Acknowledgement flag for TC[1,x] Execution Completion Acknowledgement. */
+const EXEC_COMPLETION_ACK_ENABLED_MASK : u8 = 0x08;
+
+/**
+ * @enum TCAcceptationStatus
+ * @brief statusrepresenting whether a telecommand has been accepted or rejected.
+ */
+enum TCAcceptationStatus{
+    Accepted,      /**< TC accepted */
+    Rejected       /**< TC rejected */
+};
+
+/**
+ * @enum TCErrorType
+ * @brief Enumeration of possible error types for TC verification failures.
+ */
+enum TCErrorType {
+    CRCError,      /**< CRC mismatch error */
+    APIDError,     /**< Incorrect APID */
+    SourceIDError, /**< Incorrect source ID */
+    TypeError,     /**< Invalid packet type */
+    SubTypeError,  /**< Invalid packet subtype */
+    Undefined      /**< Undefined error */
+};
+
+/**
+ * @enum TCExecutionCtrl
+ * @brief Represents the type of execution control associated with a TC.
+ */
+enum TCExecutionCtrl {
+    ExecCtrlPrioTC,       /**< Priority command */
+    ExecCtrlHK_FDIRTC,    /**< Housekeeping or FDIR command */
+    ExecCtrlBKGTC,        /**< Background command */
+    Undefined             /**< Undefined execution control */
+};
+
+/**
+ * @struct TCStatus
+ * @brief Encapsulates the statusof a TC verification and execution status.
+ */
+
+ 
+struct TCStatus{
+    acceptation_status: TCAcceptationStatus;  /**< Acceptation status */
+    execution_status: TCExecutionCtrl;        /**< Execution control type */
+    error_code : TCErrorType;                  /**< Error code (if any) */
+};
+
+/**
+ * @enum TCVerifyStage
+ * @brief Represents the verification stage for which a TM[1,x] response is issued.
+ */
+enum TCVerifyStage {
+    Acceptation,     /**< Acceptation stage */
+    ExecStart,       /**< Start of execution */
+    Progress,        /**< Execution progress */
+    ExecCompletion   /**< Completion of execution */
+};
+
+/**
+ * @brief Verifies if the CRC of the given TC packet is valid.
+ * @param tc_descriptor Pointer to the telecommand descriptor.
+ * @return true if CRC is valid, false otherwise.
+ */
+function is_crc_valid(tc_descriptor : &TCDescriptor) -> bool {
+
+    let cal_crc_value : u16 = cal_crc_16(&(tc_descriptor->tc_bytes), (tc_descriptor->tc_num_bytes - 2));
+    var packet_error_ctrl : u16 = get_packet_seq_ctrl(&(tc_descriptor->tc_bytes));
+
+    var is_valid : bool = (cal_crc_value == packet_error_ctrl);
+
+    return is_valid;
+}
+
+
+/**
+ * @brief Validates the APID of the TC packet.
+ * @param tc_descriptor Pointer to the telecommand descriptor.
+ * @return true if the APID matches the expected value.
+ */
+function is_apid_valid(tc_descriptor : &TCDescriptor) -> bool {
+    
+    let epd_apid : u16 = 0x32C : u16;
+    var tc_apid : u16 = get_APID(&(tc_descriptor->tc_bytes));
+    
+    var is_valid : bool = (epd_apid == tc_apid);
+
+    return is_valid;
+}
+
+
+/**
+ * @brief Validates the Source ID field of the TC packet.
+ * @param tc_descriptor Pointer to the telecommand descriptor.
+ * @return true if Source ID is valid.
+ */
+function is_sourceID_valid(tc_descriptor : &TCDescriptor) -> bool {
+    
+    let System_SourceID : u16 = 0x78;
+
+    var sourceID : u16 = get_source_id(&(tc_descriptor->tc_bytes));
+
+    var is_valid : bool = (System_SourceID == sourceID);
+
+    return is_valid;
+}
+
+
+/**
+ * @brief Checks if Acceptation Acknowledgement is enabled in the flag byte.
+ * @param flags_ack The acknowledgement flags byte.
+ * @return true if acceptation acknowledgement is enabled.
+ */
+function is_tc_ack_accept_enabled(flags_ack : u8) -> bool{
+
+    var ack_enabled : bool = false;
+
+    if ((flags_ack & ACCEPT_ACK_ENABLED_MASK) != 0) {
+        ack_enabled = true;
+    }
+    return ack_enabled;
+
+}
+
+
+
+/**
+ * @brief Checks if Execution Start Acknowledgement is enabled.
+ * @param flags_ack The acknowledgement flags byte.
+ * @return true if execution start acknowledgement is enabled.
+ */
+function is_tc_ack_start_exec_enabled(flags_ack : u8) -> bool{
+
+    var ack_enabled : bool = false;
+    
+    if ((flags_ack & EXEC_START_ACK_ENABLED_MASK) != 0) {
+        ack_enabled = true;
+    }
+    return ack_enabled;
+
+}
+
+
+/**
+ * @brief Checks if Execution Progress Acknowledgement is enabled.
+ * @param flags_ack The acknowledgement flags byte.
+ * @return true if execution progress acknowledgement is enabled.
+ */
+function is_tc_ack_progress_exec_enabled(flags_ack : u8) -> bool{
+
+    var ack_enabled : bool = false;
+    
+    if ((flags_ack & EXEC_PROGRESS_ACK_ENABLED_MASK) != 0) {
+        ack_enabled = true;
+    }
+    return ack_enabled;
+
+}
+
+
+/**
+ * @brief Checks if Execution Completion Acknowledgement is enabled.
+ * @param flags_ack The acknowledgement flags byte.
+ * @return true if execution completion acknowledgement is enabled.
+ */
+function is_tc_ack_completion_exec_enabled(flags_ack : u8) -> bool{
+
+    var ack_enabled : bool = false;
+    
+    if ((flags_ack & EXEC_COMPLETION_ACK_ENABLED_MASK) != 0) {
+        ack_enabled = true;
+    }
+    return ack_enabled;
+
+}
+
+
+/**
+ * @brief Maps a TC verification stage to the corresponding failure TM[1,x] subtype.
+ * @param verify_stage The verification stage.
+ * @return The corresponding TM subtype.
+ */
+function get_failure_subtype (verify_stage : TCVerifyStage) -> u8 {
+
+    var subtype : u8;
+
+    match verify_stage {
+        case Acceptation => {
+            subtype = 2;
+        }
+        case ExecStart => {
+            subtype = 4;
+        }
+        case Progress => {
+            subtype = 6;
+        }
+        case ExecCompletion => {
+            subtype = 8;
+        }
+    }
+
+    return subtype;
+}
+
+
+
+/**
+ * @brief Builds a TM[1,x] packet with no additional failure data fields.
+ * @param p_tm_handler Reference to the TM handler structure.
+ * @param tm_seq_counter TM sequence counter.
+ * @param tc_packet_id The TC packet ID.
+ * @param tc_packet_seq_ctrl The TC packet sequence control.
+ * @param verify_stage The TC verification stage.
+ * @param failure_code The failure reason code.
+ * @param current_obt The current onboard time.
+ * @param status status container.
+ */
+function build_tm_1_X_no_failure_data(p_tm_handler : &mut TMHandler, tm_seq_counter : u16, tc_packet_id : u16, 
+            tc_packet_seq_ctrl: u16, verify_stage : TCVerifyStage, failure_code : u8, current_obt : CUCTime) -> Status<TMHandlerError> {
+
+    var subtype : u8 = get_failure_subtype(verify_stage);
+
+    startup_tm(p_tm_handler);
+    var status : Status<TMHandlerError> = append_u16_appdata_field(p_tm_handler, tc_packet_id);
+    if (status is Success){
+        status = append_u16_appdata_field(p_tm_handler, tc_packet_seq_ctrl);
+    }
+    if(status is Success){
+        status = append_u8_appdata_field(p_tm_handler, failure_code);
+    }
+    if (status is Success){
+        close_tm(p_tm_handler, 1, subtype, tm_seq_counter, current_obt);
+    }
+
+    return status;
+}
+
+
+/**
+ * @brief Builds a TM[1,x] packet including one u8 failure data field.
+ * @param failure_data Failure-specific data (u8).
+ */
+function build_tm_1_X_u8_failure_data(p_tm_handler : &mut TMHandler, tm_seq_counter : u16, tc_packet_id : u16,
+         tc_packet_seq_ctrl: u16, verify_stage : TCVerifyStage, failure_code : u8, failure_data : u8, current_obt : CUCTime) -> Status<TMHandlerError> {
+
+    var subtype : u8 = get_failure_subtype(verify_stage);
+
+    startup_tm(p_tm_handler);
+    var status : Status<TMHandlerError> = append_u16_appdata_field(p_tm_handler, tc_packet_id);
+    if (status is Success){
+        status = append_u16_appdata_field(p_tm_handler, tc_packet_seq_ctrl);
+    }
+    if (status is Success){
+        status = append_u8_appdata_field(p_tm_handler, failure_code);
+    }
+    if (status is Success){
+        status = append_u8_appdata_field(p_tm_handler, failure_data);
+    }
+    if (status is Success){
+        close_tm(p_tm_handler, 1, subtype, tm_seq_counter, current_obt);
+    }
+
+    return status;
+}
+
+
+/**
+ * @brief Builds a TM[1,x] packet including one u16 failure data field.
+ * @param failure_data Failure-specific data (u16).
+ */
+function build_tm_1_X_u16_failure_data(p_tm_handler : &mut TMHandler, tm_seq_counter : u16, tc_packet_id : u16,
+         tc_packet_seq_ctrl: u16, verify_stage : TCVerifyStage, failure_code : u8, failure_data : u16, current_obt : CUCTime) -> Status<TMHandlerError> {
+
+    var subtype : u8 = get_failure_subtype(verify_stage);
+
+    startup_tm(p_tm_handler);
+    var status : Status<TMHandlerError> = append_u16_appdata_field(p_tm_handler, tc_packet_id);
+    if (status is Success){
+        status = append_u16_appdata_field(p_tm_handler, tc_packet_seq_ctrl);
+    }
+    if(status is Success){
+        status = append_u8_appdata_field(p_tm_handler, failure_code);
+    }
+    if (status is Success){
+        status = append_u16_appdata_field(p_tm_handler, failure_data);
+    }
+    if (status is Success){
+        close_tm(p_tm_handler, 1, subtype, tm_seq_counter, current_obt);
+    }
+
+    return status;
+}
+
+
+/**
+ * @brief Builds a TM[1,x] packet including one u32 failure data field.
+ * @param failure_data Failure-specific data (u32).
+ */
+function build_tm_1_X_u32_failure_data(p_tm_handler : &mut TMHandler, tm_seq_counter : u16, tc_packet_id : u16, tc_packet_seq_ctrl: u16,
+         verify_stage : TCVerifyStage, failure_code : u8, failure_data : u32, current_obt : CUCTime) -> Status<TMHandlerError> {
+
+    var subtype : u8 = get_failure_subtype(verify_stage);
+
+    startup_tm(p_tm_handler);
+    var status : Status<TMHandlerError> = append_u16_appdata_field(p_tm_handler, tc_packet_id);
+    if (status is Success){
+        status = append_u16_appdata_field(p_tm_handler, tc_packet_seq_ctrl);
+    }
+    if (status is Success){
+        status = append_u8_appdata_field(p_tm_handler, failure_code);
+    }
+    if (status is Success){
+        status = append_u32_appdata_field(p_tm_handler, failure_data);
+    }
+    if (status is Success){
+        close_tm(p_tm_handler, 1, subtype, tm_seq_counter, current_obt);
+    }
+
+    return status;
+}
+
+
+
+/**
+ * @brief Builds a TM[1,x] packet including one u8 and one u32 failure data fields.
+ * @param failure_data1 First failure data (u8).
+ * @param failure_data2 Second failure data (u32).
+ */
+function build_tm_1_X_u8_u32_failure_data(p_tm_handler : &mut TMHandler, tm_seq_counter : u16, tc_packet_id : u16, tc_packet_seq_ctrl: u16,
+                     verify_stage : TCVerifyStage, failure_code : u8, failure_data1 : u8, failure_data2 : u32, current_obt : CUCTime) -> Status<TMHandlerError> {
+
+    var subtype : u8 = get_failure_subtype(verify_stage);
+
+    startup_tm(p_tm_handler);
+    var status : Status<TMHandlerError> = append_u16_appdata_field(p_tm_handler, tc_packet_id);
+    if (status is Success){
+        status = append_u16_appdata_field(p_tm_handler, tc_packet_seq_ctrl);
+    }
+    if (status is Success){
+        status = append_u8_appdata_field(p_tm_handler, failure_code);
+    }
+    if (status is Success){
+        status = append_u8_appdata_field(p_tm_handler, failure_data1);
+    }
+    if (status is Success){
+        status = append_u32_appdata_field(p_tm_handler, failure_data2);
+    }
+    if (status is Success){
+        close_tm(p_tm_handler, 1, subtype, tm_seq_counter, current_obt);
+    }
+
+    return status;
+}
+
+

@@ -1,0 +1,182 @@
+import obdh.pus.tc_packet;
+
+
+/**
+ * @enum TCHandlerError
+ * @brief Errors when reading the application data of a TC packet.
+ */
+enum TCHandlerError {
+    AppDataOutOfRange     /**< The field goes beyond the end of the application data */
+};
+
+
+/**
+ * @brief Structure to handle telecommands (TC) and facilitate field extraction
+ *
+ * This structure holds the parsed components of a TC packet, including headers and
+ * indexing information for accessing application data fields.
+ */
+struct TCHandler {
+    tc_descriptor : TCDescriptor;                 ///< Raw telecommand descriptor
+    packet_header : CCSDSPUSTCPacketHeader;       ///< CCSDS primary header
+    df_header : CCSDSPUSTCDFHeader;               ///< PUS data field header
+    packet_error_ctrl : u16;                       ///< Error control field
+    app_data_index : usize;                        ///< Index to the next application data byte
+};
+
+
+/**
+ * @brief Initializes a TC handler structure with default values
+ *
+ * @return A new TCHandler instance with all fields set to zero or empty
+ */
+constexpr tc_handler_init : TCHandler  = {
+    tc_descriptor = {
+        tc_bytes = [0; max_tc_size],
+        tc_num_bytes = 0
+    }, 
+    packet_header = {
+        packet_id = 0,
+        packet_seq_ctrl = 0,
+        packet_length = 0
+    },
+    df_header = {
+        flag_ver_ack = 0,
+        type = 0,
+        subtype = 0,
+        sourceID = 0
+    },
+    packet_error_ctrl = 0,
+    app_data_index = 0
+};
+
+/**
+ * @brief Fills a TC handler with data from a telecommand descriptor
+ *
+ * Parses the TC header and DF header and sets the internal app data index.
+ *
+ * @param tc_handler Pointer to the TC handler structure to populate
+ * @param telecommand Pointer to the telecommand descriptor to parse
+ */
+function tc_handler_build(tc_handler : &mut TCHandler) {
+
+    tc_get_fields(&(tc_handler->tc_descriptor.tc_bytes), 
+                  &mut (tc_handler->packet_header), 
+                  &mut (tc_handler->df_header), 
+                  &mut (tc_handler->packet_error_ctrl));
+
+    tc_handler->app_data_index = 11;
+
+    return;
+
+}
+
+/**
+ * @brief Checks if the next application data field can be read safely
+ *
+ * @param tc_handler Pointer to the TC handler
+ * @param field_size Number of bytes to check
+ *
+ * @return true if enough bytes are available, false otherwise
+ */
+function tc_handler_is_valid_next_appdata_field (tc_handler : &TCHandler, field_size : usize) -> bool {
+
+    var res : bool = false;
+
+    var required_size : usize = tc_handler->app_data_index + field_size;
+
+    if (required_size <= tc_handler->tc_descriptor.tc_num_bytes){ 
+        res = true;
+    }
+
+    return res;
+
+}
+
+
+/**
+ * @brief Extracts a single byte from the application data
+ *
+ * Advances the internal application data index by 1 if successful.
+ *
+ * @param tc_handler Pointer to the TC handler
+ * @param data Output parameter to store the extracted byte
+ *
+ * @return Success, or Failure(TCHandlerError::AppDataOutOfRange) if the field goes beyond the application data
+ */
+function tc_handler_get_u8_appdata_field (tc_handler : &mut TCHandler, data : &mut u8) -> Status<TCHandlerError> {
+
+    var status : Status<TCHandlerError> = Success;
+
+    if (tc_handler_is_valid_next_appdata_field(&(*tc_handler), 1)){
+
+    *data = tc_handler->tc_descriptor.tc_bytes[tc_handler->app_data_index];
+    tc_handler->app_data_index = tc_handler->app_data_index + 1;
+
+    } else {
+
+        status = Failure(TCHandlerError::AppDataOutOfRange);
+
+    }
+
+    return status;
+
+}
+
+/**
+ * @brief Extracts a 16-bit unsigned integer from the application data
+ *
+ * Advances the internal application data index by 2 if successful.
+ *
+ * @param tc_handler Pointer to the TC handler
+ * @param data Output parameter to store the extracted 16-bit word
+ *
+ * @return Success, or Failure(TCHandlerError::AppDataOutOfRange) if the field goes beyond the application data
+ */
+function tc_handler_get_u16_appdata_field (tc_handler : &mut TCHandler, data : &mut u16) -> Status<TCHandlerError> {
+
+    var status : Status<TCHandlerError> = Success;
+
+    if (tc_handler_is_valid_next_appdata_field(&(*tc_handler), 2)){
+
+        *data = deserialize_uint16(&tc_handler->tc_descriptor.tc_bytes[tc_handler->app_data_index..tc_handler->app_data_index + 2]);
+        tc_handler->app_data_index = tc_handler->app_data_index + 2;
+
+    } else {
+
+        status = Failure(TCHandlerError::AppDataOutOfRange);
+
+    }
+    
+    return status;
+
+}
+
+/**
+ * @brief Extracts a 32-bit unsigned integer from the application data
+ *
+ * Advances the internal application data index by 4 if successful.
+ *
+ * @param tc_handler Pointer to the TC handler
+ * @param data Output parameter to store the extracted 32-bit word
+ *
+ * @return Success, or Failure(TCHandlerError::AppDataOutOfRange) if the field goes beyond the application data
+ */
+function tc_handler_get_u32_appdata_field (tc_handler : &mut TCHandler, data : &mut u32) -> Status<TCHandlerError> {
+
+    var status : Status<TCHandlerError> = Success;
+
+    if (tc_handler_is_valid_next_appdata_field(&(*tc_handler), 4)){
+
+        *data = deserialize_uint32(&tc_handler->tc_descriptor.tc_bytes[tc_handler->app_data_index..tc_handler->app_data_index + 4]);
+        tc_handler->app_data_index = tc_handler->app_data_index + 4;
+
+    } else {
+
+        status = Failure(TCHandlerError::AppDataOutOfRange);
+
+    }
+
+    return status;
+
+}

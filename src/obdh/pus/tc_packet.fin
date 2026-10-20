@@ -1,0 +1,208 @@
+import encoding.binary;
+
+
+/**
+ * @brief Maximum size in bytes of a TC packet
+ */
+constexpr max_tc_size : usize = 256 : usize;
+
+/**
+ * @brief CCSDS PUS TC Packet Header structure
+ */
+struct CCSDSPUSTCPacketHeader {
+
+    packet_id : u16;        /**< Packet identifier */
+    packet_seq_ctrl : u16;    /**< Packet sequence control */
+    packet_length : u16;     /**< Packet length */
+
+};
+
+
+/**
+ * @brief CCSDS PUS TC Data Field Header structure
+ */
+struct CCSDSPUSTCDFHeader {
+
+    flag_ver_ack : u8;    /**< Flag for version and acknowledgment */
+    type : u8;            /**< Packet type */
+    subtype : u8;        /**< Packet subtype */
+    sourceID : u16;        /**< Source identifier */
+
+};
+
+/**
+ * @brief Descriptor for a TC packet containing data bytes and size
+ */
+ struct TCDescriptor {
+
+    tc_bytes : [u8 ; max_tc_size];    /**< Bytes of the TC packet */
+    tc_num_bytes : usize;            /**< Number of bytes in the TC packet */
+
+ };
+
+/**
+ * @brief Extract the Packet ID field from the TC bytes
+ * 
+ * @param tc_bytes Byte array representing the TC packet
+ * @return u16 Packet ID extracted from bytes 0-1
+ */
+ function get_packet_id(tc_bytes : &[u8 ; max_tc_size]) -> u16 {
+
+    var packet_id : u16 = deserialize_uint16(&(*tc_bytes)[0 : usize .. 2 : usize]);
+    return packet_id;
+
+ }
+
+
+/**
+ * @brief Extract the APID (Application Process ID) from the Packet ID
+ * 
+ * @param tc_bytes Byte array representing the TC packet
+ * @return u16 APID (11 least significant bits of packet ID)
+ */
+function get_APID(tc_bytes : &[u8 ; max_tc_size]) -> u16 {
+
+    var packet_id : u16 = get_packet_id(tc_bytes);
+
+    return ((packet_id) & 0x07FF : u16);
+}
+
+
+/**
+ * @brief Extract the sequence flags (2 most significant bits) from the packet sequence control field
+ * 
+ * @param packet_seq_ctrl Packet sequence control field
+ * @return u16 Sequence flags bits
+ */
+function get_seq_flags(packet_seq_ctrl : u16) -> u16 {
+
+    return ((packet_seq_ctrl) >> 14 : u16);
+} 
+
+
+/**
+ * @brief Extract the sequence count (14 least significant bits) from the packet sequence control field
+ * 
+ * @param packet_seq_ctrl Packet sequence control field
+ * @return u16 Sequence count bits
+ */
+function get_seq_count(packet_seq_ctrl : u16) -> u16 {
+
+    return ((packet_seq_ctrl) & 0x3FFF : u16);
+}
+
+/**
+ * @brief Extract the packet length field from the TC bytes
+ * 
+ * @param tc_bytes Byte array representing the TC packet
+ * @return u16 Packet length extracted from bytes 4-5
+ */
+function get_packet_length(tc_bytes : &[u8 ; max_tc_size]) -> u16 {
+
+    return (deserialize_uint16(&(*tc_bytes)[4 : usize .. 6 : usize]));
+}
+
+
+/**
+ * @brief Extract the packet error control field from the TC bytes
+ * 
+ * @param tc_bytes Byte array representing the TC packet
+ * @return u16 Packet error control (CRC) field
+ */
+function get_packet_seq_ctrl(tc_bytes : &[u8 ; max_tc_size]) -> u16 {
+
+    let crc_offset : u16 = get_packet_length(tc_bytes) + 5 : u16;
+    var packet_error_ctrl : u16 = deserialize_uint16(&(*tc_bytes)[crc_offset as usize .. (crc_offset + 2) as usize]);
+
+    return packet_error_ctrl;
+}
+
+/**
+ * @brief Extract the acknowledgment (ACK) value from the flag_ver_ack byte
+ * 
+ * @param flag_ver_ack Byte containing flags for version and acknowledgment
+ * @return u8 ACK value (lowest 4 bits)
+ */
+function get_ack(flag_ver_ack : u8) -> u8 {
+
+    return ((flag_ver_ack) & 0x0F : u8);
+} 
+
+/**
+ * @brief Extract the 'type' field from the TC bytes
+ * 
+ * @param tc_bytes Byte array representing the TC packet
+ * @return u8 Packet type (byte 7)
+ */
+function get_type(tc_bytes : &[u8 ; max_tc_size]) -> u8 {
+
+    var type : u8 = (*tc_bytes)[7 : usize];
+    return type;
+}
+
+/**
+ * @brief Extract the 'subtype' field from the TC bytes
+ * 
+ * @param tc_bytes Byte array representing the TC packet
+ * @return u8 Packet subtype (byte 8)
+ */
+function get_subtype(tc_bytes : &[u8 ; max_tc_size]) -> u8 {
+
+    var subtype : u8 = (*tc_bytes)[8 : usize];
+    return subtype;
+}
+
+
+/**
+ * @brief Extract the sourceID field from the TC bytes
+ * 
+ * @param tc_bytes Byte array representing the TC packet
+ * @return u16 Source identifier extracted from bytes 9-10
+ */
+function get_source_id(tc_bytes : &[u8 ; max_tc_size]) -> u16 {
+
+    var sourceID : u16 = deserialize_uint16(&(*tc_bytes)[9 : usize .. 11 : usize]);
+    return sourceID;
+}
+
+
+/**
+ * @brief Parses and fills the fields of the TC packet header, data field header, and packet error control from the TC byte array
+ * 
+ * @param tc_bytes Byte array representing the TC packet
+ * @param p_tc_packet_header Pointer to a structure to store the TC packet header fields
+ * @param p_tc_df_header Pointer to a structure to store the TC data field header fields
+ * @param p_tc_packet_err_ctrl Pointer to store the packet error control field
+ */
+function tc_get_fields(tc_bytes : &[u8 ; max_tc_size],
+                      p_tc_packet_header : &mut CCSDSPUSTCPacketHeader,
+                      p_tc_df_header : &mut CCSDSPUSTCDFHeader,
+                      p_tc_packet_err_ctrl : &mut u16) {
+
+    // Deserialize Packet ID and store it into field packet_id
+    p_tc_packet_header->packet_id = deserialize_uint16(&(*tc_bytes)[0 : usize .. 2 : usize]);
+
+    // Deserialize Packet Sequence Control and store it into field packet_seq_ctrl
+    p_tc_packet_header->packet_seq_ctrl = deserialize_uint16(&(*tc_bytes)[2 : usize .. 4 : usize]);
+
+    // Deserialize Packet Length and store it into field packet_length
+    p_tc_packet_header->packet_length = deserialize_uint16(&(*tc_bytes)[4 : usize .. 6 : usize]);
+
+    // Read the MSB of the Data Field Header and store it into flag_ver_ack
+    p_tc_df_header->flag_ver_ack = (*tc_bytes)[6 : usize];
+
+    // Read the remaining fields of the Data Field Header into the struct
+    p_tc_df_header->type = (*tc_bytes)[7 : usize];
+    p_tc_df_header->subtype = (*tc_bytes)[8 : usize];
+    p_tc_df_header->sourceID = deserialize_uint16(&(*tc_bytes)[9 : usize .. 11 : usize]);
+
+    // Deserialize Packet Error Control and store it at p_tc_packet_err_ctrl
+    var packet_error_ctrl : [u8 ; 2] = [0 : u8 ; 2];
+    packet_error_ctrl[0 : usize] = (*tc_bytes)[((*p_tc_packet_header).packet_length + 5 : u16) as usize];
+    packet_error_ctrl[1 : usize] = (*tc_bytes)[((*p_tc_packet_header).packet_length + 6 : u16) as usize];
+
+    *p_tc_packet_err_ctrl = deserialize_uint16(&packet_error_ctrl);
+
+    return;
+}
+

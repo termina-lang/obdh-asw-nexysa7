@@ -1,0 +1,67 @@
+/**
+ * @brief Size of the buffers that read and write copy from and to.
+ */
+constexpr max_memory_access_length : usize = 256 : usize;
+
+/**
+ * @enum MemAccessError
+ * @brief Reasons why a memory access is refused.
+ */
+enum MemAccessError {
+    InvalidAccess,    /**< Memory identifier or range out of the regions of the board */
+    ReadOnly          /**< Write to a region that cannot be written */
+};
+
+/**
+ * @interface IByteMemoryAccess
+ * @brief Access to byte-addressable memory regions of the board.
+ *
+ * Each region is identified by a memory identifier, and an address is an
+ * offset from the start of its region. The implementation knows the size of
+ * every region and whether it can be written. check_access validates a range
+ * once; read, write and checksum do not check it again.
+ */
+interface IByteMemoryAccess {
+
+    /**
+     * @brief Checks that a range lies in a region and, for a write, that the region can be written.
+     * @param[in] mem_id Memory identifier.
+     * @param[in] address Offset of the first byte from the start of the region.
+     * @param[in] length Number of bytes.
+     * @param[in] write True if the range is going to be written.
+     * @param[out] result Success, or the reason why the access is refused.
+     */
+    procedure check_access(&self, mem_id : u8, address : usize, length : usize,
+                           write : bool, result : &mut Status<MemAccessError>);
+
+    /**
+     * @brief Copies a range of memory to the start of a buffer. Precondition: check_access has accepted the range.
+     * @param[in] mem_id Memory identifier.
+     * @param[in] address Offset of the first byte from the start of the region.
+     * @param[in] length Number of bytes.
+     * @param[out] dst Buffer that receives the bytes.
+     */
+    procedure read(&self, mem_id : u8, address : usize, length : usize,
+                   dst : &mut [u8; max_memory_access_length]);
+
+    /**
+     * @brief Copies the start of a buffer to a range of memory. Precondition: check_access has accepted the range for a write.
+     * @param[in] mem_id Memory identifier.
+     * @param[in] address Offset of the first byte from the start of the region.
+     * @param[in] length Number of bytes.
+     * @param[in] src Buffer that holds the bytes.
+     */
+    procedure write(&mut self, mem_id : u8, address : usize, length : usize,
+                    src : &[u8; max_memory_access_length]);
+
+    /**
+     * @brief Computes the CRC-16-CCITT of a range of memory. Precondition: check_access has accepted the range.
+     * @param[in] mem_id Memory identifier.
+     * @param[in] address Offset of the first byte from the start of the region.
+     * @param[in] length Number of bytes.
+     * @param[out] checksum CRC-16-CCITT of the range, as computed by checksum.crc16.
+     */
+    procedure checksum(&self, mem_id : u8, address : usize, length : usize,
+                       checksum : &mut u16);
+
+};

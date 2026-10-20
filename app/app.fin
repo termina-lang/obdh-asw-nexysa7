@@ -1,35 +1,36 @@
 
-import service_libraries.pus_services.pus_service1;
-import service_libraries.pus_services.pus_service2;
-import service_libraries.pus_services.pus_service3;
-import service_libraries.pus_services.pus_service5;
-import service_libraries.pus_services.pus_service12;
-import service_libraries.pus_services.pus_service17;
-import service_libraries.pus_services.pus_service19;
-import service_libraries.pus_services.pus_service20;
-import service_libraries.pus_services.pus_service4;
-import service_libraries.pus_services.pus_service9;
-import service_libraries.pus_services.pus_service6;
-import drivers.char_dev.uart.apbuart;
-import resources.gpio_driver;
-import tasks.hk_fdir_mng.hk_fdir;
-import tasks.bkgtcexec;
-import tasks.obdh_manager.obdh_manager;
-import handlers.init;
-import drivers.char_dev.irq_handler;
-import tasks.tc_rx;
-import resources.tm_counter;
-import resources.obt_manager;
+import obdh.pus.services.service1;
+import obdh.pus.services.service2;
+import obdh.pus.services.service3;
+import obdh.pus.services.service5;
+import obdh.pus.services.service12;
+import obdh.pus.services.service17;
+import obdh.pus.services.service19;
+import obdh.pus.services.service20;
+import obdh.pus.services.service4;
+import obdh.pus.services.service9;
+import obdh.pus.services.service6;
+import drivers.gaisler.apbuart;
+import drivers.gaisler.grgpio;
+import drivers.memory.nexysa7;
+import obdh.hk_fdir;
+import obdh.bkg_tc_executor;
+import obdh.obdh_manager.obdh_manager;
+import obdh.init;
+import obdh.tmtc.frame_irq_handler;
+import obdh.tmtc.tc_frame_receiver;
+import obdh.tmtc.tm_frame_transmitter;
+import obdh.tm_counter;
+import obdh.obt_manager;
 
 
-import tasks.obdh_manager.obdh_manager;
-import tasks.hk_fdir_mng.hk_fdir;
+import obdh.obdh_manager.obdh_manager;
+import obdh.hk_fdir;
 
 emitter hk_fdir_timer : PeriodicTimer = {
     period = {tv_sec = 1 : u32, tv_usec = 0 : u32} : TimeVal
 } : PeriodicTimer;
 
-channel rx_task_message_queue : MsgQueue<usize; 10>;
 channel tc_message_queue : MsgQueue<box TCHandler;10>;
 channel hkfdir_message_queue : MsgQueue<box TCHandler;10>;
 channel bkg_message_queue : MsgQueue<box TCHandler;10>;
@@ -37,6 +38,9 @@ channel action_tc_message_queue : MsgQueue<box TCHandler;5>;
 
 resource tm_pool : Pool<TMHandler; 10>;
 resource tc_pool : Pool<TCHandler; 10>;
+
+resource tc_frame_deque : Deque<TCHandler; 1>;
+resource tm_frame_deque : Deque<TMHandler; 10>;
 
 resource u32_system_data_pool : AtomicArray<u32; sdp_num_u32_params> = {
     values = [0; sdp_num_u32_params]
@@ -46,29 +50,18 @@ resource u8_system_data_pool : AtomicArray<u8; sdp_num_u8_params> = {
     values = [0; sdp_num_u8_params]
 };
 
-resource tc_channel : CTCChannel = {
+resource tc_frame_receiver : CTCFrameReceiver = {
     sync_word = {0xBE, 0xBA, 0xBE, 0xEF},
-    aux_index = 0,
+    sync_index = 0,
     raw_rx_tc_length = [0; 2],
-    tc_num_bytes = 0,
-    rx_status = TCRxStatus::SyncBytesRx,
-    tc_rx_queue = {
-        elements = [0; queue_max_noe],
-        head_index = 0,
-        num_elements = 0
-    }
+    rx_index = 0,
+    rx_status = TCFrameRxStatus::SyncBytesRx,
+    tc_frame <-> tc_frame_deque,
+    tc_handler_pool <-> tc_pool
 };
 
 resource uart_drv : CAPBUARTDriver = {
-    registers @ 0x80000100, 
-    rem_bytes = false,
-    uart_tx_queue = {
-        elements = [0 ; queue_max_noe],
-        head_index = 0,
-        num_elements = 0
-    },
-    rx_queue <-> tc_channel
-
+    registers @ 0x80000100
 };
 
 resource gpio_drv : CGPIODriver = {
@@ -76,14 +69,19 @@ resource gpio_drv : CGPIODriver = {
 };
 
 
-resource tm_channel : CTMChannel = {
-    char_dev <-> uart_drv,
-    tm_handler_pool <-> tm_pool
+resource tm_counter : CTMCounter = {
+    tm_count = 0,
+    lost_tm = 0
 };
 
 
-resource tm_counter : CTMCounter = {
-    tm_count = 0
+resource tm_frame_transmitter : CTMFrameTransmitter = {
+    sync_word = {0xBE, 0xBA, 0xBE, 0xEF},
+    char_dev <-> uart_drv,
+    tm_handler_pool <-> tm_pool,
+    tm_counter <-> tm_counter,
+    tm_frames <-> tm_frame_deque,
+    tx_index = 0
 };
 
 resource obt_manager : COBTManager = {
@@ -96,7 +94,7 @@ resource obt_manager : COBTManager = {
 #[unprotected]
 resource pus_service_1 : CPUSService1 = {
 
-    tm_channel <-> tm_channel,
+    tm_channel <-> tm_frame_transmitter,
     tm_handler_pool <-> tm_pool,
     tm_counter <-> tm_counter,
     obt_manager <-> obt_manager
@@ -104,15 +102,13 @@ resource pus_service_1 : CPUSService1 = {
 };
 
 resource pus_service_9 : CPUSService9 = {
-    exec_tc_req_status_update = ps9_init_tc_req_status_update,
     obt_manager <-> obt_manager,
     pus_service_1 <-> pus_service_1
 };
 
 resource pus_service_5 : CPUSService5 = {
     Ev_ID_enable_config = {0x00000007, 0x00000000, 0x00000000, 0x00000007},
-    exec_tc_req_status_update = ps5_init_tc_req_status_update,
-    tm_channel <-> tm_channel,
+    tm_channel <-> tm_frame_transmitter,
     tm_handler_pool <-> tm_pool,
     tm_counter <-> tm_counter,
     obt_manager <-> obt_manager,
@@ -130,7 +126,7 @@ resource pus_service_3 : CPUSService3 = {
                         {enabled = false, SID = 0, interval = 0, interval_control = 0, num_params = 0, params_def = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}},
     system_data_pool_u32 <-> u32_system_data_pool,
     system_data_pool_u8 <-> u8_system_data_pool,
-    tm_channel <-> tm_channel,   
+    tm_channel <-> tm_frame_transmitter,   
     tm_handler_pool <-> tm_pool,
     tm_counter <-> tm_counter,
     obt_manager <-> obt_manager,
@@ -140,9 +136,6 @@ resource pus_service_3 : CPUSService3 = {
 };
 
 resource pus_service_12 : CPUSService12 = {
-    do_monitoring_req_status = DoMonitoringReqStatus::Init,
-    do_monitoring_req_status_update = ps12_init_do_monitoring_req_status_update,
-    exec_tc_req_status_update = ps12_init_tc_req_status_update,
     param_mon_config_table = [{ PID = 0, type = MonitorCheckType::Free, enabled = false, definition = MonitorDefinition::Unselected, repetition= 0, repetition_control= 0, interval = 0, interval_control = 0,
     transition_obt = {seconds = 0, finetime = 0}, temp_state = CheckState::Unselected, current_state = CheckState::Unselected}; max_num_pmon_ids],
     monitoring_transition_counter = 0,
@@ -150,7 +143,7 @@ resource pus_service_12 : CPUSService12 = {
     prev_status = CheckState::Unselected, new_status = CheckState::Unselected, trans_obt = {seconds = 0, finetime = 0}}; max_num_transitions],
     system_data_pool_u32 <-> u32_system_data_pool,
     system_data_pool_u8 <-> u8_system_data_pool,
-    tm_channel <-> tm_channel,
+    tm_channel <-> tm_frame_transmitter,
     tm_handler_pool <-> tm_pool,
     tm_counter <-> tm_counter,
     obt_manager <-> obt_manager,
@@ -158,7 +151,6 @@ resource pus_service_12 : CPUSService12 = {
 };
 
 resource pus_service_19 : CPUSService19 = {
-    exec_tc_req_status_update = ps19_init_tc_req_status_update,
     event_action_config = [{enabled = false, event_ID = 0}; max_event_action_definitions],
     event_action_packets = [tc_handler_init; max_event_action_definitions],
     pending_action_queue_1I  = [tc_handler_init; event_action_queue_dimension],
@@ -171,10 +163,9 @@ resource pus_service_19 : CPUSService19 = {
 };
 
 resource pus_service_20 : CPUSService20 = {
-    exec_tc_req_status_update = ps20_init_tc_req_status_update,
     system_data_pool_u32 <-> u32_system_data_pool,
     system_data_pool_u8 <-> u8_system_data_pool,
-    tm_channel <-> tm_channel,
+    tm_channel <-> tm_frame_transmitter,
     tm_handler_pool <-> tm_pool,
     tm_counter <-> tm_counter,
     obt_manager <-> obt_manager,
@@ -182,8 +173,7 @@ resource pus_service_20 : CPUSService20 = {
 };
 
 resource pus_service_17 : CPUSService17 = {
-    exec_tc_req_status_update = ps17_init_tc_req_status_update,
-    tm_channel <-> tm_channel,
+    tm_channel <-> tm_frame_transmitter,
     tm_handler_pool <-> tm_pool,
     tm_counter <-> tm_counter,
     obt_manager <-> obt_manager,
@@ -191,7 +181,6 @@ resource pus_service_17 : CPUSService17 = {
 };
 
 resource pus_service_128 : CPUSService128 = {
-    exec_tc_req_status_update = ps128_init_tc_req_status_update,
     pus_service_1 <-> pus_service_1
 };
 
@@ -200,11 +189,14 @@ resource pus_service_2 : CPUSService2 = {
     pus_service_1 <-> pus_service_1
 };
 
+resource memory_drv : CNexysA7Memory = {
+    ddr2 @ 0x40000000,
+    write_enabled = {false, true, true, true, true, true, true, false}
+};
+
 resource pus_service_6 : CPUSService6 = {
-    exec_tc_req_status_update = ps6_init_tc_req_status_update,
-    mem_id_write_permissions = {false, true, true, true, true, true, true, false},
-    memory @ 0x40000000,
-    tm_channel <-> tm_channel,
+    memory <-> memory_drv,
+    tm_channel <-> tm_frame_transmitter,
     tm_handler_pool <-> tm_pool,
     tm_counter <-> tm_counter,
     obt_manager <-> obt_manager,
@@ -212,12 +204,11 @@ resource pus_service_6 : CPUSService6 = {
 };
 
 resource pus_service_4 : CPUSService4 = {
-    exec_tc_req_status_update = ps4_init_tc_req_status_update,
     param_stats = [{min = 0, min_obt = {seconds = 0, finetime = 0}, max = 0, max_obt = {seconds = 0, finetime = 0}, mean_value = 0, samples = 0}; max_num_of_stats],
     stats_config_table = {defined = [false; max_num_of_stats],  PID = [0; max_num_of_stats], start_time = [{seconds = 0, finetime = 0}; max_num_of_stats]},
     system_data_pool_u32 <-> u32_system_data_pool,
     system_data_pool_u8 <-> u8_system_data_pool,
-    tm_channel <-> tm_channel,
+    tm_channel <-> tm_frame_transmitter,
     tm_handler_pool <-> tm_pool,
     tm_counter <-> tm_counter,
     obt_manager <-> obt_manager,
@@ -242,18 +233,12 @@ handler init_hdlr : CInitHandler = {
 };
 
 
-handler uart_hdlr : CCharDevIRQHandler = {
+handler uart_hdlr : CTMTCFrameIRQHandler = {
     irq_entry <- irq_2,
-    uart_drv <-> uart_drv,
-    frame_ready_output -> rx_task_message_queue
-};
-
-#[priority(4)]
-task tc_rx_bottom_half_task : CTXRxBottomHalfTask = {
-    tc_channel <-> tc_channel,
-    frame_ready_input <- rx_task_message_queue,
-    tc_message_queue_output -> tc_message_queue,
-    tc_handler_pool <-> tc_pool
+    char_dev <-> uart_drv,
+    tc_frame_receiver <-> tc_frame_receiver,
+    tm_frame_transmitter <-> tm_frame_transmitter,
+    tc_message_queue_output -> tc_message_queue
 };
 
 

@@ -1,0 +1,386 @@
+/*
+PUS SERVICE 3 : HOUSEKEEPING
+*/
+
+import obdh.pus.services.service1;
+import obdh.pus.services.service3.internal;
+
+
+interface IPUSService3 {
+
+    procedure do_hk (&mut self);
+    procedure exec_tc(&mut self, tc_handler : &mut TCHandler);
+    procedure update_params(&mut self);
+
+};
+
+resource class CPUSService3 provides IPUSService3 {
+
+    hk_config_table : [HKConfiguration; max_num_of_SIDs];
+
+    system_data_pool_u32 : access AtomicArrayAccess<u32; sdp_num_u32_params>;
+    system_data_pool_u8 : access AtomicArrayAccess<u8; sdp_num_u8_params>;
+
+    tm_channel: access ITMChannel;   
+    tm_handler_pool : access Allocator<TMHandler>;
+    tm_counter : access ITMCounter;
+
+    obt_manager : access IOBTManager;
+    
+    pus_service_1 : access IPUSService1;
+    pus_service_5 : access IPUSService5;
+
+    random_seed : u32;
+
+    method get_SIDindex (&self, tc_request : &PS3TCRequest) -> Option<usize> {
+
+        var index_found: Option<usize> = None;
+
+        for i : usize in 0 .. max_num_of_SIDs while (index_found is None) {
+
+            if (tc_request->SID == self->hk_config_table[i].SID){
+
+                index_found = Some(i);
+
+            }
+        }
+        return index_found;
+    }
+
+    method exec3_5TC(&priv self, tc_request : &PS3TCRequest) -> Status<PUSService3Error> {
+
+        var status : Status<PUSService3Error> = Success;
+
+        if (tc_request->N != 1) {
+
+            status = Failure(PUSService3Error::NumOfInstrNotValid(tc_request->N));
+
+        } else {
+
+            var opt_index : Option<usize> = self->get_SIDindex(tc_request);
+
+            match opt_index {
+
+                case Some(sid_index) => {
+
+                    self->pus_service_1.notify_tm_1_3(
+                                tc_request->packet_id,
+                                tc_request->packet_seq_ctrl,
+                                tc_request->flags_ack);
+
+                    self->hk_config_table[sid_index].enabled = true;
+                    self->hk_config_table[sid_index].interval_control = 0;
+
+                    self->pus_service_1.notify_tm_1_7(
+                                tc_request->packet_id,
+                                tc_request->packet_seq_ctrl,
+                                tc_request->flags_ack);
+
+                }
+
+                case None => {
+
+                    status = Failure(PUSService3Error::SIDNotValid(tc_request->SID));
+
+                }
+
+            }
+
+        }
+
+        return status;
+    }
+
+    method exec3_6TC(&priv self, tc_request : & PS3TCRequest) -> Status<PUSService3Error> {
+
+        var status : Status<PUSService3Error> = Success;
+
+        if (tc_request->N != 1) {
+
+            status = Failure(PUSService3Error::NumOfInstrNotValid(tc_request->N));
+
+        } else {
+
+            var opt_index : Option<usize> = self->get_SIDindex(tc_request);
+
+            match opt_index {
+
+                case Some(sid_index) => {
+
+                    self->pus_service_1.notify_tm_1_3(
+                                tc_request->packet_id,
+                                tc_request->packet_seq_ctrl,
+                                tc_request->flags_ack);
+
+                    self->hk_config_table[sid_index].enabled = false;
+                    self->hk_config_table[sid_index].interval_control = 0;
+
+                    self->pus_service_1.notify_tm_1_7(
+                                tc_request->packet_id,
+                                tc_request->packet_seq_ctrl,
+                                tc_request->flags_ack);
+
+                }
+
+                case None => {
+
+                    status = Failure(PUSService3Error::SIDNotValid(tc_request->SID));
+                }
+
+            }
+
+        }
+
+        return status;
+
+    }
+
+    method exec3_31TC(&priv self, tc_request : &mut PS3TCRequest) -> Status<PUSService3Error> {
+
+        var status : Status<PUSService3Error> = Success;
+
+        if (tc_request->N != 1) {
+
+            status = Failure(PUSService3Error::NumOfInstrNotValid(tc_request->N));
+
+        } else {
+
+            var opt_index : Option<usize> = self->get_SIDindex(&(*tc_request));
+
+            match opt_index {
+
+                case Some(sid_index) => {
+
+                    self->pus_service_1.notify_tm_1_3(
+                                tc_request->packet_id,
+                                tc_request->packet_seq_ctrl,
+                                tc_request->flags_ack);
+
+                    self->hk_config_table[sid_index].interval = tc_request->collection_interval;
+                    self->hk_config_table[sid_index].interval_control = 0;
+
+                    self->pus_service_1.notify_tm_1_7(
+                                tc_request->packet_id,
+                                tc_request->packet_seq_ctrl,
+                                tc_request->flags_ack);
+
+                }
+
+                case None => {
+
+                    status = Failure(PUSService3Error::SIDNotValid(tc_request->SID));
+
+                }
+
+            }
+
+        }
+
+        return status;
+    }
+
+
+
+    procedure exec_tc(&mut self, tc_handler : &mut TCHandler){
+
+        var status : Status<PUSService3Error> = Success;
+        var subtype : u8 = tc_handler->df_header.subtype;
+        var tc_request : PS3TCRequest = ps3_init_tc_request;
+
+        tc_request.packet_id = tc_handler->packet_header.packet_id;
+        tc_request.packet_seq_ctrl = tc_handler->packet_header.packet_seq_ctrl;
+        tc_request.flags_ack = tc_handler->df_header.flag_ver_ack;
+        tc_request.tc_num_bytes = tc_handler->tc_descriptor.tc_num_bytes;
+
+        var tc_data_status : Status<TCHandlerError> = tc_handler_get_u8_appdata_field(tc_handler, &mut (tc_request.N));
+
+        if (tc_data_status is Success) {
+            tc_data_status = tc_handler_get_u16_appdata_field(tc_handler, &mut tc_request.SID);
+        }
+
+        if ((tc_data_status is Success) && subtype == 31) {
+            tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &mut (tc_request.collection_interval));
+        }
+
+        if (tc_data_status is Failure) {
+            status = Failure(PUSService3Error::AppDataOutOfRange(tc_request.tc_num_bytes));
+        }
+
+        if (status is Success) {
+
+            if (subtype == 5) {
+
+                status = self->exec3_5TC(&tc_request);
+
+            } else if (subtype == 6) {
+
+                status = self->exec3_6TC(&tc_request);
+
+            } else if (subtype == 31) {
+
+                status = self->exec3_31TC(&mut tc_request);
+
+            } else {
+
+                status = Failure(PUSService3Error::ErrorInAcceptance);
+
+            }
+
+        }
+
+        match status {
+
+            case Success => {
+
+            }
+            case Failure(error) => {
+
+                match error {
+
+                    case ErrorInAcceptance => {
+
+                        self->pus_service_1.send_tm_1_4_error_in_acceptance(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl);
+
+                    }
+                    case AppDataOutOfRange(tc_num_bytes) => {
+
+                        self->pus_service_1.send_tm_1_4_short_pack_length(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl,
+                                    tc_num_bytes);
+
+                    }
+                    case NumOfInstrNotValid(N) => {
+
+                        self->pus_service_1.send_tm_1_4_num_of_instr_not_valid(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl,
+                                    N);
+
+                    }
+                    case SIDNotValid(SID) => {
+
+                        self->pus_service_1.send_tm_1_4_SID_not_valid(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl,
+                                    SID);
+
+                    }
+                }
+
+            }
+        }
+
+        return;
+
+    }
+
+    procedure do_hk (&mut self) {
+
+        for i : usize in 0 .. max_num_of_SIDs {
+
+            if (self->hk_config_table[i].enabled == true){
+
+                self->hk_config_table[i].interval_control = self->hk_config_table[i].interval_control + 1;
+
+                if (self->hk_config_table[i].interval_control >= self->hk_config_table[i].interval){
+
+                    self->hk_config_table[i].interval_control = 0;
+
+                    var tm_handler : Option<box TMHandler> = None;
+                    self->tm_handler_pool.alloc(&mut tm_handler);
+
+                    match tm_handler {
+
+                        case Some(b_tm_handler) => {
+
+                        var tm_count : u16 = 0 : u16;
+                        self->tm_counter.get_next_tm_count(&mut tm_count);
+
+                        startup_tm(&mut b_tm_handler);
+                        var do_hk_status : Status<TMHandlerError> = append_u16_appdata_field(&mut b_tm_handler, self->hk_config_table[i].SID);
+                        var valid_PIDs : bool = true;
+
+                        var num_params : usize = self->hk_config_table[i].num_params as usize;
+
+                        for j : usize in 0 .. max_params_per_SID while (j < num_params && (do_hk_status is Success) && valid_PIDs) {
+
+                            var PID : u16 = self->hk_config_table[i].params_def[j];
+                            var item_type : DataPoolItem = sys_data_pool_get_item(PID);
+
+                            match item_type {
+                                case U8Item(sdp_index) => {
+                                    var u8_SDP_value : u8 = 0;
+                                    self->system_data_pool_u8.load_index(sdp_index, &mut u8_SDP_value);
+                                    do_hk_status = append_u8_appdata_field(&mut b_tm_handler, u8_SDP_value);
+                                }
+                                case U32Item(sdp_index) => {
+                                    var u32_SDP_value : u32 = 0;
+                                    self->system_data_pool_u32.load_index(sdp_index, &mut u32_SDP_value);
+                                    do_hk_status = append_u32_appdata_field(&mut b_tm_handler, u32_SDP_value);
+                                }
+                                case NoValidPID => {
+                                    valid_PIDs = false;
+                                }
+                            }
+
+                        }
+
+                        var current_obt: CUCTime = {seconds = 0, finetime = 0};
+                        self->obt_manager.get_current_obt(&mut current_obt);
+
+                        if ((do_hk_status is Success) && valid_PIDs){
+                            close_tm(&mut b_tm_handler, 3, 25, tm_count, current_obt);
+                            self->tm_channel.send_tm(b_tm_handler);
+                        }
+                         else {
+                            self->tm_handler_pool.free(b_tm_handler);
+                            //Generar TM[5,2]
+                            self->pus_service_5.send_tm_5_2();
+                        }
+
+
+                        }
+                        case None => {
+                            self->tm_counter.count_lost_tm();
+
+                        }
+                    }       
+                }
+            }
+        }
+
+        return;
+    }
+
+    procedure update_params(&mut self) {
+
+        for i : usize in 0 .. 5 {
+
+            var random_noise : u32 = (rand_r(&mut (self->random_seed)) % 11) - 5;
+            var data : u32 = 0;
+
+            self->system_data_pool_u32.load_index(i, &mut data);
+            data = data + random_noise;
+
+           self->system_data_pool_u32.store_index(i, data);
+        }
+
+        return;
+    }
+
+
+
+};
+
+
+
+
+
+
+
+
+
+

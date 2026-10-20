@@ -1,0 +1,91 @@
+/**
+ * @file pus_service19_help.fin
+ * @brief Imports and definitions related to PUS Service 19.
+ */
+
+import obdh.pus.services.service5;
+import obdh.pus.services.service1;
+import obdh.obt_manager;
+
+const event_action_max_bytes : usize = 242;
+
+const min_tc_size : usize = 13; ///< Bytes of a TC with no application data: primary and secondary headers and CRC
+
+
+constexpr max_event_action_definitions : usize = 16;
+constexpr event_action_queue_dimension : usize = 8;
+
+
+struct EventActionConfig {
+    enabled: bool;
+    event_ID: u16;
+};
+
+struct PS19TCData {
+    packet_id : u16;
+    packet_seq_ctrl : u16;
+    flags_ack : u8;
+    tc_num_bytes : usize;
+    N : u8;
+    EvID: u16;
+};
+
+struct FoundID {
+    found : bool;
+    ev_action_index : usize;
+    enabled : bool;
+};
+
+/**
+ * @struct PS19TCRequest
+ * @brief Fields of a TC[19,x] that its execution needs, decoded by exec_tc, and the event-action slot it works on.
+ */
+struct PS19TCRequest {
+    tc_data : PS19TCData;
+    ev_action_ID: FoundID;
+    action_tc_packet : TCDescriptor;
+};
+
+constexpr ps19_init_tc_request : PS19TCRequest = {
+    tc_data = {
+        packet_id = 0,
+        packet_seq_ctrl = 0,
+        flags_ack = 0,
+        tc_num_bytes = 0,
+        N = 0,
+        EvID = 0
+    },
+    ev_action_ID = {
+        found = false,
+        ev_action_index = 0,
+        enabled = false
+    },
+    action_tc_packet = {
+        tc_bytes = [0 ; max_tc_size],
+        tc_num_bytes = 0
+    }
+};
+ 
+
+
+
+enum TC19_1_Error {
+    NoError,
+    EvIDEnabled,
+    MaxEventActionDefinitions
+};
+
+/**
+ * @enum PUSService19Error
+ * @brief Reasons why PUS service 19 rejects or fails a TC, with the data of the TM[1,4] or TM[1,8] that reports each one.
+ */
+enum PUSService19Error {
+    ErrorInAcceptance,              /**< Subtype not supported */
+    AppDataOutOfRange(usize),       /**< TC shorter than its fields, with its length in bytes */
+    NumOfInstrNotValid(u8),         /**< Number of instructions other than 1 */
+    EvIDNotValid(u16),              /**< Event ID not valid */
+    EvActionEnabled(u16),           /**< The event-action of the event ID is enabled */
+    EvActionRejected(u16),          /**< The action TC of the event ID is not accepted */
+    EvActionUndefined(u16),         /**< No event-action defined for the event ID */
+    MaxEvActionsDefined(u16)        /**< No free slot for the event-action of the event ID */
+};

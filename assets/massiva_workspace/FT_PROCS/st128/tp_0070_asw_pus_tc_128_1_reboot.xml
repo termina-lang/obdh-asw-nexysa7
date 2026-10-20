@@ -19,20 +19,6 @@
 				<level1_from_level0 import="DEFAULT"/>
 				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
 			</output_level_1>
-			<output_level_1 name="tm_1_3" id="1" ifRef="0">
-				<level1 format="DEFAULT"/>
-				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_3_filter.xml"/>
-				<level0 format="DEFAULT"/>
-				<level1_from_level0 import="DEFAULT"/>
-				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
-			</output_level_1>
-			<output_level_1 name="tm_1_7" id="2" ifRef="0">
-				<level1 format="DEFAULT"/>
-					<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_7_filter.xml"/>
-				<level0 format="DEFAULT"/>
-				<level1_from_level0 import="DEFAULT"/>
-				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
-			</output_level_1>
 		</outputs>			
 	</step>
 </test_proc>

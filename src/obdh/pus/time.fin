@@ -1,0 +1,15 @@
+/**
+ * @file time.fin
+ * @brief On-board time as the TM packets carry it.
+ */
+
+/**
+ * @struct CUCTime
+ * @brief CCSDS Unsegmented time Code with 4 bytes of coarse time and 2 bytes
+ * of fine time.
+ */
+struct CUCTime {
+
+    seconds: u32;
+    finetime: u16;
+};

@@ -1,0 +1,43 @@
+/**
+ * @file pus_service17_help.fin
+ * @brief Imports and definitions related to PUS Service 17.
+ */
+
+import obdh.tmtc.tm_channel;
+import obdh.obt_manager;
+
+/**
+ * @struct PS17TCRequest
+ * @brief Fields of a TC[17,x] that its execution needs, decoded by exec_tc.
+ */
+struct PS17TCRequest {
+    packet_id : u16;            /**< TC Packet identifier */
+    packet_seq_ctrl : u16;    /**< Error control field for packet integrity verification */
+    flags_ack : u8;            /**< Flags indicating acknowledgments */
+};
+
+/**
+ * @brief Initial value of the local PS17TCRequest of exec_tc, with zeroed fields.
+ */
+constexpr ps17_init_tc_request : PS17TCRequest = {
+    packet_id = 0,
+    packet_seq_ctrl = 0,
+    flags_ack = 0
+};
+
+/**
+ * @enum PUSService17Error
+ * @brief Reasons why PUS service 17 rejects a TC, reported with a TM[1,4].
+ */
+enum PUSService17Error {
+    ErrorInAcceptance       /**< Subtype not supported */
+};
+
+
+function build_tm_17_2(p_tm_handler : &mut TMHandler,
+                tm_seq_counter : u16, current_obt : CUCTime){
+
+    startup_tm(p_tm_handler);
+    close_tm(p_tm_handler, 17, 2, tm_seq_counter, current_obt);
+    return;
+}

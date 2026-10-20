@@ -1,0 +1,56 @@
+/**
+ * @file pus_service20_help.fin
+ * @brief Imports and definitions related to PUS Service 20.
+ */
+
+import obdh.system_data_pool;
+import obdh.pus.services.service1;
+import obdh.tmtc.tm_channel;
+import obdh.obt_manager;
+
+
+struct TC20_3Data {
+    PID_value_u8 : u8;
+    PID_value_u32 : u32;
+};
+
+/**
+ * @struct PS20TCRequest
+ * @brief Fields of a TC[20,x] that its execution needs, decoded by exec_tc.
+ */
+struct PS20TCRequest {
+    packet_id : u16;
+    packet_seq_ctrl : u16;
+    flags_ack : u8;
+    tc_num_bytes : usize;
+    N: u8;
+    PID: u16;
+    tc_20_3_data : TC20_3Data;
+};
+
+
+/**
+ * @enum PUSService20Error
+ * @brief Reasons why PUS service 20 rejects a TC, with the data of the TM[1,4] that reports each one.
+ */
+enum PUSService20Error {
+    ErrorInAcceptance,          /**< Subtype not supported */
+    AppDataOutOfRange(usize),   /**< TC shorter than its fields, with its length in bytes */
+    NumOfInstrNotValid(u8),     /**< Number of instructions other than 1 */
+    PIDNotValid(u16),           /**< PID not defined in the system data pool */
+    PIDReadOnlyViaTC(u16)       /**< PID that cannot be updated by TC */
+};
+
+
+constexpr ps20_init_tc_request : PS20TCRequest = {
+    packet_id = 0,
+    packet_seq_ctrl = 0,
+    flags_ack = 0,
+    tc_num_bytes = 0,
+    N = 0,
+    PID = 0,
+    tc_20_3_data = {
+        PID_value_u8 = 0,
+        PID_value_u32 = 0
+    }
+};

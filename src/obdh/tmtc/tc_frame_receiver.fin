@@ -1,0 +1,159 @@
+import encoding.binary;
+import obdh.pus.tc_packet;
+import obdh.pus.tc_handler;
+
+/**
+ * @enum TCFrameRxStatus
+ * @brief State of the search for the start of a frame.
+ *
+ * While the bytes of a frame arrive, its TC is parked in the deque of the
+ * receiver, and this state is not used.
+ */
+enum TCFrameRxStatus {
+    SyncBytesRx,     /**< Receiving sync word. */
+    SyncLengthRx     /**< Receiving frame length (2 bytes). */
+};
+
+
+/**
+ * @interface ITCFrameReceiver
+ * @brief Interface for receiving TC frames byte by byte.
+ */
+interface ITCFrameReceiver {
+    procedure receive(&mut self, byte : u8, tc_handler : &mut Option<box TCHandler>);
+};
+
+
+/**
+ * @class CTCFrameReceiver
+ * @brief Receives TC frames made of a sync word, a 2-byte length and the
+ * bytes of the packet.
+ *
+ * The bytes of a frame are written directly into a TC handler from the pool,
+ * which stays in the deque of the receiver until its last byte arrives.
+ */
+resource class CTCFrameReceiver provides ITCFrameReceiver {
+
+    sync_word : [u8; 4]; //{0xBE, 0xBA, 0xBE, 0xEF}
+
+    /** @brief Next byte of the sync word or of the length */
+    sync_index : usize;
+    raw_rx_tc_length : [u8; 2];
+
+    /** @brief Next byte of the TC being received */
+    rx_index : usize;
+
+    rx_status : TCFrameRxStatus;
+
+    /** @brief TC being received */
+    tc_frame : access DequeAccess<TCHandler>;
+
+    tc_handler_pool : access Allocator<TCHandler>;
+
+    /**
+     * @brief Looks for the sync word and the length of the next frame.
+     *
+     * @param[in] byte Received byte.
+     * @return Length of the TC once it is complete and valid, 0 otherwise.
+     */
+    method sync(&mut self, byte : u8) -> usize {
+
+        var length : usize = 0;
+
+        match self->rx_status {
+
+            case SyncBytesRx => {
+
+                if (byte == self->sync_word[self->sync_index]) {
+
+                    if (3 == self->sync_index) {
+                        self->sync_index = 0;
+                        self->rx_status = TCFrameRxStatus::SyncLengthRx;
+                    } else {
+                        self->sync_index = self->sync_index + 1;
+                    }
+
+                } else {
+                    self->sync_index = 0;
+                }
+            }
+
+            case SyncLengthRx => {
+
+                self->raw_rx_tc_length[self->sync_index] = byte;
+                self->sync_index = self->sync_index + 1;
+
+                if (2 == self->sync_index) {
+
+                    let num_bytes : usize = deserialize_uint16(&self->raw_rx_tc_length) as usize;
+
+                    if (num_bytes > 0 && num_bytes < max_tc_size) {
+                        length = num_bytes;
+                    }
+
+                    self->rx_status = TCFrameRxStatus::SyncBytesRx;
+                    self->sync_index = 0;
+                }
+            }
+        }
+
+        return length;
+    }
+
+    /**
+     * @brief Receives a byte from the character device.
+     *
+     * @param[in] byte         Received byte.
+     * @param[out] tc_handler  The TC, once its last byte has arrived, or None.
+     */
+    procedure receive(&mut self, byte : u8, tc_handler : &mut Option<box TCHandler>) {
+
+        var current : Option<box TCHandler> = None;
+        self->tc_frame.take(&mut current);
+
+        match current {
+
+            case Some(tc_handler_b) => {
+
+                tc_handler_b.tc_descriptor.tc_bytes[self->rx_index] = byte;
+                self->rx_index = self->rx_index + 1;
+
+                if (self->rx_index == tc_handler_b.tc_descriptor.tc_num_bytes) {
+                    self->rx_index = 0;
+                    *tc_handler = Some(tc_handler_b);
+                } else {
+                    self->tc_frame.put(tc_handler_b);
+                    *tc_handler = None;
+                }
+            }
+
+            case None => {
+
+                let length : usize = self->sync(byte);
+
+                if (length > 0) {
+
+                    var new_tc_handler : Option<box TCHandler> = None;
+                    self->tc_handler_pool.alloc(&mut new_tc_handler);
+
+                    match new_tc_handler {
+                        case Some(tc_handler_b) => {
+                            tc_handler_b.tc_descriptor.tc_num_bytes = length;
+                            self->tc_frame.put(tc_handler_b);
+                        }
+                        case None => {
+                            // No TC handler: this TC is lost and the search
+                            // for the next one starts over
+                        }
+                    }
+                }
+
+                *tc_handler = None;
+            }
+        }
+
+        return;
+
+    }
+
+};

@@ -1,0 +1,142 @@
+import encoding.binary;
+
+/**
+ * @brief Maximum allowed size for telemetry packet in bytes
+ */
+constexpr max_send_size : usize = 256;
+
+/**
+ * @brief CCSDS PUS TM Packet Header structure
+ */
+struct CCSDSPUSTMPacketHeader {
+    packet_id : u16;          /**< Packet identifier */
+    packet_seq_ctrl : u16;    /**< Packet sequence control */
+    packet_length : u16;      /**< Packet length */
+};
+
+/**
+ * @brief CCSDS PUS TM Data Field Header structure
+ */
+struct CCSDSPUSTMDFHeader {
+    version : u8;             /**< Version number */
+    type : u8;                /**< Service type */
+    subtype : u8;             /**< Service subtype */
+    msg_type_counter : u16;   /**< Message type counter */
+    destinationID : u16;      /**< Destination identifier */
+    obt_secs : u32;           /**< Onboard time seconds */
+    obt_finetime : u16;       /**< Onboard time fine time */
+};
+
+/**
+ * @brief Descriptor for a TM packet with byte array and valid length
+ */
+struct TMDescriptor {
+    tm_bytes : [u8 ; max_send_size]; /**< TM packet bytes */
+    tm_num_bytes : usize;             /**< Number of valid bytes */
+};
+
+/**
+ * @brief Builds the Packet ID field for a telemetry packet given the APID
+ * 
+ * @param apid Application Process ID (11 bits)
+ * @return u16 Packet ID constructed according to CCSDS PUS standard
+ */
+function ccsds_pus_tm_build_packet_id(apid : u16) -> u16 {
+    
+    return (((1 : u16 << 14 : u16) | (1 : u16 << 11 : u16) | ((apid) & 0x07FF : u16)));
+
+}
+
+
+/**
+ * @brief Builds the Packet Sequence Control field from sequence flags and telemetry count
+ * 
+ * @param sequence_flags 2-bit sequence flags
+ * @param tm_count 14-bit telemetry packet count
+ * @return u16 Packet sequence control field
+ */
+function ccsds_pus_tm_build_packet_seq_ctrl(sequence_flags : u16, tm_count : u16) -> u16 {
+
+    return (((sequence_flags &0x3) << 14 : u16) | (tm_count) & 0x3FFF : u16);
+}
+
+
+/**
+ * @brief Builds the Data Field header word combining version, service type, subtype, and destination ID
+ * 
+ * @param service_type Service type byte
+ * @param service_subtype Service subtype byte
+ * @param destination_id Destination ID byte
+ * @return u32 Data Field header packed into a 32-bit word
+ */
+function ccsds_pus_tm_build_df_header(service_type : u8,service_subtype : u8,destination_id : u8) -> u32 {
+
+    return (0x10 : u32 << 24 : u32)| (service_type as u32 << 16 : u32) | (service_subtype as u32 << 8 : u32) | destination_id as u32;
+
+}
+ 
+
+/**
+ * @brief Builds the version field for the Data Field header (left-aligned 4 bits)
+ * 
+ * @param version Version nibble (4 bits)
+ * @return u8 Version field shifted to the high nibble position
+ */
+function ccsds_pus_tm_build_df_header_version(version : u8) -> u8 {
+    
+    return (((version) & 0xF : u8) << 4 : u8);
+} 
+
+
+/**
+ * @brief Serializes the packet header and data field header into the byte array representing the telemetry packet
+ * 
+ * @param tm_bytes Byte array buffer to fill with serialized TM header data (at least 19 bytes)
+ * @param p_tm_packet_header Pointer to the TM packet header structure
+ * @param p_tm_df_header Pointer to the TM data field header structure
+ */
+function ccsds_pus_tm_set_fields(tm_bytes : &mut[u8 ; 19],
+        p_tm_packet_header : &CCSDSPUSTMPacketHeader,
+        p_tm_df_header : &CCSDSPUSTMDFHeader) {
+
+    // Serialize Packet ID (bytes 0-1)
+    serialize_uint16(p_tm_packet_header->packet_id, &mut(*tm_bytes)[0 : usize .. 2 : usize]);
+
+    // Serialize Packet Sequence Control (bytes 2-3)
+    serialize_uint16(p_tm_packet_header->packet_seq_ctrl, &mut(*tm_bytes)[2 : usize .. 4 : usize]);
+
+    // Serialize Packet Length (bytes 4-5)
+    serialize_uint16(p_tm_packet_header->packet_length, &mut(*tm_bytes)[4 : usize .. 6 : usize]);
+
+    // Store version field (byte 6)
+    (*tm_bytes)[6 : usize] = p_tm_df_header->version;
+
+    // Store type (byte 7)
+    (*tm_bytes)[7 : usize] = p_tm_df_header->type;
+
+    // Store subtype (byte 8)
+    (*tm_bytes)[8 : usize] = p_tm_df_header->subtype;
+
+    // Serialize msg_type_counter (bytes 9-10)
+    serialize_uint16(p_tm_df_header->msg_type_counter, &mut(*tm_bytes)[9 : usize .. 11 : usize]);
+
+    // Serialize destinationID (bytes 11-12)
+    serialize_uint16(p_tm_df_header->destinationID, &mut(*tm_bytes)[11 : usize .. 13 : usize]);
+
+    // Serialize obt_secs (bytes 13-16)
+    serialize_uint32(p_tm_df_header->obt_secs, &mut(*tm_bytes)[13 : usize .. 17 : usize]);
+
+    // Serialize obt_finetime (bytes 17-18)
+    serialize_uint16(p_tm_df_header->obt_finetime, &mut(*tm_bytes)[17 : usize .. 19 : usize]);
+
+    return;
+}
+
+
+
+
+
+
+
+
+

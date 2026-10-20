@@ -1,0 +1,80 @@
+import drivers.memory;
+import checksum.crc16;
+
+/**
+ * Memory regions of the Nexys A7: the DDR2 from 0x40000000, split in eight
+ * banks of 16 MB numbered as the memory identifiers of the telecommands.
+ * Bank 0 holds the image.
+ */
+constexpr nexysa7_num_banks : usize = 8 : usize;
+constexpr nexysa7_bank_size : usize = 1 << 24 : usize;
+
+resource class CNexysA7Memory provides IByteMemoryAccess {
+
+    ddr2 : loc [[u8; nexysa7_bank_size]; nexysa7_num_banks];
+
+    // Write permission of each bank, indexed by its memory identifier
+    write_enabled : [bool; nexysa7_num_banks];
+
+    procedure check_access(&self, mem_id : u8, address : usize, length : usize,
+                           write : bool, result : &mut Status<MemAccessError>) {
+
+        if ((mem_id as usize >= nexysa7_num_banks)
+                || (address >= nexysa7_bank_size)
+                || (length > nexysa7_bank_size - address)
+                || (length > max_memory_access_length)) {
+
+            *result = Failure(MemAccessError::InvalidAccess);
+
+        } else if (write) {
+
+            if (self->write_enabled[mem_id as usize]) {
+                *result = Success;
+            } else {
+                *result = Failure(MemAccessError::ReadOnly);
+            }
+
+        } else {
+
+            *result = Success;
+
+        }
+
+        return;
+    }
+
+    procedure read(&self, mem_id : u8, address : usize, length : usize,
+                   dst : &mut [u8; max_memory_access_length]) {
+
+        for i : usize in 0 : usize .. max_memory_access_length while (i < length) {
+            (*dst)[i] = self->ddr2[mem_id as usize][address + i];
+        }
+
+        return;
+    }
+
+    procedure write(&mut self, mem_id : u8, address : usize, length : usize,
+                    src : &[u8; max_memory_access_length]) {
+
+        for i : usize in 0 : usize .. max_memory_access_length while (i < length) {
+            self->ddr2[mem_id as usize][address + i] = (*src)[i];
+        }
+
+        return;
+    }
+
+    procedure checksum(&self, mem_id : u8, address : usize, length : usize,
+                       checksum : &mut u16) {
+
+        var crc : u16 = crc16_initial;
+
+        for i : usize in 0 : usize .. max_memory_access_length while (i < length) {
+            crc = crc16_update(crc, self->ddr2[mem_id as usize][address + i]);
+        }
+
+        *checksum = crc;
+
+        return;
+    }
+
+};

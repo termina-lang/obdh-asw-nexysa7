@@ -1,0 +1,1272 @@
+/*
+PUS SERVICE 12 : ON-BOARD MONITORING
+*/
+
+import obdh.system_data_pool;
+import obdh.obt_manager;
+import obdh.pus.services.service5;
+import obdh.pus.services.service1;
+
+import obdh.pus.services.service12.internal;
+
+
+interface IPUSService12 {
+    procedure exec_tc (&mut self, tc_handler : &mut TCHandler);
+    procedure do_monitoring (&mut self, PMONID: u16, evID : &mut u16, fault_info : &mut FaultInfo, event_triggered: &mut bool);
+    procedure is_PMON_enabled(&mut self, PMONID : usize, is_enabled : &mut bool);
+};
+
+resource class CPUSService12 provides IPUSService12 {
+
+    param_mon_config_table : [ParamMonitoringConfiguration; max_num_pmon_ids];
+    monitoring_transition_counter : u8; 
+    param_mon_transitions_table : [ParamMonitoringTransition; max_num_transitions];
+
+    system_data_pool_u32 : access AtomicArrayAccess<u32; sdp_num_u32_params>;
+    system_data_pool_u8 : access AtomicArrayAccess<u8; sdp_num_u8_params>;
+
+    tm_channel : access ITMChannel;
+    tm_handler_pool : access Allocator<TMHandler>;
+    tm_counter : access ITMCounter;
+
+    obt_manager : access IOBTManager;
+
+    pus_service_1 : access IPUSService1;
+
+    method is_limits_monitoring(&self, PMONID : u16) -> bool{
+
+        var is_limits_mon : bool = false;
+
+        if (self->param_mon_config_table[PMONID as usize].type is MonitorCheckType::Limits) {
+
+            is_limits_mon = true;
+        }
+
+        return is_limits_mon;
+    }
+
+
+    method is_expected_value_monitoring(&self, PMONID : u16) -> bool{
+
+        var is_exp_val_mon : bool = false;
+
+        if (self->param_mon_config_table[PMONID as usize].type is MonitorCheckType::ExpectedValue){
+
+            is_exp_val_mon = true;
+        }
+
+        return is_exp_val_mon;
+    }
+
+    method get_limits_monitoring_definition(&self, PMONID : u16) -> ParamLimitCheckDefinition {
+
+        var monitoring_definition : ParamLimitCheckDefinition = {
+            low_limit = 0,
+            low_limit_evID = 0,
+            high_limit = 0,
+            high_limit_evID = 0
+        };
+
+        match(self->param_mon_config_table[PMONID as usize].definition) {
+
+            case ParamLimitCheck(limit_check_def)=> {
+
+                monitoring_definition = limit_check_def;
+            }
+            
+            case _ => {
+                //error
+            }
+        }
+
+        return monitoring_definition;
+    }
+
+
+    method get_expected_value_monitoring_definition(&self, PMONID : u16) -> ParamValueCheckDefinition {
+
+        var monitoring_definition : ParamValueCheckDefinition = {
+            mask_value = 0,
+            expected_value = 0,
+            EvID = 0
+        };
+
+        match(self->param_mon_config_table[PMONID as usize].definition) {
+
+            case ParamValueCheck(param_check_definition)=> {
+
+                monitoring_definition = param_check_definition;
+                
+            }
+            case _ =>{
+
+            }
+            
+        }
+
+        return monitoring_definition;
+    }
+
+    // Returns true when the interval of the monitor has elapsed and the check is due
+    method manage_interval_control(&priv self, PMONID : u16) -> bool {
+
+        var check_due : bool = false;
+
+        self->param_mon_config_table[PMONID as usize].interval_control = self->param_mon_config_table[PMONID as usize].interval_control + 1;
+
+        if (self->param_mon_config_table[PMONID as usize].interval_control
+                >= self->param_mon_config_table[PMONID as usize].interval){
+
+            self->param_mon_config_table[PMONID as usize].interval_control = 0;
+            check_due = true;
+
+        }
+
+        return check_due;
+    }
+
+    method check_PID_status_limits_monitoring(&self, PMONID : u16)-> CheckLimitsResult{
+
+        var current_monitor_definition : ParamLimitCheckDefinition = self->get_limits_monitoring_definition(PMONID);
+        var check_status: CheckLimitsResult;
+
+        if(self->PID_is_above_upper_limit(PMONID, &current_monitor_definition)){
+
+            check_status = CheckLimitsResult::MonitorAboveHighLimit;
+
+        }
+        else if(self->PID_is_below_lower_limit(PMONID, &current_monitor_definition)){
+
+            check_status = CheckLimitsResult::MonitorBelowLowLimit;
+
+        }
+        else {
+
+            //monitor within limits
+            check_status = CheckLimitsResult::MonitorWithinLimits;
+        }
+
+        return check_status;
+
+    }
+
+    method check_PID_status_exp_val_monitoring(&self, PMONID : u16)-> CheckValueResult {
+
+        var current_monitor_definition : ParamValueCheckDefinition = self->get_expected_value_monitoring_definition(PMONID);
+        var check_status : CheckValueResult;
+
+        if(self->PID_has_expected_masked_value(PMONID, &current_monitor_definition)){
+
+            check_status = CheckValueResult::MonitorValueExpected;
+
+        }
+        else {
+
+            check_status = CheckValueResult::MonitorValueUnexpected;
+
+        }
+
+        return check_status;
+    }
+
+    method PID_is_above_upper_limit(&self, PMONID : u16, limit_check_def : &ParamLimitCheckDefinition) -> bool {
+
+        var res : bool = false;
+        var upper_limit : u32 = limit_check_def->high_limit;
+        var PID : u16 = self->param_mon_config_table[PMONID as usize].PID;
+        var type : DataPoolItem = sys_data_pool_get_item(PID);
+        var SDP_value : u32 = 0;
+
+        match type {
+
+            case U32Item(sdp_index) => {
+                self->system_data_pool_u32.load_index(sdp_index, &mut SDP_value);
+            }
+            case U8Item(sdp_index) => {
+                var SDP_value_u8 : u8 = 0;
+                self->system_data_pool_u8.load_index(sdp_index, &mut SDP_value_u8);
+
+                SDP_value = SDP_value_u8 as u32;
+            }
+            case NoValidPID => {
+               //Error
+            }
+        }
+        
+        if (SDP_value > upper_limit) {
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    method PID_is_below_lower_limit(&self, PMONID : u16, limit_check_def : &ParamLimitCheckDefinition) -> bool {
+
+        var res : bool = false;
+        var lower_limit : u32 = limit_check_def->low_limit;
+        var PID : u16 = self->param_mon_config_table[PMONID as usize].PID;
+        var type : DataPoolItem = sys_data_pool_get_item(PID);
+        var SDP_value : u32 = 0;
+
+        match type {
+
+            case U32Item(sdp_index) => {
+                self->system_data_pool_u32.load_index(sdp_index, &mut SDP_value);
+            }
+            case U8Item(sdp_index) => {
+                var SDP_value_u8 : u8 = 0;
+                self->system_data_pool_u8.load_index(sdp_index, &mut SDP_value_u8);
+                SDP_value = SDP_value_u8 as u32;
+            }
+            case NoValidPID => {
+               //Error
+            }
+        }
+        
+        if (SDP_value < lower_limit) {
+
+            res = true;
+        }
+
+        return res;
+    }
+
+    
+    method PID_has_expected_masked_value(&self, PMONID : u16, expected_value_check_definition : &ParamValueCheckDefinition) -> bool {
+
+        var res : bool = false;
+        var PID : u16 = self->param_mon_config_table[PMONID as usize].PID;
+        var SDP_value : u32 = 0;
+        var type : DataPoolItem = sys_data_pool_get_item(PID);
+
+        match type {
+
+            case U32Item(sdp_index) => {
+                self->system_data_pool_u32.load_index(sdp_index, &mut SDP_value);
+            }
+            case U8Item(sdp_index) => {
+                var SDP_value_u8 : u8 = 0;
+                self->system_data_pool_u8.load_index(sdp_index, &mut SDP_value_u8);
+                SDP_value = SDP_value_u8 as u32;
+            }
+            case NoValidPID => {
+               //Error
+            }
+        }
+
+        if ((SDP_value & expected_value_check_definition->mask_value) == (expected_value_check_definition->expected_value & expected_value_check_definition->mask_value)) {
+
+            res = true;
+        }
+
+        return res;
+    }
+
+
+    method manage_unexpected_value (&priv self, PMONID : u16) -> MonitoringOutcome {
+
+        var outcome : MonitoringOutcome = MonitoringOutcome::NoEvent;
+
+        match(self->param_mon_config_table[PMONID as usize].definition){
+
+            case ParamValueCheck(check_definition) => {
+
+                var fault_info : ParamFaultValueInfo = {PID = 0,
+                                                        PID_value = 0,
+                                                        PID_mask = 0,
+                                                        PID_expected_value = 0};
+
+                fault_info.PID = self->param_mon_config_table[PMONID as usize].PID; 
+                fault_info.PID_expected_value = check_definition.expected_value;
+                fault_info.PID_mask = check_definition.mask_value;
+
+                var type : DataPoolItem = sys_data_pool_get_item(fault_info.PID);
+                var valid_PID : bool = true;
+
+                match type {
+
+                    case U32Item(sdp_index) => {
+                        self->system_data_pool_u32.load_index(sdp_index, &mut (fault_info.PID_value));
+                    }
+                    case U8Item(sdp_index) => {
+                        var value : u8 = 0;
+                        self->system_data_pool_u8.load_index(sdp_index, &mut value);
+                        fault_info.PID_value = value as u32;
+
+                    }
+                    case NoValidPID => {
+                        valid_PID = false;
+                    }
+                }
+
+                let check_status : CheckValueResult = CheckValueResult::MonitorValueUnexpected;
+                let new_status : CheckState = CheckState::ParamValueStatus(Some(check_status));
+                var prev_status : Option<CheckState> = self->manage_new_status(PMONID, new_status);
+
+                match prev_status {
+                    case Some(transition_prev_status) => {
+                        let event_fault_info : FaultInfo = FaultInfo::ParamFaultValue(fault_info);
+                        self->add_monitoring_transition(PMONID, &event_fault_info, new_status, transition_prev_status);
+                        outcome = MonitoringOutcome::EventTriggered(check_definition.EvID, event_fault_info);
+                    }
+                    case None => {
+                    }
+                }
+
+                // A PID out of the data pool leaves the outputs of do_monitoring as they are
+                if (valid_PID == false) {
+                    outcome = MonitoringOutcome::NoReport;
+                }
+
+            }
+            case _ => {
+                outcome = MonitoringOutcome::NoReport;
+            }
+        }
+
+        return outcome;
+    }
+
+
+    method manage_expected_value (&priv self, PMONID : u16, fault_info : &FaultInfo) -> MonitoringOutcome {
+
+        let outcome : MonitoringOutcome = MonitoringOutcome::NoEvent;
+
+        let check_status : CheckValueResult = CheckValueResult::MonitorValueExpected;
+        let new_status : CheckState = CheckState::ParamValueStatus(Some(check_status));
+
+        var prev_status : Option<CheckState> = self->manage_new_status(PMONID, new_status);
+
+        match prev_status {
+            case Some(transition_prev_status) => {
+                self->add_monitoring_transition(PMONID, fault_info, new_status, transition_prev_status);
+            }
+            case None => {
+            }
+        }
+
+        return outcome;
+    }
+
+    method manage_param_above_upper_limit (&priv self, PMONID : u16) -> MonitoringOutcome {
+
+        var outcome : MonitoringOutcome = MonitoringOutcome::NoEvent;
+
+        match(self->param_mon_config_table[PMONID as usize].definition){
+
+            case ParamLimitCheck(check_definition) => {
+
+                var fault_info : ParamOutOfLimitInfo = {PID = 0,
+                                                        PID_value = 0,
+                                                        PID_limit = 0};
+
+                fault_info.PID = self->param_mon_config_table[PMONID as usize].PID; 
+                fault_info.PID_limit = check_definition.high_limit;
+
+                var type : DataPoolItem = sys_data_pool_get_item(fault_info.PID);
+                var valid_PID : bool = true;
+
+                match type {
+
+                    case U32Item(sdp_index) => {
+                        self->system_data_pool_u32.load_index(sdp_index, &mut (fault_info.PID_value));
+                    }
+                    case U8Item(sdp_index) => {
+                        var value : u8 = 0;
+                        self->system_data_pool_u8.load_index(sdp_index, &mut value);
+                        fault_info.PID_value = value as u32;
+                    }
+                    case NoValidPID => {
+                        valid_PID = false;
+                    }
+                }
+
+                let check_status : CheckLimitsResult = CheckLimitsResult::MonitorAboveHighLimit;
+                let new_status : CheckState = CheckState::ParamLimitStatus(Some(check_status));
+                var prev_status : Option<CheckState> = self->manage_new_status(PMONID, new_status);
+
+                match prev_status {
+                    case Some(transition_prev_status) => {
+                        let event_fault_info : FaultInfo = FaultInfo::ParamOutOfLimit(fault_info);
+                        self->add_monitoring_transition(PMONID, &event_fault_info, new_status, transition_prev_status);
+                        outcome = MonitoringOutcome::EventTriggered(check_definition.high_limit_evID, event_fault_info);
+                    }
+                    case None => {
+                    }
+                }
+
+                // A PID out of the data pool leaves the outputs of do_monitoring as they are
+                if (valid_PID == false) {
+                    outcome = MonitoringOutcome::NoReport;
+                }
+
+            }
+            case _ => {
+                outcome = MonitoringOutcome::NoReport;
+
+            }
+        }
+
+        return outcome;
+    }
+
+    method manage_param_below_lower_limit (&priv self, PMONID : u16) -> MonitoringOutcome {
+
+        var outcome : MonitoringOutcome = MonitoringOutcome::NoEvent;
+
+        match(self->param_mon_config_table[PMONID as usize].definition){
+
+            case ParamLimitCheck(check_definition) => {
+
+                var fault_info : ParamOutOfLimitInfo = {PID = 0,
+                                                        PID_value = 0,
+                                                        PID_limit = 0};
+
+                fault_info.PID = self->param_mon_config_table[PMONID as usize].PID; 
+                fault_info.PID_limit = check_definition.low_limit;
+
+                var type : DataPoolItem = sys_data_pool_get_item(fault_info.PID);
+                var valid_PID : bool = true;
+
+                match type {
+
+                    case U32Item(sdp_index) => {
+                        self->system_data_pool_u32.load_index(sdp_index, &mut (fault_info.PID_value));
+                    }
+                    case U8Item(sdp_index) => {
+                        var value : u8 = 0;
+                        self->system_data_pool_u8.load_index(sdp_index, &mut value);
+                        fault_info.PID_value = value as u32;
+                    }
+                    case NoValidPID => {
+                        valid_PID = false;
+                    }
+                }
+
+                let check_status : CheckLimitsResult = CheckLimitsResult::MonitorBelowLowLimit;
+                let new_status : CheckState = CheckState::ParamLimitStatus(Some(check_status));
+                var prev_status : Option<CheckState> = self->manage_new_status(PMONID, new_status);
+
+                match prev_status {
+                    case Some(transition_prev_status) => {
+                        let event_fault_info : FaultInfo = FaultInfo::ParamOutOfLimit(fault_info);
+                        self->add_monitoring_transition(PMONID, &event_fault_info, new_status, transition_prev_status);
+                        outcome = MonitoringOutcome::EventTriggered(check_definition.low_limit_evID, event_fault_info);
+                    }
+                    case None => {
+                    }
+                }
+
+                // A PID out of the data pool leaves the outputs of do_monitoring as they are
+                if (valid_PID == false) {
+                    outcome = MonitoringOutcome::NoReport;
+                }
+
+            }
+            case _ => {
+                outcome = MonitoringOutcome::NoReport;
+            }
+        }
+
+        return outcome;
+    }
+
+    method manage_param_within_limits (&priv self, PMONID : u16, fault_info : &FaultInfo) -> MonitoringOutcome {
+
+        let outcome : MonitoringOutcome = MonitoringOutcome::NoEvent;
+
+        var within_limits : CheckLimitsResult = CheckLimitsResult::MonitorWithinLimits;
+        var new_status : CheckState = CheckState::ParamLimitStatus(Some(within_limits));
+        let current_status : CheckState = self->param_mon_config_table[PMONID as usize].current_state;
+
+        if(are_status_equal(new_status, current_status) == false){
+
+            var prev_status : Option<CheckState> = self->manage_new_status(PMONID, new_status);
+
+            match prev_status {
+                case Some(transition_prev_status) => {
+                    self->add_monitoring_transition(PMONID, fault_info, new_status, transition_prev_status);
+                }
+                case None => {
+                }
+            }
+        }
+
+        return outcome;
+    }
+
+
+    // Returns the state the monitor leaves when the new state is confirmed, None otherwise
+    method manage_new_status(&priv self, PMONID : u16, new_state : CheckState) -> Option<CheckState> {
+
+        var prev_state : Option<CheckState> = None;
+        var current_state : CheckState = self->param_mon_config_table[PMONID as usize].current_state;
+        var temp_state : CheckState = self->param_mon_config_table[PMONID as usize].temp_state;
+
+        if (are_status_equal(new_state, current_state) == false) {
+
+            if(are_status_equal(new_state, temp_state)) {
+
+                self->param_mon_config_table[PMONID as usize].repetition_control = self->param_mon_config_table[PMONID as usize].repetition_control + 1;
+
+            } else {
+
+                self->param_mon_config_table[PMONID as usize].temp_state = new_state;
+                self->param_mon_config_table[PMONID as usize].repetition_control = 1;
+                var current_obt : CUCTime = {seconds = 0, finetime = 0};
+                self->obt_manager.get_current_obt(&mut current_obt);
+                self->param_mon_config_table[PMONID as usize].transition_obt = current_obt;
+            }
+
+            if (self->param_mon_config_table[PMONID as usize].repetition_control >= self->param_mon_config_table[PMONID as usize].repetition) {
+
+                self->param_mon_config_table[PMONID as usize].repetition_control = 0;
+                prev_state = Some(self->param_mon_config_table[PMONID as usize].current_state);
+                self->param_mon_config_table[PMONID as usize].current_state = new_state;
+
+            }
+        } 
+        else {
+            
+            self->param_mon_config_table[PMONID as usize].temp_state = new_state;
+            self->param_mon_config_table[PMONID as usize].repetition_control = 0;
+
+        }
+
+        return prev_state;
+
+    }
+
+    method add_monitoring_transition(&priv self, PMONID : u16, fault_info : &FaultInfo, new_status : CheckState, prev_status : CheckState) {
+
+        if((self->monitoring_transition_counter as usize) < max_num_transitions){
+
+            self->param_mon_transitions_table[self->monitoring_transition_counter as usize].PID = self->param_mon_config_table[PMONID as usize].PID;
+            self->param_mon_transitions_table[self->monitoring_transition_counter as usize].PMONID = PMONID;
+            self->param_mon_transitions_table[self->monitoring_transition_counter as usize].type = self->param_mon_config_table[PMONID as usize].type;
+            match *fault_info {
+                case ParamOutOfLimit(out_of_limit_info)=> {
+                    self->param_mon_transitions_table[self->monitoring_transition_counter as usize].limit_value = out_of_limit_info.PID_limit;
+                    self->param_mon_transitions_table[self->monitoring_transition_counter as usize].new_value = out_of_limit_info.PID_value;
+                }
+                case ParamFaultValue(fault_value_info)=> {
+                    self->param_mon_transitions_table[self->monitoring_transition_counter as usize].limit_value = fault_value_info.PID_expected_value;
+                    self->param_mon_transitions_table[self->monitoring_transition_counter as usize].new_value = fault_value_info.PID_value;
+
+                }
+                case Empty => {
+                    //error
+                }
+            }
+             
+            match (self->param_mon_config_table[PMONID as usize].definition) {
+                case ParamValueCheck(value_definition)=> {
+
+                     self->param_mon_transitions_table[self->monitoring_transition_counter as usize].mask_value = value_definition.mask_value;
+
+                }
+                case _ => {
+
+                }
+
+            }
+
+            self->param_mon_transitions_table[self->monitoring_transition_counter as usize].new_status = new_status;
+            self->param_mon_transitions_table[self->monitoring_transition_counter as usize].prev_status = prev_status;
+            self->param_mon_transitions_table[self->monitoring_transition_counter as usize].trans_obt = self->param_mon_config_table[PMONID as usize].transition_obt;
+
+            self->monitoring_transition_counter = self->monitoring_transition_counter + 1;
+        }
+
+        if(self->monitoring_transition_counter as usize == max_num_transitions){
+
+            var tm_handler : Option<box TMHandler> = None;
+            self->tm_handler_pool.alloc(&mut tm_handler);
+
+            match tm_handler {
+
+                case Some(b_tm_handler) => {
+
+                    var tm_count : u16 = 0 : u16;
+                    var current_obt : CUCTime = {seconds = 0, finetime = 0};
+                    self->tm_counter.get_next_tm_count(&mut tm_count);
+                    self->obt_manager.get_current_obt(&mut current_obt);
+                    
+                    let monitoring_status : Status<TMHandlerError> = build_tm_12_12(&mut b_tm_handler, tm_count, current_obt, self->monitoring_transition_counter, &(self->param_mon_transitions_table));
+
+                    if( monitoring_status is Success) {
+                        self->tm_channel.send_tm(b_tm_handler);
+
+                    } else {
+                        self->tm_handler_pool.free(b_tm_handler);
+                        self->tm_counter.count_lost_tm();
+                    }
+
+
+                }
+                case None => {
+                    self->tm_counter.count_lost_tm();
+
+                }
+            }
+
+
+            self->monitoring_transition_counter = 0;
+        }
+
+        return;
+    }
+
+    /**
+     * @brief Checks a parameter monitor when it is enabled and its interval has elapsed.
+     *
+     * @param PMONID Parameter monitor ID.
+     * @param[in,out] evID Event ID, overwritten when the check triggers an event.
+     * @param[in,out] fault_info Fault info, overwritten when the check triggers an event, and recorded as is in a transition that triggers none.
+     * @param[out] event_triggered True when the check triggers an event and false when it completes without one; left unwritten when the monitor is not checked, its definition does not match its type or its PID is not in the data pool.
+     */
+    procedure do_monitoring (&mut self, PMONID: u16, evID : &mut u16,
+                             fault_info : &mut FaultInfo, event_triggered: &mut bool) {
+
+        var outcome : MonitoringOutcome = MonitoringOutcome::NoReport;
+
+        if (is_PMONID_valid(PMONID)) {
+
+            if (self->param_mon_config_table[PMONID as usize].enabled == true) {
+
+                if (self->manage_interval_control(PMONID)) {
+
+                    if (self->is_limits_monitoring(PMONID)) {
+
+                        var limits_monitoring_status : CheckLimitsResult = self->check_PID_status_limits_monitoring(PMONID);
+
+                        match limits_monitoring_status {
+                            case MonitorAboveHighLimit => {
+
+                                outcome = self->manage_param_above_upper_limit(PMONID);
+                            }
+                            case MonitorBelowLowLimit => {
+
+                                outcome = self->manage_param_below_lower_limit(PMONID);
+
+                            }
+                            case MonitorWithinLimits => {
+
+                                outcome = self->manage_param_within_limits(PMONID, &(*fault_info));
+                            }
+
+                        }
+
+                    } else if (self->is_expected_value_monitoring(PMONID)) {
+
+                        var exp_value_monitoring_status : CheckValueResult = self->check_PID_status_exp_val_monitoring(PMONID);
+
+                        match exp_value_monitoring_status {
+                            case MonitorValueUnexpected => {
+
+                                outcome = self->manage_unexpected_value(PMONID);
+                            }
+                            case MonitorValueExpected => {
+
+                                outcome = self->manage_expected_value(PMONID, &(*fault_info));
+
+                            }
+
+                        }
+
+                    } else {
+
+                    }
+                }
+            }
+        }
+
+        match outcome {
+            case EventTriggered(event_evID, event_fault_info) => {
+                *evID = event_evID;
+                *fault_info = event_fault_info;
+                *event_triggered = true;
+            }
+            case NoEvent => {
+                *event_triggered = false;
+            }
+            case NoReport => {
+            }
+        }
+
+        return;
+    }
+
+    procedure is_PMON_enabled(&mut self, PMONID : usize, is_enabled : &mut bool) {
+
+        *is_enabled = false;
+    
+        if (PMONID < max_num_pmon_ids) {
+
+            if((self->param_mon_config_table[PMONID].type is MonitorCheckType::Free) == false){
+
+                *is_enabled = self->param_mon_config_table[PMONID as usize].enabled;
+            }
+        }
+
+        return;
+    }
+
+    method set_unchecked (&priv self, tc_request : &PS12TCRequest) {
+
+        var valid_PMONID : usize = (tc_request->tc_data_1_2_6.PMONID) as usize;
+
+        match (self->param_mon_config_table[valid_PMONID].type) {
+
+            case ExpectedValue => {
+                self->param_mon_config_table[valid_PMONID].current_state = CheckState::ParamValueStatus(None);
+            }
+            case Limits => {
+                self->param_mon_config_table[valid_PMONID].current_state = CheckState::ParamLimitStatus(None);
+            }
+            case Delta => {
+                self->param_mon_config_table[valid_PMONID].current_state = CheckState::ParamDeltaStatus(None);
+            }
+            case Free => {
+                //Do nothing
+            }
+        }
+
+        self->param_mon_config_table[valid_PMONID].temp_state = self->param_mon_config_table[valid_PMONID].current_state;
+
+        return;
+    }
+
+    method exec12_1TC(&priv self, tc_request : &PS12TCRequest) -> Status<PUSService12Error> {
+
+        var status : Status<PUSService12Error> = Success;
+
+        if (tc_request->tc_data_1_2_6.N != 1) {
+
+            status = Failure(PUSService12Error::NumOfInstrNotValid(tc_request->tc_data_1_2_6.N));
+        } else {
+
+            var PMONID : usize = (tc_request->tc_data_1_2_6.PMONID) as usize;
+
+            if (is_PMONID_valid(tc_request->tc_data_1_2_6.PMONID)) {
+
+                if (self->param_mon_config_table[PMONID].type is MonitorCheckType::Free == false) {
+
+                    self->pus_service_1.notify_tm_1_3(
+                            tc_request->packet_id,
+                            tc_request->packet_seq_ctrl,
+                            tc_request->flags_ack);
+
+                    self->param_mon_config_table[PMONID].enabled = true;
+                    self->param_mon_config_table[PMONID].interval_control = 0;
+                    self->param_mon_config_table[PMONID].repetition_control = 0;
+
+                    self->pus_service_1.notify_tm_1_7(
+                            tc_request->packet_id,
+                            tc_request->packet_seq_ctrl,
+                            tc_request->flags_ack);
+
+                } else {
+
+                    status = Failure(PUSService12Error::PMONUndefined(tc_request->tc_data_1_2_6.PMONID));
+
+                }
+
+            } else {
+
+                status = Failure(PUSService12Error::PMONIDInvalid(tc_request->tc_data_1_2_6.PMONID));
+            }
+
+        }
+
+        return status;
+    }
+
+    method exec12_2TC(&priv self, tc_request : &PS12TCRequest) -> Status<PUSService12Error> {
+
+        var status : Status<PUSService12Error> = Success;
+
+
+        if (tc_request->tc_data_1_2_6.N != 1) {
+
+            status = Failure(PUSService12Error::NumOfInstrNotValid(tc_request->tc_data_1_2_6.N));
+
+        } else {
+
+            if (is_PMONID_valid(tc_request->tc_data_1_2_6.PMONID)) {
+
+                if(self->param_mon_config_table[(tc_request->tc_data_1_2_6.PMONID) as usize].type is MonitorCheckType::Free == false){
+
+                    self->pus_service_1.notify_tm_1_3(
+                            tc_request->packet_id,
+                            tc_request->packet_seq_ctrl,
+                            tc_request->flags_ack);
+
+                    self->param_mon_config_table[(tc_request->tc_data_1_2_6.PMONID) as usize].enabled = false;
+                    self->set_unchecked(tc_request);
+
+                    self->pus_service_1.notify_tm_1_7(
+                            tc_request->packet_id,
+                            tc_request->packet_seq_ctrl,
+                            tc_request->flags_ack);
+
+
+                } else {
+
+                    status = Failure(PUSService12Error::PMONUndefined(tc_request->tc_data_1_2_6.PMONID));
+
+                }
+
+            } else {
+
+                status = Failure(PUSService12Error::PMONIDInvalid(tc_request->tc_data_1_2_6.PMONID));
+            }
+
+        }
+
+        return status;
+    }
+
+    method add_valid_mng_mon_def (&priv self, tc_request : &PS12TCRequest){
+
+        let PMONID : usize = (tc_request->tc_data_5.PMONID) as usize;
+
+        (self->param_mon_config_table)[PMONID] = tc_request->tc_data_5.mon_config;
+
+        (self->param_mon_config_table)[PMONID].enabled = false;
+
+        //set unckecked
+        if (PMONID < max_num_pmon_ids){
+
+            match (self->param_mon_config_table[PMONID].type) {
+
+                case ExpectedValue => {
+
+                    (self->param_mon_config_table)[PMONID].current_state = CheckState::ParamValueStatus(None);
+                }
+                case Limits => {
+
+                    (self->param_mon_config_table)[PMONID].current_state = CheckState::ParamLimitStatus(None);
+
+                }
+                case Delta => { 
+
+                    (self->param_mon_config_table)[PMONID].current_state = CheckState::ParamDeltaStatus(None);
+
+                }
+                case Free => {
+
+                    //Error
+
+                }    
+    
+            }
+
+        }
+
+        return;
+    }
+
+    method exec12_5TC(&priv self, tc_request : &PS12TCRequest) -> Status<PUSService12Error> {
+
+        var status : Status<PUSService12Error> = Success;
+
+
+        if (tc_request->tc_data_5.N != 1) {
+
+            status = Failure(PUSService12Error::NumOfInstrNotValid(tc_request->tc_data_5.N));
+
+        } else if (sys_data_pool_is_valid_PID(tc_request->tc_data_5.mon_config.PID) == false) {
+
+            status = Failure(PUSService12Error::PIDNotValid(tc_request->tc_data_5.mon_config.PID));
+
+        } else if (tc_request->tc_data_5.mon_config.type is MonitorCheckType::Limits) {
+
+            if (is_valid_check_limit_def(&tc_request->tc_data_5.mon_config.definition)){
+
+                self->pus_service_1.notify_tm_1_3(
+                        tc_request->packet_id,
+                        tc_request->packet_seq_ctrl,
+                        tc_request->flags_ack);
+
+                self->add_valid_mng_mon_def(tc_request);
+
+                self->pus_service_1.notify_tm_1_7(
+                        tc_request->packet_id,
+                        tc_request->packet_seq_ctrl,
+                        tc_request->flags_ack);
+
+            } else {
+
+                status = Failure(PUSService12Error::PMONDefinitionInvalid(tc_request->tc_data_5.PMONID));
+
+            }
+
+        } else if (tc_request->tc_data_5.mon_config.type is MonitorCheckType::ExpectedValue) {
+
+            self->pus_service_1.notify_tm_1_3(
+                    tc_request->packet_id,
+                    tc_request->packet_seq_ctrl,
+                    tc_request->flags_ack);
+
+            self->add_valid_mng_mon_def(tc_request);
+
+            self->pus_service_1.notify_tm_1_7(tc_request->packet_id,
+                    tc_request->packet_seq_ctrl,
+                    tc_request->flags_ack);
+
+        } else {
+
+            status = Failure(PUSService12Error::PMONDefinitionInvalid(tc_request->tc_data_5.PMONID));
+
+        }
+
+        return status;
+
+    }
+
+    method exec12_6TC(&priv self, tc_request : &PS12TCRequest) -> Status<PUSService12Error> {
+
+        var status : Status<PUSService12Error> = Success;
+
+        if (tc_request->tc_data_1_2_6.N != 1) {
+
+            status = Failure(PUSService12Error::NumOfInstrNotValid(tc_request->tc_data_1_2_6.N));
+
+        } else {
+
+            var PMON_type : MonitorCheckType = get_check_type((tc_request->tc_data_1_2_6.PMONID) as u8);
+
+            if (PMON_type is MonitorCheckType::Free){
+
+                status = Failure(PUSService12Error::PMONUndefined(tc_request->tc_data_1_2_6.PMONID));
+
+            } else if (self->param_mon_config_table[(tc_request->tc_data_1_2_6.PMONID)as usize].enabled == false){
+
+                self->pus_service_1.notify_tm_1_3(
+                            tc_request->packet_id,
+                            tc_request->packet_seq_ctrl,
+                            tc_request->flags_ack);
+
+                self->param_mon_config_table[(tc_request->tc_data_1_2_6.PMONID) as usize].type = MonitorCheckType::Free;
+
+                self->pus_service_1.notify_tm_1_7(
+                            tc_request->packet_id,
+                            tc_request->packet_seq_ctrl,
+                            tc_request->flags_ack);
+
+            } else {
+
+                status = Failure(PUSService12Error::PMONEnabled(tc_request->tc_data_1_2_6.PMONID));
+
+
+            }
+
+        }
+
+        return status;
+
+    }
+   
+
+    procedure exec_tc (&mut self, tc_handler : &mut TCHandler){
+
+        var status : Status<PUSService12Error> = Success;
+        var tc_data_status : Status<TCHandlerError> = Success;
+        var subtype : u8 = tc_handler->df_header.subtype;
+        var tc_request : PS12TCRequest = ps12_init_tc_request;
+
+        tc_request.packet_id = tc_handler->packet_header.packet_id;
+        tc_request.packet_seq_ctrl = tc_handler->packet_header.packet_seq_ctrl;
+        tc_request.flags_ack = tc_handler->df_header.flag_ver_ack;
+        tc_request.tc_num_bytes = tc_handler->tc_descriptor.tc_num_bytes;
+
+        if (subtype == 1 || subtype == 2 || subtype == 6){
+        
+            tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &mut (tc_request.tc_data_1_2_6.N));
+
+            if (tc_data_status is Success){
+                tc_data_status = tc_handler_get_u16_appdata_field(tc_handler, &mut (tc_request.tc_data_1_2_6.PMONID));
+            }
+            
+        } else if (subtype == 5) {
+
+            tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &mut (tc_request.tc_data_5.N));
+
+            if (tc_data_status is Success){
+                tc_data_status = tc_handler_get_u16_appdata_field(tc_handler, &mut (tc_request.tc_data_5.PMONID));
+            }
+            if (tc_data_status is Success){
+                tc_data_status = tc_handler_get_u16_appdata_field(tc_handler, &mut (tc_request.tc_data_5.mon_config.PID));
+            }
+            if (tc_data_status is Success){
+                tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &mut (tc_request.tc_data_5.mon_config.interval));
+            }
+            if (tc_data_status is Success){
+                tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &mut (tc_request.tc_data_5.mon_config.repetition));
+            }
+            if (tc_data_status is Success){
+                var aux : u8 = 0;
+                tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &mut aux);
+                tc_request.tc_data_5.mon_config.type = get_check_type(aux);
+            }
+
+            if (tc_data_status is Success) {
+
+                if (tc_request.tc_data_5.mon_config.type is MonitorCheckType::ExpectedValue) {
+
+                    var value_def : ParamValueCheckDefinition = {
+                        mask_value = 0,
+                        expected_value = 0,
+                        EvID = 0
+                    };
+
+                    var type : DataPoolItem = sys_data_pool_get_item(tc_request.tc_data_5.mon_config.PID);
+
+                    match type {
+
+                        case U8Item(sdp_index) => {
+
+                            var mask : u8 = 0;
+
+                            //get mask
+                            tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &mut mask);
+                            value_def.mask_value = mask as u32;
+
+                            //get expected value
+                            if (tc_data_status is Success){
+                                var expected_value : u8 = 0;
+                                tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &mut expected_value);
+                                value_def.expected_value = expected_value as u32;
+                            }
+                            
+                            //get EvID
+                            if (tc_data_status is Success){
+                                tc_data_status = tc_handler_get_u16_appdata_field(tc_handler, &mut (value_def.EvID));
+                            }
+
+                            tc_request.tc_data_5.mon_config.definition = MonitorDefinition::ParamValueCheck(value_def);
+
+                        }
+                        case U32Item(sdp_index) => {
+
+                            //get mask
+                            tc_data_status = tc_handler_get_u32_appdata_field(tc_handler, &mut (value_def.mask_value));
+
+                            //get expected value
+                            if (tc_data_status is Success) {
+                                tc_data_status = tc_handler_get_u32_appdata_field(tc_handler, &mut (value_def.expected_value));
+                            }
+                            
+                            //get EvID
+                            if (tc_data_status is Success) {
+                                tc_data_status = tc_handler_get_u16_appdata_field(tc_handler, &mut (value_def.EvID));
+                            }
+                            
+                            tc_request.tc_data_5.mon_config.definition = MonitorDefinition::ParamValueCheck(value_def);
+
+                        }
+                        case NoValidPID => {
+                            status = Failure(PUSService12Error::PIDNotValid(tc_request.tc_data_5.mon_config.PID));
+                        }
+
+                    }
+
+                } else if (tc_request.tc_data_5.mon_config.type is MonitorCheckType::Limits){
+
+                    var limits_def : ParamLimitCheckDefinition = {
+                        low_limit = 0,
+                        low_limit_evID = 0,
+                        high_limit = 0,
+                        high_limit_evID = 0
+                    };
+
+                    var type : DataPoolItem = sys_data_pool_get_item(tc_request.tc_data_5.mon_config.PID);
+
+                    match type {
+
+                        case U8Item(sdp_index) => {
+
+                            var low_limit : u8 = 0;
+
+                            //get low limit
+                            tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &mut low_limit);
+                            limits_def.low_limit = low_limit as u32;
+
+                            //get low limit evID
+                            if (tc_data_status is Success){
+                                tc_data_status = tc_handler_get_u16_appdata_field(tc_handler, &mut (limits_def.low_limit_evID));
+                            }
+                            
+                            //get high limit
+                            if (tc_data_status is Success){
+                                var high_limit : u8 = 0;
+                                tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &mut high_limit);
+                                limits_def.high_limit = high_limit as u32;
+                            }
+
+                            //get high limit evID
+                            if (tc_data_status is Success){
+                                tc_data_status = tc_handler_get_u16_appdata_field(tc_handler, &mut (limits_def.high_limit_evID));
+                            }
+
+                            tc_request.tc_data_5.mon_config.definition = MonitorDefinition::ParamLimitCheck(limits_def);
+
+                        }
+                        case U32Item(sdp_index) => {
+
+                            //get low limit
+                            tc_data_status = tc_handler_get_u32_appdata_field(tc_handler, &mut (limits_def.low_limit));
+                            
+                            //get low limit evID
+                            if (tc_data_status is Success){
+                                tc_data_status = tc_handler_get_u16_appdata_field(tc_handler, &mut (limits_def.low_limit_evID));
+                            }
+
+                            //get high limit
+                            if (tc_data_status is Success){
+                                tc_data_status = tc_handler_get_u32_appdata_field(tc_handler, &mut (limits_def.high_limit));
+                            }
+
+                            //get high limit evID
+                            if( tc_data_status is Success){
+                                tc_data_status = tc_handler_get_u16_appdata_field(tc_handler, &mut (limits_def.high_limit_evID));
+                            }
+
+                            tc_request.tc_data_5.mon_config.definition = MonitorDefinition::ParamLimitCheck(limits_def);
+
+                        }
+                        case NoValidPID => {
+                            status = Failure(PUSService12Error::PIDNotValid(tc_request.tc_data_5.mon_config.PID));
+                        }
+                    }
+
+                } else {
+                    // TODO: Error
+                }
+            }
+
+        } else {
+
+            // Invalid subtype
+            // The error will be signalled in the following conditional block
+
+        }
+
+        if (tc_data_status is Failure) {
+            status = Failure(PUSService12Error::AppDataOutOfRange(tc_request.tc_num_bytes));
+        }
+
+        if (status is Success) {
+
+            if (subtype == 1) {
+
+                status = self->exec12_1TC(&tc_request);
+
+            } else if (subtype == 2) {
+
+                status = self->exec12_2TC(&tc_request);
+
+            } else if (subtype == 5) {
+
+                status = self->exec12_5TC(&tc_request);
+
+            } else if (subtype == 6) {
+
+                status = self->exec12_6TC(&tc_request);
+
+            } else {
+
+                status = Failure(PUSService12Error::ErrorInAcceptance);
+            }
+
+        }
+
+        match status {
+
+            case Success => {
+
+            }
+            case Failure(error) => {
+
+                match error {
+
+                    case ErrorInAcceptance => {
+
+                        self->pus_service_1.send_tm_1_4_error_in_acceptance(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl);
+
+                    }
+                    case AppDataOutOfRange(tc_num_bytes) => {
+
+                        self->pus_service_1.send_tm_1_4_short_pack_length(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl,
+                                    tc_num_bytes);
+
+                    }
+                    case NumOfInstrNotValid(N) => {
+
+                        self->pus_service_1.send_tm_1_4_num_of_instr_not_valid(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl,
+                                    N);
+
+                    }
+                    case PIDNotValid(PID) => {
+
+                        self->pus_service_1.send_tm_1_4_PID_not_valid(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl,
+                                    PID);
+
+                    }
+                    case PMONUndefined(PMONID) => {
+
+                        self->pus_service_1.send_tm_1_4_PMON_undefined(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl,
+                                    PMONID);
+
+                    }
+                    case PMONIDInvalid(PMONID) => {
+
+                        self->pus_service_1.send_tm_1_4_PMONID_invalid(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl,
+                                    PMONID);
+
+                    }
+                    case PMONDefinitionInvalid(PMONID) => {
+
+                        self->pus_service_1.send_tm_1_4_PMON_definition_invalid(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl,
+                                    PMONID);
+
+                    }
+                    case PMONEnabled(PMONID) => {
+
+                        self->pus_service_1.send_tm_1_4_PMON_enabled(
+                                    tc_request.packet_id,
+                                    tc_request.packet_seq_ctrl,
+                                    PMONID);
+
+                    }
+                }
+
+            }
+        }
+
+        return;
+    
+    }
+
+     
+};
+
+
+
+

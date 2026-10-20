@@ -1,0 +1,190 @@
+/**
+ * @file pus_service5_help.fin
+ * @brief Imports and definitions related to PUS Service 5.
+ */
+
+
+import obdh.pus.services.service1;
+import obdh.tmtc.tm_channel;
+import obdh.obt_manager;
+
+enum Ev_IDType {
+    Informative, //0x1XXX
+    LowSeverityAnomaly, //0x2XXX
+    MediumSeverityAnomaly, //0x3XXX
+    HighSeverityAnomaly, //0x4XXX
+    Ev_IDNotValid
+};
+
+/**
+ * @enum PUSService5Error
+ * @brief Reasons why PUS service 5 rejects a TC, with the data of the TM[1,4] that reports each one.
+ */
+enum PUSService5Error {
+    ErrorInAcceptance,          /**< Subtype not supported */
+    AppDataOutOfRange(usize),   /**< TC shorter than its fields, with its length in bytes */
+    NumOfInstrNotValid(u8),     /**< Number of instructions other than 1 */
+    EvIDNotValid(u16)           /**< Event ID not valid */
+};
+
+const informative_Ev_IDs : u16 = 3;
+const low_severity_anomaly_Ev_IDs : u16 = 4;
+const medium_severity_anomaly_Ev_IDs : u16 = 0;
+const high_severity_anomaly_Ev_IDs : u16 = 16;
+
+//Number of Ev_IDs of each type, indexed by the Ev_ID type
+const Ev_IDs_per_type : [u16; 5] = {0, informative_Ev_IDs, low_severity_anomaly_Ev_IDs,
+                                    medium_severity_anomaly_Ev_IDs, high_severity_anomaly_Ev_IDs};
+
+const offset_mask : u16 = 0x001F; //Maximum Ev_IDs of each type in the baseline configuration is 32,
+                                  //from 0xX000 to 0xX01F, where X is the Ev_ID type
+
+const EvID_build_tm_error : u16 = 0x2100; //Ev_ID for the build TM error
+
+struct ParamOutOfLimitInfo {
+    PID : u16;
+    PID_value : u32;
+    PID_limit : u32;
+};
+
+struct ParamFaultValueInfo {
+    PID : u16;
+    PID_value : u32;
+    PID_mask : u32;
+    PID_expected_value : u32;
+};
+
+/**
+ * @struct PS5TCRequest
+ * @brief Fields of a TC[5,x] that its execution needs, decoded by exec_tc.
+ */
+struct PS5TCRequest {
+    packet_id : u16;
+    packet_seq_ctrl : u16;
+    flags_ack : u8;
+    tc_num_bytes : usize;
+    N : u8;
+    EvID: u16;
+};
+
+constexpr ps5_init_tc_request : PS5TCRequest = {
+    packet_id = 0, packet_seq_ctrl = 0, flags_ack = 0, tc_num_bytes = 0, N = 0, EvID = 0
+};
+
+//These functions could become viewers !!!
+
+
+function get_Ev_ID_type(Ev_ID : u16) -> Ev_IDType {
+
+    var Ev_ID_type: Ev_IDType = Ev_IDType::Ev_IDNotValid;
+    var aux_type : u16 = Ev_ID >> 12 : u16;
+
+    if ((aux_type >= 1) && (aux_type <= 4)){
+        var aux_id : u16 = Ev_ID & 0x0FFF;
+        if (aux_id < Ev_IDs_per_type[aux_type as usize]){
+            if (aux_type == 1){
+                Ev_ID_type = Ev_IDType::Informative;
+            } else if (aux_type == 2){
+                Ev_ID_type = Ev_IDType::LowSeverityAnomaly;
+            } else if (aux_type == 3){
+                Ev_ID_type = Ev_IDType::MediumSeverityAnomaly;
+            } else {
+                Ev_ID_type = Ev_IDType::HighSeverityAnomaly;
+            }
+        }
+    }
+
+    return Ev_ID_type;
+
+}
+
+function is_Ev_ID_valid (evID : u16) -> bool {
+
+    var is_valid : bool = true;
+    var evID_type : Ev_IDType = get_Ev_ID_type(evID);
+    if (evID_type is Ev_IDType::Ev_IDNotValid){
+        is_valid = false;
+    } else {
+        
+    }
+    return is_valid;
+}
+
+
+
+function get_Ev_ID_enable_config_index(Ev_ID : u16) -> usize {
+
+    var Ev_ID_type : Ev_IDType = get_Ev_ID_type(Ev_ID);
+    var config_slot : usize = 0; //not valid config_slot
+    match Ev_ID_type {
+        case Informative => {
+            config_slot = 1;
+        }
+        case LowSeverityAnomaly => {
+            config_slot = 2;
+        }
+        case MediumSeverityAnomaly => {
+            config_slot = 3;
+        }
+        case HighSeverityAnomaly => {
+            config_slot = 4;
+        }
+        case Ev_IDNotValid => {
+        }
+    }
+
+    return config_slot;
+}
+
+function get_Ev_ID_enable_config_offset(Ev_ID : u16) -> u8 {
+
+    return (Ev_ID & offset_mask) as u8;
+} 
+
+
+
+function build_tm_5_x_param_out_of_limit(p_tm_handler : &mut TMHandler, tm_seq_counter: u16, fault_info : ParamOutOfLimitInfo, ev_ID : u16, current_obt : CUCTime) -> Status<TMHandlerError> {
+
+    startup_tm(p_tm_handler);
+    var status : Status<TMHandlerError> = append_u16_appdata_field(p_tm_handler, ev_ID);
+    if (status is Success){
+        status = append_u16_appdata_field(p_tm_handler, fault_info.PID);
+    }
+    if (status is Success){
+        status = append_u32_appdata_field(p_tm_handler, fault_info.PID_value);
+    }
+    if (status is Success){
+        status = append_u32_appdata_field(p_tm_handler, fault_info.PID_limit);
+    }
+    if (status is Success){
+        var subtype : u8 = get_Ev_ID_enable_config_index(ev_ID) as u8;
+        close_tm(p_tm_handler, 5, subtype, tm_seq_counter, current_obt);
+    }
+
+    return status;
+}
+
+
+function build_tm_5_x_param_check_value_fail(p_tm_handler : &mut TMHandler, tm_seq_counter: u16, fault_info : ParamFaultValueInfo, ev_ID : u16, current_obt : CUCTime) -> Status<TMHandlerError> {
+
+    startup_tm(p_tm_handler);
+    var status : Status<TMHandlerError> = append_u16_appdata_field(p_tm_handler, ev_ID);
+    if (status is Success){
+        status = append_u16_appdata_field(p_tm_handler, fault_info.PID);
+    }
+    if (status is Success){
+        status = append_u32_appdata_field(p_tm_handler, fault_info.PID_value);
+    }
+    if (status is Success){
+        status = append_u32_appdata_field(p_tm_handler, fault_info.PID_mask);
+    }
+    if (status is Success){
+        status = append_u32_appdata_field(p_tm_handler, fault_info.PID_expected_value);
+    }
+    if (status is Success){
+        var subtype : u8 = get_Ev_ID_enable_config_index(ev_ID) as u8;
+        close_tm(p_tm_handler, 5, subtype, tm_seq_counter, current_obt);
+    }
+
+    return status;
+}

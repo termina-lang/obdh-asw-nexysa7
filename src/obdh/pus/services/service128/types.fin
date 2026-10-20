@@ -1,0 +1,30 @@
+/**
+ * @file pus_service128_help.fin
+ * @brief Imports and definitions related to PUS Service 128.
+ */
+
+/**
+ * @struct PS128TCRequest
+ * @brief Fields of a TC[128,x] that its execution needs, decoded by exec_tc, and the reboot flag it returns.
+ */
+struct PS128TCRequest {
+    packet_id : u16;
+    packet_seq_ctrl : u16;
+    flags_ack : u8;
+    reboot_requested : bool;
+};
+
+constexpr ps128_init_tc_request : PS128TCRequest = {
+    packet_id = 0,
+    packet_seq_ctrl = 0,
+    flags_ack = 0,
+    reboot_requested = false
+};
+
+/**
+ * @enum PUSService128Error
+ * @brief Reasons why PUS service 128 rejects a TC, reported with a TM[1,4].
+ */
+enum PUSService128Error {
+    ErrorInAcceptance       /**< Subtype not supported */
+};
