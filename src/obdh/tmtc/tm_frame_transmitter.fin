@@ -120,8 +120,10 @@ resource class CTMFrameTransmitter provides ITMChannel, ITMFrameTransmitter {
 
             match byte {
                 case Some(tx_byte) => {
-                    self->char_dev.write_byte(tx_byte);
+                    // Enabled first: the interrupt fires as the byte leaves
+                    // the FIFO, which may happen before write_byte returns
                     self->char_dev.enable_tx_irq();
+                    self->char_dev.write_byte(tx_byte);
                 }
                 case None => {
                     self->char_dev.disable_tx_irq();
