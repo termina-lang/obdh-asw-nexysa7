@@ -29,7 +29,7 @@ CTCFrameReceiver tc_frame_receiver;
 
 CAPBUARTDriver uart_drv;
 
-CGPIODriver gpio_drv;
+CGRGPIODriver gpio_drv;
 
 CTMCounter tm_counter;
 

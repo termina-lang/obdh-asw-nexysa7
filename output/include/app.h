@@ -57,7 +57,7 @@ extern CTCFrameReceiver tc_frame_receiver;
 
 extern CAPBUARTDriver uart_drv;
 
-extern CGPIODriver gpio_drv;
+extern CGRGPIODriver gpio_drv;
 
 extern CTMCounter tm_counter;
 

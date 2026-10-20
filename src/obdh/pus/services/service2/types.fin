@@ -1,6 +1,9 @@
 
 const num_params2 : usize = 64;
 
+/** @brief Number of device indices a device address can carry (bits 28 to 31) */
+constexpr max_num_devices : usize = 16;
+
 /**
  * @struct PS2TCRequest
  * @brief Fields of a TC[2,x] that its execution needs, decoded by exec_tc.
@@ -22,8 +25,7 @@ enum PUSService2Error {
     ErrorInAcceptance,              /**< Subtype not supported */
     AppDataOutOfRange(usize),       /**< TC shorter than its fields, with its length in bytes */
     NumOfInstrNotValid(u8),         /**< Number of instructions other than 1 */
-    DeviceAddressNotValid(u32),     /**< Device address not valid */
-    DeviceCommandExecError(u32)     /**< The device command failed, with the device address */
+    DeviceAddressNotValid(u32)      /**< Device address not valid */
 };
 
 constexpr ps2_init_tc_request : PS2TCRequest = {

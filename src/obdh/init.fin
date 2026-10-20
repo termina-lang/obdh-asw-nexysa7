@@ -23,7 +23,7 @@ const Dec : u32 = 20;
 handler class CInitHandler {
 
     uart_drv : access IAPBUARTInit;                         /**< UART driver access */
-    gpio_driver : access IGPIODriver;                /**< GPIO driver access */
+    gpio_driver : access IGRGPIOInit;                /**< GPIO driver access */
     system_data_pool_u32 : access AtomicArrayAccess<u32; sdp_num_u32_params>; /**< Access to 32-bit system data pool atomic array */
     system_data_pool_u8 : access AtomicArrayAccess<u8; sdp_num_u8_params>;   /**< Access to 8-bit system data pool atomic array */
     system_init_ev : sink TimeVal triggers init;      /**< Event sink that triggers initialization */

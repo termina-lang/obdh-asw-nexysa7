@@ -3,24 +3,9 @@
 
 #include <termina.h>
 
+#include "drivers/gpio.h"
+
 #include "option.h"
-
-typedef enum {
-    GPIODriverError__InvalidLEDIndex
-} termina__enum__GPIODriverError_t;
-
-typedef struct {
-    termina__enum__GPIODriverError_t _variant;
-} GPIODriverError;
-
-typedef struct {
-    GPIODriverError _0;
-} termina__enum__Status__GPIODriverError__Failure_params_t;
-
-typedef struct {
-    termina__enum__Status__GPIODriverError__Failure_params_t Failure;
-    termina__enum__Status_t _variant;
-} Status__GPIODriverError;
 
 typedef struct {
     uint32_t Data;
@@ -30,11 +15,16 @@ typedef struct {
 
 typedef struct {
     termina__resource_lock_type_t _lock_type;
+    uint32_t output_mask;
     volatile GPIO_registers * registers;
-} CGPIODriver;
+} CGRGPIODriver;
 
-void CGPIODriver__init_gpio(const termina__event_t * const termina__ev, void * const termina__this);
+void CGRGPIODriver__init_gpio(const termina__event_t * const termina__ev, void * const termina__this);
 
-void CGPIODriver__write_led(const termina__event_t * const termina__ev, void * const termina__this, const uint8_t led, const uint8_t value, Status__GPIODriverError * const status);
+void CGRGPIODriver__read_pin(const termina__event_t * const termina__ev, void * const termina__this, const GPIOPinId pin, GPIOPinState * const state);
+
+void CGRGPIODriver__toggle_pin(const termina__event_t * const termina__ev, void * const termina__this, const GPIOPinId pin);
+
+void CGRGPIODriver__write_pin(const termina__event_t * const termina__ev, void * const termina__this, const GPIOPinId pin, const GPIOPinState state);
 
 #endif

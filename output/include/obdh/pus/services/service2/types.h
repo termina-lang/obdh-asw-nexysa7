@@ -20,8 +20,7 @@ typedef enum {
     PUSService2Error__ErrorInAcceptance,
     PUSService2Error__AppDataOutOfRange,
     PUSService2Error__NumOfInstrNotValid,
-    PUSService2Error__DeviceAddressNotValid,
-    PUSService2Error__DeviceCommandExecError
+    PUSService2Error__DeviceAddressNotValid
 } termina__enum__PUSService2Error_t;
 
 typedef struct {
@@ -37,16 +36,11 @@ typedef struct {
 } termina__enum__PUSService2Error__DeviceAddressNotValid_params_t;
 
 typedef struct {
-    uint32_t _0;
-} termina__enum__PUSService2Error__DeviceCommandExecError_params_t;
-
-typedef struct {
     termina__enum__PUSService2Error_t _variant;
     union {
         termina__enum__PUSService2Error__AppDataOutOfRange_params_t AppDataOutOfRange;
         termina__enum__PUSService2Error__NumOfInstrNotValid_params_t NumOfInstrNotValid;
         termina__enum__PUSService2Error__DeviceAddressNotValid_params_t DeviceAddressNotValid;
-        termina__enum__PUSService2Error__DeviceCommandExecError_params_t DeviceCommandExecError;
     };
 } PUSService2Error;
 

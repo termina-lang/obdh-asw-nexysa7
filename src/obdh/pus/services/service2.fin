@@ -2,22 +2,17 @@
 PUS SERVICE 2 : DEVICE ACCESS
 */
 
-import drivers.gaisler.grgpio;
+import drivers.gpio;
 import obdh.pus.services.service1;
 import encoding.binary;
 import obdh.pus.tc_packet;
 import obdh.pus.tm_packet;
 import obdh.pus.services.service2.types;
-import obdh.pus.services.service2.internal;
 import obdh.pus.services.service12;
 
 
-
-// DISP <--> LED <--> address ON, OFF
-// DISP 1 <--> LED 0 <--> 0x00000001, 0x00000000
-// DISP 2 <--> LED 1 <--> 0x10000001, 0x10000000
-// DISP 3 <--> LED 2 <--> 0x20000001, 0x20000000
-// DISP 4 <--> LED 3 <--> 0x30000001, 0x30000000
+// Device address: device index in bits 28 to 31, 1 (on) or 0 (off) in bits
+// 0 to 3, the rest 0. The pin of each device is given by app.fin.
 
 interface IPUSService2 {
 
@@ -30,7 +25,30 @@ resource class CPUSService2 provides IPUSService2 {
 
     pus_service_1 : access IPUSService1;
 
-    gpio_driver : access IGPIODriver;
+    gpio : access IGPIO;
+
+    /// Pin of each device, indexed by the device index of its address; None if there is no such device
+    device_pins : [Option<GPIOPinId>; max_num_devices];
+
+    method is_device_address_valid(&self, dev_address : u32) -> bool {
+
+        var is_valid : bool = false;
+
+        if ((dev_address & 0x0FFFFFFE : u32) == 0 : u32) {
+
+            let device : usize = ((dev_address & 0xF0000000 : u32) >> 28 : u32) as usize;
+
+            match self->device_pins[device] {
+                case Some(_pin) => {
+                    is_valid = true;
+                }
+                case None => {
+                }
+            }
+        }
+
+        return is_valid;
+    }
 
     method exec2_1TC(&mut self, tc_request : &PS2TCRequest) -> Status<PUSService2Error> {
 
@@ -40,7 +58,7 @@ resource class CPUSService2 provides IPUSService2 {
 
             status = Failure(PUSService2Error::NumOfInstrNotValid(tc_request->N));
 
-        } else if device_drv_is_on_off_address_valid(tc_request) == false {
+        } else if self->is_device_address_valid(tc_request->dev_address) == false {
 
             status = Failure(PUSService2Error::DeviceAddressNotValid(tc_request->dev_address));
 
@@ -51,36 +69,35 @@ resource class CPUSService2 provides IPUSService2 {
                         tc_request->packet_seq_ctrl,
                         tc_request->flags_ack);
 
-            let led_status : Status<GPIODriverError> = self->dev_drv_on_off(tc_request);
+            self->dev_drv_on_off(tc_request);
 
-            if (led_status is Success) {
-
-                self->pus_service_1.notify_tm_1_7(
-                            tc_request->packet_id,
-                            tc_request->packet_seq_ctrl,
-                            tc_request->flags_ack);
-
-            } else {
-
-                status = Failure(PUSService2Error::DeviceCommandExecError(tc_request->dev_address));
-
-            }
+            self->pus_service_1.notify_tm_1_7(
+                        tc_request->packet_id,
+                        tc_request->packet_seq_ctrl,
+                        tc_request->flags_ack);
 
         }
 
         return status;
     }
 
-    method dev_drv_on_off(&priv self, tc_request: &PS2TCRequest) -> Status<GPIODriverError> {
+    method dev_drv_on_off(&priv self, tc_request: &PS2TCRequest) {
 
-        var status : Status<GPIODriverError> = Success;
+        let device : usize = ((tc_request->dev_address & 0xF0000000 : u32) >> 28 : u32) as usize;
 
-        var led: u8 = ((tc_request->dev_address & 0xF0000000) >> 28 : u32) as u8;
-        var on_off : u8 = (tc_request->dev_address & 0x0000000F) as u8;
+        match self->device_pins[device] {
+            case Some(pin) => {
+                if ((tc_request->dev_address & 0x00000001 : u32) == 0 : u32) {
+                    self->gpio.write_pin(pin, GPIOPinState::Low);
+                } else {
+                    self->gpio.write_pin(pin, GPIOPinState::High);
+                }
+            }
+            case None => {
+            }
+        }
 
-        self->gpio_driver.write_led(led, on_off, &mut status);
-
-        return status;
+        return;
     }
 
     procedure exec_tc (&mut self, tc_handler : &mut TCHandler){
@@ -152,14 +169,6 @@ resource class CPUSService2 provides IPUSService2 {
                     case DeviceAddressNotValid(dev_address) => {
 
                         self->pus_service_1.send_tm_1_4_device_address_not_valid(
-                                        tc_request.packet_id,
-                                        tc_request.packet_seq_ctrl,
-                                        dev_address);
-
-                    }
-                    case DeviceCommandExecError(dev_address) => {
-
-                        self->pus_service_1.send_tm_1_8_device_command_exec_error(
                                         tc_request.packet_id,
                                         tc_request.packet_seq_ctrl,
                                         dev_address);

@@ -64,8 +64,10 @@ resource uart_drv : CAPBUARTDriver = {
     registers @ 0x80000100
 };
 
-resource gpio_drv : CGPIODriver = {
-    registers @ 0x80000A00
+// LEDs on bits 23 to 26
+resource gpio_drv : CGRGPIODriver = {
+    registers @ 0x80000A00,
+    output_mask = 0x07800000
 };
 
 
@@ -184,8 +186,13 @@ resource pus_service_128 : CPUSService128 = {
     pus_service_1 <-> pus_service_1
 };
 
+// Devices 6 to 9 are the LEDs on bits 23 to 26
 resource pus_service_2 : CPUSService2 = {
-    gpio_driver <-> gpio_drv,
+    gpio <-> gpio_drv,
+    device_pins = {None, None, None, None, None, None,
+                   Some({port = 0, pin = 23}), Some({port = 0, pin = 24}),
+                   Some({port = 0, pin = 25}), Some({port = 0, pin = 26}),
+                   None, None, None, None, None, None},
     pus_service_1 <-> pus_service_1
 };
 

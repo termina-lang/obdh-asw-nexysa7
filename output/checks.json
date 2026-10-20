@@ -1,8 +1,8 @@
 {
     "summary": {
-        "obligations": 373,
-        "discharged": 207,
-        "checked": 166
+        "obligations": 377,
+        "discharged": 208,
+        "checked": 169
     },
     "modules": [
         {
@@ -88,33 +88,46 @@
             "obligations": [
                 {
                     "start": {
-                        "line": 77,
-                        "column": 48
+                        "line": 50,
+                        "column": 25
                     },
                     "end": {
-                        "line": 77,
-                        "column": 56
+                        "line": 50,
+                        "column": 45
                     },
                     "property": "shift-below-width",
-                    "status": "discharged",
-                    "prover": "value",
-                    "reason": "the amount stays between 23 and 26"
+                    "status": "checked"
                 },
                 {
                     "start": {
-                        "line": 80,
-                        "column": 68
+                        "line": 66,
+                        "column": 60
                     },
                     "end": {
-                        "line": 80,
-                        "column": 76
+                        "line": 66,
+                        "column": 80
                     },
                     "property": "shift-below-width",
-                    "status": "discharged",
-                    "prover": "value",
-                    "reason": "the amount stays between 23 and 26"
+                    "status": "checked"
+                },
+                {
+                    "start": {
+                        "line": 73,
+                        "column": 38
+                    },
+                    "end": {
+                        "line": 73,
+                        "column": 58
+                    },
+                    "property": "shift-below-width",
+                    "status": "checked"
                 }
             ]
+        },
+        {
+            "module": "drivers.gpio",
+            "file": "src/drivers/gpio.fin",
+            "obligations": []
         },
         {
             "module": "drivers.memory",
@@ -2984,24 +2997,61 @@
             "obligations": [
                 {
                     "start": {
-                        "line": 78,
-                        "column": 25
+                        "line": 39,
+                        "column": 36
                     },
                     "end": {
-                        "line": 78,
-                        "column": 74
+                        "line": 39,
+                        "column": 79
                     },
                     "property": "shift-below-width",
                     "status": "discharged",
                     "prover": "constant",
                     "reason": "the amount is a constant"
+                },
+                {
+                    "start": {
+                        "line": 41,
+                        "column": 19
+                    },
+                    "end": {
+                        "line": 41,
+                        "column": 45
+                    },
+                    "property": "index-in-bounds",
+                    "status": "discharged",
+                    "prover": "value",
+                    "reason": "the index stays between 0 and 15"
+                },
+                {
+                    "start": {
+                        "line": 86,
+                        "column": 32
+                    },
+                    "end": {
+                        "line": 86,
+                        "column": 87
+                    },
+                    "property": "shift-below-width",
+                    "status": "discharged",
+                    "prover": "constant",
+                    "reason": "the amount is a constant"
+                },
+                {
+                    "start": {
+                        "line": 88,
+                        "column": 15
+                    },
+                    "end": {
+                        "line": 88,
+                        "column": 41
+                    },
+                    "property": "index-in-bounds",
+                    "status": "discharged",
+                    "prover": "value",
+                    "reason": "the index stays between 0 and 15"
                 }
             ]
-        },
-        {
-            "module": "obdh.pus.services.service2.internal",
-            "file": "src/obdh/pus/services/service2/internal.fin",
-            "obligations": []
         },
         {
             "module": "obdh.pus.services.service2.types",
