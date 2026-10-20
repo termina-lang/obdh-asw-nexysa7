@@ -106,6 +106,8 @@ void CPUSService17__exec_tc(const termina__event_t * const termina__ev, void * c
         #line 139 "src/obdh/pus/services/service17.fin"
         const PUSService17Error error = status.Failure._0;
 
+        (void)error;
+
         #line 145 "src/obdh/pus/services/service17.fin"
         self->pus_service_1.send_tm_1_4_error_in_acceptance(termina__ev, self->pus_service_1._that, tc_request.packet_id, tc_request.packet_seq_ctrl);
 

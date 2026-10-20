@@ -23,7 +23,8 @@ typedef struct {
     termina__allocator_t tm_handler_pool;
     struct {
         void * _that;
-        void (* stop_tx)(const termina__event_t * const termina__ev, void * const termina__this);
+        void (* disable_tx_irq)(const termina__event_t * const termina__ev, void * const termina__this);
+        void (* enable_tx_irq)(const termina__event_t * const termina__ev, void * const termina__this);
         void (* tx_ready)(const termina__event_t * const termina__ev, void * const termina__this, _Bool * const ready);
         void (* write_byte)(const termina__event_t * const termina__ev, void * const termina__this, const uint8_t byte);
     } char_dev;

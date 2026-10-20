@@ -1667,9 +1667,6 @@ void CPUSService12__exec_tc(const termina__event_t * const termina__ev, void * c
                 #line 1029 "src/obdh/pus/services/service12.fin"
                 if (type._variant == DataPoolItem__U8Item) {
                     
-                    #line 1029 "src/obdh/pus/services/service12.fin"
-                    const size_t sdp_index = type.U8Item._0;
-
                     #line 1031 "src/obdh/pus/services/service12.fin"
                     uint8_t mask = 0U;
 
@@ -1710,9 +1707,6 @@ void CPUSService12__exec_tc(const termina__event_t * const termina__ev, void * c
                 #line 1052 "src/obdh/pus/services/service12.fin"
                 if (type._variant == DataPoolItem__U32Item) {
                     
-                    #line 1052 "src/obdh/pus/services/service12.fin"
-                    const size_t sdp_index = type.U32Item._0;
-
                     #line 1055 "src/obdh/pus/services/service12.fin"
                     tc_data_status = tc_handler_get_u32_appdata_field(tc_handler, &value_def.mask_value);
 
@@ -1762,9 +1756,6 @@ void CPUSService12__exec_tc(const termina__event_t * const termina__ev, void * c
                 #line 1089 "src/obdh/pus/services/service12.fin"
                 if (type._variant == DataPoolItem__U8Item) {
                     
-                    #line 1089 "src/obdh/pus/services/service12.fin"
-                    const size_t sdp_index = type.U8Item._0;
-
                     #line 1091 "src/obdh/pus/services/service12.fin"
                     uint8_t low_limit = 0U;
 
@@ -1813,9 +1804,6 @@ void CPUSService12__exec_tc(const termina__event_t * const termina__ev, void * c
                 #line 1117 "src/obdh/pus/services/service12.fin"
                 if (type._variant == DataPoolItem__U32Item) {
                     
-                    #line 1117 "src/obdh/pus/services/service12.fin"
-                    const size_t sdp_index = type.U32Item._0;
-
                     #line 1120 "src/obdh/pus/services/service12.fin"
                     tc_data_status = tc_handler_get_u32_appdata_field(tc_handler, &limits_def.low_limit);
 

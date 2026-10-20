@@ -19,11 +19,13 @@ typedef struct {
     volatile APBUARTRegs * registers;
 } CAPBUARTDriver;
 
+void CAPBUARTDriver__disable_tx_irq(const termina__event_t * const termina__ev, void * const termina__this);
+
+void CAPBUARTDriver__enable_tx_irq(const termina__event_t * const termina__ev, void * const termina__this);
+
 void CAPBUARTDriver__initialize(const termina__event_t * const termina__ev, void * const termina__this);
 
 void CAPBUARTDriver__read_byte(const termina__event_t * const termina__ev, void * const termina__this, Option__u8 * const byte);
-
-void CAPBUARTDriver__stop_tx(const termina__event_t * const termina__ev, void * const termina__this);
 
 void CAPBUARTDriver__tx_ready(const termina__event_t * const termina__ev, void * const termina__this, _Bool * const ready);
 

@@ -1026,7 +1026,7 @@ resource class CPUSService12 provides IPUSService12 {
 
                     match type {
 
-                        case U8Item(sdp_index) => {
+                        case U8Item(_sdp_index) => {
 
                             var mask : u8 = 0;
 
@@ -1049,7 +1049,7 @@ resource class CPUSService12 provides IPUSService12 {
                             tc_request.tc_data_5.mon_config.definition = MonitorDefinition::ParamValueCheck(value_def);
 
                         }
-                        case U32Item(sdp_index) => {
+                        case U32Item(_sdp_index) => {
 
                             //get mask
                             tc_data_status = tc_handler_get_u32_appdata_field(tc_handler, &mut (value_def.mask_value));
@@ -1086,7 +1086,7 @@ resource class CPUSService12 provides IPUSService12 {
 
                     match type {
 
-                        case U8Item(sdp_index) => {
+                        case U8Item(_sdp_index) => {
 
                             var low_limit : u8 = 0;
 
@@ -1114,7 +1114,7 @@ resource class CPUSService12 provides IPUSService12 {
                             tc_request.tc_data_5.mon_config.definition = MonitorDefinition::ParamLimitCheck(limits_def);
 
                         }
-                        case U32Item(sdp_index) => {
+                        case U32Item(_sdp_index) => {
 
                             //get low limit
                             tc_data_status = tc_handler_get_u32_appdata_field(tc_handler, &mut (limits_def.low_limit));

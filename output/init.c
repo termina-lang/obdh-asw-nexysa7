@@ -76,7 +76,8 @@ void termina__app__init_globals(void) {
     tm_frame_transmitter.char_dev._that = &uart_drv;
     tm_frame_transmitter.char_dev.tx_ready = &CAPBUARTDriver__tx_ready;
     tm_frame_transmitter.char_dev.write_byte = &CAPBUARTDriver__write_byte;
-    tm_frame_transmitter.char_dev.stop_tx = &CAPBUARTDriver__stop_tx;
+    tm_frame_transmitter.char_dev.enable_tx_irq = &CAPBUARTDriver__enable_tx_irq;
+    tm_frame_transmitter.char_dev.disable_tx_irq = &CAPBUARTDriver__disable_tx_irq;
     tm_frame_transmitter.sync_word[0U] = 0xBEU;
     tm_frame_transmitter.sync_word[1U] = 0xBAU;
     tm_frame_transmitter.sync_word[2U] = 0xBEU;

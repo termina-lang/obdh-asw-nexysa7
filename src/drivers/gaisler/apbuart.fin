@@ -146,6 +146,14 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
     procedure write_byte(&mut self, byte : u8) {
 
         self->registers.data = byte as u32;
+
+        return;
+
+    }
+
+
+    procedure enable_tx_irq(&mut self) {
+
         self->enable_TI();
 
         return;
@@ -153,7 +161,7 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
     }
 
 
-    procedure stop_tx(&mut self) {
+    procedure disable_tx_irq(&mut self) {
 
         self->disable_TI();
 
@@ -166,7 +174,7 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
      * @brief Initializes the UART module.
      *
      * Enables TX, RX, and the reception interrupt. The transmission
-     * interrupt is enabled with each byte written.
+     * interrupt is left to enable_tx_irq and disable_tx_irq.
      */
     procedure initialize(&mut self) {
 

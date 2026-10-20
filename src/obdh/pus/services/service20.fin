@@ -185,10 +185,10 @@ resource class CPUSService20 provides IPUSService20 {
             var item_type : DataPoolItem = sys_data_pool_get_item(tc_request.PID);
 
             match item_type {
-                case U8Item(sdp_index) => {
+                case U8Item(_sdp_index) => {
                     tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &mut (tc_request.tc_20_3_data.PID_value_u8));
                 }
-                case U32Item(sdp_index) => {
+                case U32Item(_sdp_index) => {
                     tc_data_status = tc_handler_get_u32_appdata_field(tc_handler, &mut (tc_request.tc_20_3_data.PID_value_u32));
                 }
                 case NoValidPID => {

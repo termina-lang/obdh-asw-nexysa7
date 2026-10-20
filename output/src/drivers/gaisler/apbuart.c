@@ -60,6 +60,25 @@ static void CAPBUARTDriver__disable_TI(const termina__event_t * const termina__e
 
 }
 
+void CAPBUARTDriver__disable_tx_irq(const termina__event_t * const termina__ev, void * const termina__this) {
+    
+    #line 164 "src/drivers/gaisler/apbuart.fin"
+    CAPBUARTDriver * self = (CAPBUARTDriver *)termina__this;
+
+    #line 164 "src/drivers/gaisler/apbuart.fin"
+    termina__lock_t termina__lock = termina__resource__lock(&termina__ev->owner, &self->_lock_type);
+
+    #line 166 "src/drivers/gaisler/apbuart.fin"
+    CAPBUARTDriver__disable_TI(termina__ev, self);
+
+    #line 168 "src/drivers/gaisler/apbuart.fin"
+    termina__resource__unlock(&termina__ev->owner, &self->_lock_type, termina__lock);
+
+    #line 168 "src/drivers/gaisler/apbuart.fin"
+    return;
+
+}
+
 static void CAPBUARTDriver__enable_RI(const termina__event_t * const termina__ev, CAPBUARTDriver * const self) {
     
     (void)termina__ev;
@@ -120,33 +139,52 @@ static void CAPBUARTDriver__enable_TX(const termina__event_t * const termina__ev
 
 }
 
-void CAPBUARTDriver__initialize(const termina__event_t * const termina__ev, void * const termina__this) {
+void CAPBUARTDriver__enable_tx_irq(const termina__event_t * const termina__ev, void * const termina__this) {
     
-    #line 171 "src/drivers/gaisler/apbuart.fin"
+    #line 155 "src/drivers/gaisler/apbuart.fin"
     CAPBUARTDriver * self = (CAPBUARTDriver *)termina__this;
 
-    #line 171 "src/drivers/gaisler/apbuart.fin"
+    #line 155 "src/drivers/gaisler/apbuart.fin"
     termina__lock_t termina__lock = termina__resource__lock(&termina__ev->owner, &self->_lock_type);
 
-    #line 173 "src/drivers/gaisler/apbuart.fin"
-    CAPBUARTDriver__enable_RX(termina__ev, self);
+    #line 157 "src/drivers/gaisler/apbuart.fin"
+    CAPBUARTDriver__enable_TI(termina__ev, self);
 
-    #line 174 "src/drivers/gaisler/apbuart.fin"
-    CAPBUARTDriver__enable_TX(termina__ev, self);
-
-    #line 175 "src/drivers/gaisler/apbuart.fin"
-    CAPBUARTDriver__enable_RI(termina__ev, self);
-
-    #line 176 "src/drivers/gaisler/apbuart.fin"
-    CAPBUARTDriver__disable_TF(termina__ev, self);
-
-    #line 177 "src/drivers/gaisler/apbuart.fin"
-    CAPBUARTDriver__disable_RF(termina__ev, self);
-
-    #line 179 "src/drivers/gaisler/apbuart.fin"
+    #line 159 "src/drivers/gaisler/apbuart.fin"
     termina__resource__unlock(&termina__ev->owner, &self->_lock_type, termina__lock);
 
+    #line 159 "src/drivers/gaisler/apbuart.fin"
+    return;
+
+}
+
+void CAPBUARTDriver__initialize(const termina__event_t * const termina__ev, void * const termina__this) {
+    
     #line 179 "src/drivers/gaisler/apbuart.fin"
+    CAPBUARTDriver * self = (CAPBUARTDriver *)termina__this;
+
+    #line 179 "src/drivers/gaisler/apbuart.fin"
+    termina__lock_t termina__lock = termina__resource__lock(&termina__ev->owner, &self->_lock_type);
+
+    #line 181 "src/drivers/gaisler/apbuart.fin"
+    CAPBUARTDriver__enable_RX(termina__ev, self);
+
+    #line 182 "src/drivers/gaisler/apbuart.fin"
+    CAPBUARTDriver__enable_TX(termina__ev, self);
+
+    #line 183 "src/drivers/gaisler/apbuart.fin"
+    CAPBUARTDriver__enable_RI(termina__ev, self);
+
+    #line 184 "src/drivers/gaisler/apbuart.fin"
+    CAPBUARTDriver__disable_TF(termina__ev, self);
+
+    #line 185 "src/drivers/gaisler/apbuart.fin"
+    CAPBUARTDriver__disable_RF(termina__ev, self);
+
+    #line 187 "src/drivers/gaisler/apbuart.fin"
+    termina__resource__unlock(&termina__ev->owner, &self->_lock_type, termina__lock);
+
+    #line 187 "src/drivers/gaisler/apbuart.fin"
     return;
 
 }
@@ -183,25 +221,6 @@ void CAPBUARTDriver__read_byte(const termina__event_t * const termina__ev, void 
 
 }
 
-void CAPBUARTDriver__stop_tx(const termina__event_t * const termina__ev, void * const termina__this) {
-    
-    #line 156 "src/drivers/gaisler/apbuart.fin"
-    CAPBUARTDriver * self = (CAPBUARTDriver *)termina__this;
-
-    #line 156 "src/drivers/gaisler/apbuart.fin"
-    termina__lock_t termina__lock = termina__resource__lock(&termina__ev->owner, &self->_lock_type);
-
-    #line 158 "src/drivers/gaisler/apbuart.fin"
-    CAPBUARTDriver__disable_TI(termina__ev, self);
-
-    #line 160 "src/drivers/gaisler/apbuart.fin"
-    termina__resource__unlock(&termina__ev->owner, &self->_lock_type, termina__lock);
-
-    #line 160 "src/drivers/gaisler/apbuart.fin"
-    return;
-
-}
-
 void CAPBUARTDriver__tx_ready(const termina__event_t * const termina__ev, void * const termina__this, _Bool * const ready) {
     
     #line 137 "src/drivers/gaisler/apbuart.fin"
@@ -232,13 +251,10 @@ void CAPBUARTDriver__write_byte(const termina__event_t * const termina__ev, void
     #line 148 "src/drivers/gaisler/apbuart.fin"
     self->registers->data = (uint32_t)byte;
 
-    #line 149 "src/drivers/gaisler/apbuart.fin"
-    CAPBUARTDriver__enable_TI(termina__ev, self);
-
-    #line 151 "src/drivers/gaisler/apbuart.fin"
+    #line 150 "src/drivers/gaisler/apbuart.fin"
     termina__resource__unlock(&termina__ev->owner, &self->_lock_type, termina__lock);
 
-    #line 151 "src/drivers/gaisler/apbuart.fin"
+    #line 150 "src/drivers/gaisler/apbuart.fin"
     return;
 
 }

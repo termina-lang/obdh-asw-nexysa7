@@ -3,7 +3,8 @@
  * @brief Byte-level access to a character device.
  *
  * Every operation reads or writes the registers of the device and nothing
- * else: the device keeps no buffer and knows nothing of what it carries.
+ * else: the device keeps no buffer and knows nothing of what it carries. The
+ * operations on data and the ones on the transmit interrupt are kept apart.
  */
 interface ICharDev {
 
@@ -20,14 +21,19 @@ interface ICharDev {
     procedure tx_ready(&mut self, ready : &mut bool);
 
     /**
-     * @brief Writes a byte and enables the transmit interrupt.
+     * @brief Writes a byte to the transmit register.
      * @param[in] byte Byte to transmit.
      */
     procedure write_byte(&mut self, byte : u8);
 
     /**
-     * @brief Disables the transmit interrupt.
+     * @brief Enables the interrupt raised when the transmitter can take a new byte.
      */
-    procedure stop_tx(&mut self);
+    procedure enable_tx_irq(&mut self);
+
+    /**
+     * @brief Disables the transmit interrupt. A byte already written is still sent.
+     */
+    procedure disable_tx_irq(&mut self);
 
 };

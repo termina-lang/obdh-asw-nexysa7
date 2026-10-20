@@ -90,69 +90,72 @@ static void CTMFrameTransmitter__next_byte(const termina__event_t * const termin
 
 static void CTMFrameTransmitter__pump(const termina__event_t * const termina__ev, CTMFrameTransmitter * const self) {
     
-    #line 112 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 113 "src/obdh/tmtc/tm_frame_transmitter.fin"
     _Bool ready = false;
 
-    #line 113 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 114 "src/obdh/tmtc/tm_frame_transmitter.fin"
     self->char_dev.tx_ready(termina__ev, self->char_dev._that, &ready);
 
-    #line 115 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 116 "src/obdh/tmtc/tm_frame_transmitter.fin"
     if (ready) {
         
-        #line 117 "src/obdh/tmtc/tm_frame_transmitter.fin"
+        #line 118 "src/obdh/tmtc/tm_frame_transmitter.fin"
         Option__u8 byte = { ._variant = Option__None };
 
-        #line 118 "src/obdh/tmtc/tm_frame_transmitter.fin"
+        #line 119 "src/obdh/tmtc/tm_frame_transmitter.fin"
         CTMFrameTransmitter__next_byte(termina__ev, self, &byte);
 
-        #line 121 "src/obdh/tmtc/tm_frame_transmitter.fin"
+        #line 122 "src/obdh/tmtc/tm_frame_transmitter.fin"
         if (byte._variant == Option__Some) {
             
-            #line 121 "src/obdh/tmtc/tm_frame_transmitter.fin"
+            #line 122 "src/obdh/tmtc/tm_frame_transmitter.fin"
             const uint8_t tx_byte = byte.Some._0;
 
-            #line 122 "src/obdh/tmtc/tm_frame_transmitter.fin"
+            #line 123 "src/obdh/tmtc/tm_frame_transmitter.fin"
             self->char_dev.write_byte(termina__ev, self->char_dev._that, tx_byte);
+
+            #line 124 "src/obdh/tmtc/tm_frame_transmitter.fin"
+            self->char_dev.enable_tx_irq(termina__ev, self->char_dev._that);
 
         } else
         {
             
-            #line 125 "src/obdh/tmtc/tm_frame_transmitter.fin"
-            self->char_dev.stop_tx(termina__ev, self->char_dev._that);
+            #line 127 "src/obdh/tmtc/tm_frame_transmitter.fin"
+            self->char_dev.disable_tx_irq(termina__ev, self->char_dev._that);
 
         }
 
     }
 
-    #line 130 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 132 "src/obdh/tmtc/tm_frame_transmitter.fin"
     return;
 
 }
 
 void CTMFrameTransmitter__send_tm(const termina__event_t * const termina__ev, void * const termina__this, const termina__box_t tm_handler) {
     
-    #line 141 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 143 "src/obdh/tmtc/tm_frame_transmitter.fin"
     CTMFrameTransmitter * self = (CTMFrameTransmitter *)termina__this;
 
-    #line 141 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 143 "src/obdh/tmtc/tm_frame_transmitter.fin"
     termina__lock_t termina__lock = termina__resource__lock(&termina__ev->owner, &self->_lock_type);
 
-    #line 143 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 145 "src/obdh/tmtc/tm_frame_transmitter.fin"
     Option__box rejected = { ._variant = Option__None };
 
-    #line 144 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 146 "src/obdh/tmtc/tm_frame_transmitter.fin"
     termina__deque__try_put(self->tm_frames, tm_handler, &rejected);
 
-    #line 147 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 149 "src/obdh/tmtc/tm_frame_transmitter.fin"
     if (rejected._variant == Option__Some) {
         
-        #line 147 "src/obdh/tmtc/tm_frame_transmitter.fin"
+        #line 149 "src/obdh/tmtc/tm_frame_transmitter.fin"
         const termina__box_t rejected_tm = rejected.Some._0;
 
-        #line 148 "src/obdh/tmtc/tm_frame_transmitter.fin"
+        #line 150 "src/obdh/tmtc/tm_frame_transmitter.fin"
         self->tm_handler_pool.free(termina__ev, self->tm_handler_pool._that, rejected_tm);
 
-        #line 149 "src/obdh/tmtc/tm_frame_transmitter.fin"
+        #line 151 "src/obdh/tmtc/tm_frame_transmitter.fin"
         self->tm_counter.count_lost_tm(termina__ev, self->tm_counter._that);
 
     } else
@@ -161,32 +164,32 @@ void CTMFrameTransmitter__send_tm(const termina__event_t * const termina__ev, vo
 
     }
 
-    #line 155 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 157 "src/obdh/tmtc/tm_frame_transmitter.fin"
     CTMFrameTransmitter__pump(termina__ev, self);
 
-    #line 157 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 159 "src/obdh/tmtc/tm_frame_transmitter.fin"
     termina__resource__unlock(&termina__ev->owner, &self->_lock_type, termina__lock);
 
-    #line 157 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 159 "src/obdh/tmtc/tm_frame_transmitter.fin"
     return;
 
 }
 
 void CTMFrameTransmitter__transmit(const termina__event_t * const termina__ev, void * const termina__this) {
     
-    #line 164 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 166 "src/obdh/tmtc/tm_frame_transmitter.fin"
     CTMFrameTransmitter * self = (CTMFrameTransmitter *)termina__this;
 
-    #line 164 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 166 "src/obdh/tmtc/tm_frame_transmitter.fin"
     termina__lock_t termina__lock = termina__resource__lock(&termina__ev->owner, &self->_lock_type);
 
-    #line 166 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 168 "src/obdh/tmtc/tm_frame_transmitter.fin"
     CTMFrameTransmitter__pump(termina__ev, self);
 
-    #line 168 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 170 "src/obdh/tmtc/tm_frame_transmitter.fin"
     termina__resource__unlock(&termina__ev->owner, &self->_lock_type, termina__lock);
 
-    #line 168 "src/obdh/tmtc/tm_frame_transmitter.fin"
+    #line 170 "src/obdh/tmtc/tm_frame_transmitter.fin"
     return;
 
 }

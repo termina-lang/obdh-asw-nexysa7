@@ -104,8 +104,9 @@ resource class CTMFrameTransmitter provides ITMChannel, ITMFrameTransmitter {
     }
 
     /**
-     * @brief Writes the next byte if the transmitter is free, or stops the
-     * transmit interrupt when there is nothing left to send.
+     * @brief Writes the next byte if the transmitter is free and enables the
+     * transmit interrupt for the one after, or disables the interrupt when
+     * there is nothing left to send.
      */
     method pump(&mut self) {
 
@@ -120,9 +121,10 @@ resource class CTMFrameTransmitter provides ITMChannel, ITMFrameTransmitter {
             match byte {
                 case Some(tx_byte) => {
                     self->char_dev.write_byte(tx_byte);
+                    self->char_dev.enable_tx_irq();
                 }
                 case None => {
-                    self->char_dev.stop_tx();
+                    self->char_dev.disable_tx_irq();
                 }
             }
         }

@@ -304,9 +304,6 @@ void CPUSService20__exec_tc(const termina__event_t * const termina__ev, void * c
         #line 188 "src/obdh/pus/services/service20.fin"
         if (item_type._variant == DataPoolItem__U8Item) {
             
-            #line 188 "src/obdh/pus/services/service20.fin"
-            const size_t sdp_index = item_type.U8Item._0;
-
             #line 189 "src/obdh/pus/services/service20.fin"
             tc_data_status = tc_handler_get_u8_appdata_field(tc_handler, &tc_request.tc_20_3_data.PID_value_u8);
 
@@ -314,9 +311,6 @@ void CPUSService20__exec_tc(const termina__event_t * const termina__ev, void * c
         #line 191 "src/obdh/pus/services/service20.fin"
         if (item_type._variant == DataPoolItem__U32Item) {
             
-            #line 191 "src/obdh/pus/services/service20.fin"
-            const size_t sdp_index = item_type.U32Item._0;
-
             #line 192 "src/obdh/pus/services/service20.fin"
             tc_data_status = tc_handler_get_u32_appdata_field(tc_handler, &tc_request.tc_20_3_data.PID_value_u32);
 
