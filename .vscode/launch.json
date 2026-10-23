@@ -5,7 +5,7 @@
           "name": "(gdb) Launch",
           "type": "cppdbg",
           "request": "launch",
-          "program": "${workspaceFolder}/output/bin/obdh-asw-nexysa7",
+          "program": "${workspaceFolder}/output/app/bin/obdh-asw-nexysa7",
           "preLaunchTask": "build",
           "args": [],
           "stopAtEntry": false,

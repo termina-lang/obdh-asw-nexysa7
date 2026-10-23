@@ -3,7 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/output/include/**"
+                "${workspaceFolder}/output/app/include/**"
             ],
             "defines": [],
             "cStandard": "c11",
@@ -12,7 +12,7 @@
             "compilerPath": "/opt/rcc/bin/sparc-gaisler-rtems5-gcc",
             "compilerArgs": [
                 "-I/opt/rcc/sparc-gaisler-rtems5/leon3/lib/include",
-                "-I/opt/termina-osal/api"
+                "-I/opt/termina/osal/api"
 
             ]
         }

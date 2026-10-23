@@ -1,13 +1,8 @@
-name: obdh-asw-nexysa7
-output-folder: output
-efp-folder: efp
-platform: rtems5-leon3sf-nexysa7
-source-modules: src
-profile: debug
-enable-system-init: true
-enable-system-port: true
-builder: make
-platform-flags:
-  rtems5-leon3sf-nexysa7:
-    enable-irq-2: true
-        
+project:
+  name: obdh-asw-nexysa7
+  version: 0.1.0
+  manifest-version: 1
+
+app:
+  platform: rtems5-leon3sf-nexysa7
+  profile: debug
