@@ -8,7 +8,7 @@
  * 
  * @return A 32-bit pseudo-random number
  */
-function rand_r (mutseed : &mut u32) -> u32 {
+function random_gen (mutseed : &mut u32) -> u32 {
     
     var next : u32 = *mutseed;
 

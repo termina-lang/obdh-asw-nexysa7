@@ -359,7 +359,7 @@ resource class CPUSService3 provides IPUSService3 {
 
         for i : usize in 0 .. 5 {
 
-            var random_noise : u32 = (rand_r(&mut (self->random_seed)) % 11) - 5;
+            var random_noise : u32 = (random_gen(&mut (self->random_seed)) % 11) - 5;
             var data : u32 = 0;
 
             self->system_data_pool_u32.load_index(i, &mut data);
