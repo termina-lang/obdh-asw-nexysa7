@@ -16,7 +16,7 @@ interface ICharDev {
 
     /**
      * @brief Tells whether the transmitter can take a new byte.
-     * @param[out] ready True if the transmit register is empty.
+     * @param[out] ready True if the transmitter can take one more byte.
      */
     procedure tx_ready(&mut self, ready : &mut bool);
 

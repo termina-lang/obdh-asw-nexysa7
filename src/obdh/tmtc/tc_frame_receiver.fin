@@ -20,7 +20,8 @@ enum TCFrameRxStatus {
  * @brief Interface for receiving TC frames byte by byte.
  */
 interface ITCFrameReceiver {
-    procedure receive(&mut self, byte : u8, tc_handler : &mut Option<box TCHandler>);
+    procedure receive(&mut self, byte : u8, complete : &mut bool);
+    procedure take_tc(&mut self, tc_handler : &mut Option<box TCHandler>);
 };
 
 
@@ -30,7 +31,8 @@ interface ITCFrameReceiver {
  * bytes of the packet.
  *
  * The bytes of a frame are written directly into a TC handler from the pool,
- * which stays in the deque of the receiver until its last byte arrives.
+ * which stays in the deque of the receiver until take_tc takes it out after
+ * its last byte.
  */
 resource class CTCFrameReceiver provides ITCFrameReceiver {
 
@@ -44,6 +46,9 @@ resource class CTCFrameReceiver provides ITCFrameReceiver {
     rx_index : usize;
 
     rx_status : TCFrameRxStatus;
+
+    /** @brief True when the TC in the deque has all its bytes */
+    tc_complete : bool;
 
     /** @brief TC being received */
     tc_frame : access DequeAccess<TCHandler>;
@@ -101,12 +106,13 @@ resource class CTCFrameReceiver provides ITCFrameReceiver {
     }
 
     /**
-     * @brief Receives a byte from the character device.
+     * @brief Receives a byte from the character device. The bytes received
+     * while a complete TC waits for take_tc are dropped.
      *
-     * @param[in] byte         Received byte.
-     * @param[out] tc_handler  The TC, once its last byte has arrived, or None.
+     * @param[in] byte       Received byte.
+     * @param[out] complete  True once the last byte of the TC has arrived.
      */
-    procedure receive(&mut self, byte : u8, tc_handler : &mut Option<box TCHandler>) {
+    procedure receive(&mut self, byte : u8, complete : &mut bool) {
 
         var current : Option<box TCHandler> = None;
         self->tc_frame.take(&mut current);
@@ -115,16 +121,18 @@ resource class CTCFrameReceiver provides ITCFrameReceiver {
 
             case Some(tc_handler_b) => {
 
-                tc_handler_b.tc_descriptor.tc_bytes[self->rx_index] = byte;
-                self->rx_index = self->rx_index + 1;
+                if (self->tc_complete == false) {
+                    tc_handler_b.tc_descriptor.tc_bytes[self->rx_index] = byte;
+                    self->rx_index = self->rx_index + 1;
+                }
 
                 if (self->rx_index == tc_handler_b.tc_descriptor.tc_num_bytes) {
                     self->rx_index = 0;
-                    *tc_handler = Some(tc_handler_b);
-                } else {
-                    self->tc_frame.put(tc_handler_b);
-                    *tc_handler = None;
+                    self->tc_complete = true;
                 }
+
+                self->tc_frame.put(tc_handler_b);
+                *complete = self->tc_complete;
             }
 
             case None => {
@@ -148,8 +156,26 @@ resource class CTCFrameReceiver provides ITCFrameReceiver {
                     }
                 }
 
-                *tc_handler = None;
+                *complete = false;
             }
+        }
+
+        return;
+
+    }
+
+    /**
+     * @brief Takes the TC out of the receiver once its last byte has arrived.
+     *
+     * @param[out] tc_handler  The complete TC, or None.
+     */
+    procedure take_tc(&mut self, tc_handler : &mut Option<box TCHandler>) {
+
+        if (self->tc_complete) {
+            self->tc_complete = false;
+            self->tc_frame.take(tc_handler);
+        } else {
+            *tc_handler = None;
         }
 
         return;

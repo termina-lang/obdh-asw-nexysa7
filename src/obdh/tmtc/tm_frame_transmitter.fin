@@ -14,6 +14,9 @@ import obdh.pus.tm_handler;
 /** @brief Bytes of the frame header: sync word and 2-byte length */
 constexpr tm_frame_header_size : usize = 6;
 
+/** @brief Bytes of the longest TM frame, bound of the bytes written per call to pump */
+constexpr tm_frame_max_size : usize = tm_frame_header_size + max_send_size;
+
 
 /**
  * @interface ITMFrameTransmitter
@@ -104,8 +107,8 @@ resource class CTMFrameTransmitter provides ITMChannel, ITMFrameTransmitter {
     }
 
     /**
-     * @brief Writes the next byte if the transmitter is free and enables the
-     * transmit interrupt for the one after, or disables the interrupt when
+     * @brief Writes bytes while the transmitter can take them and enables the
+     * transmit interrupt for the ones after, or disables the interrupt when
      * there is nothing left to send.
      */
     method pump(&mut self) {
@@ -113,7 +116,7 @@ resource class CTMFrameTransmitter provides ITMChannel, ITMFrameTransmitter {
         var ready : bool = false;
         self->char_dev.tx_ready(&mut ready);
 
-        if (ready) {
+        for i : usize in 0 .. tm_frame_max_size while (ready) {
 
             var byte : Option<u8> = None;
             self->next_byte(&mut byte);
@@ -124,9 +127,11 @@ resource class CTMFrameTransmitter provides ITMChannel, ITMFrameTransmitter {
                     // the FIFO, which may happen before write_byte returns
                     self->char_dev.enable_tx_irq();
                     self->char_dev.write_byte(tx_byte);
+                    self->char_dev.tx_ready(&mut ready);
                 }
                 case None => {
                     self->char_dev.disable_tx_irq();
+                    ready = false;
                 }
             }
         }
