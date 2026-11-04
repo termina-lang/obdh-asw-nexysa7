@@ -560,7 +560,7 @@ resource class CPUSService19 provides IPUSService19 {
         
     procedure get_pending_action_number(&mut self, paction_num : &mut[usize;4]){
 
-        for i: usize in 0 .. 3 {
+        for i: usize in 0 .. 4 {
 
             paction_num[i] = self->pending_action_number[i];
 
