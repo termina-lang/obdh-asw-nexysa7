@@ -12,10 +12,10 @@
 		<Op type="equal" />
 		<Constant value="0x1" />
 	</BoolVar>
-	<BoolVar id="2" name="StartAddess_equal_to_0x20200" constantType="hex">
+	<BoolVar id="2" name="StartAddess_equal_to_0x41020200" constantType="hex">
 		<FieldRef name="StartAddress" />
 		<Op type="equal" />
-		<Constant value="20200" />
+		<Constant value="41020200" />
 	</BoolVar>
 	<BoolVar id="3" name="Length_equal_to_48" constantType="decimal">
 		<FieldRef name="Length" />

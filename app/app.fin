@@ -197,7 +197,7 @@ resource pus_service_2 : CPUSService2 = {
 };
 
 resource memory_drv : CNexysA7Memory = {
-    ddr2 @ 0x40000000,
+    ddr2 @ nexysa7_ddr2_base,
     write_enabled = {false, true, true, true, true, true, true, false}
 };
 

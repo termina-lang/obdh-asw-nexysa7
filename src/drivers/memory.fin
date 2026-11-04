@@ -8,7 +8,7 @@ constexpr max_memory_access_length : usize = 256 : usize;
  * @brief Reasons why a memory access is refused.
  */
 enum MemAccessError {
-    InvalidAccess,    /**< Memory identifier or range out of the regions of the board */
+    InvalidAccess,    /**< Memory identifier unknown, or range out of its region */
     ReadOnly          /**< Write to a region that cannot be written */
 };
 
@@ -16,17 +16,19 @@ enum MemAccessError {
  * @interface IByteMemoryAccess
  * @brief Access to byte-addressable memory regions of the board.
  *
- * Each region is identified by a memory identifier, and an address is an
- * offset from the start of its region. The implementation knows the size of
- * every region and whether it can be written. check_access validates a range
- * once; read, write and checksum do not check it again.
+ * Each region is identified by a memory identifier. An address is the
+ * absolute address of a byte, and a range is only accepted if it lies in the
+ * region of the memory identifier given with it. The implementation knows
+ * the start and size of every region and whether it can be written.
+ * check_access validates a range once; read, write and checksum do not check
+ * it again.
  */
 interface IByteMemoryAccess {
 
     /**
      * @brief Checks that a range lies in a region and, for a write, that the region can be written.
      * @param[in] mem_id Memory identifier.
-     * @param[in] address Offset of the first byte from the start of the region.
+     * @param[in] address Absolute address of the first byte.
      * @param[in] length Number of bytes.
      * @param[in] write True if the range is going to be written.
      * @param[out] result Success, or the reason why the access is refused.
@@ -37,7 +39,7 @@ interface IByteMemoryAccess {
     /**
      * @brief Copies a range of memory to the start of a buffer. Precondition: check_access has accepted the range.
      * @param[in] mem_id Memory identifier.
-     * @param[in] address Offset of the first byte from the start of the region.
+     * @param[in] address Absolute address of the first byte.
      * @param[in] length Number of bytes.
      * @param[out] dst Buffer that receives the bytes.
      */
@@ -47,7 +49,7 @@ interface IByteMemoryAccess {
     /**
      * @brief Copies the start of a buffer to a range of memory. Precondition: check_access has accepted the range for a write.
      * @param[in] mem_id Memory identifier.
-     * @param[in] address Offset of the first byte from the start of the region.
+     * @param[in] address Absolute address of the first byte.
      * @param[in] length Number of bytes.
      * @param[in] src Buffer that holds the bytes.
      */
@@ -57,7 +59,7 @@ interface IByteMemoryAccess {
     /**
      * @brief Computes the CRC-16-CCITT of a range of memory. Precondition: check_access has accepted the range.
      * @param[in] mem_id Memory identifier.
-     * @param[in] address Offset of the first byte from the start of the region.
+     * @param[in] address Absolute address of the first byte.
      * @param[in] length Number of bytes.
      * @param[out] checksum CRC-16-CCITT of the range, as computed by checksum.crc16.
      */

@@ -9,6 +9,6 @@ expected data is received.
 |-------|-|-|-|-|
 | **TO + 1** | **STEP0** | | | |
 | | | **INPUTS** | **TC** | **App Data** |
-| | Send the TC (6,5) to read bytes from memory address 0x40001000 | | TC(6,5) | N = 1, Memory ID = 0, Start Address = 0x1000, Length = 0x40 |
+| | Send the TC (6,5) to read bytes from memory address 0x40001000 | | TC(6,5) | N = 1, Memory ID = 0, Start Address = 0x40001000, Length = 0x40 |
 | | | **OUTPUTS** | **TM** | **App Data Filter** |
-| | Check that memory read is executed and TM (6,6) contains expected data | | TM(1,1)<br>TM(6,6)<br>TM(1,7) | N = 1, Memory ID = 0, Start Address = 0x1000, Length = 64, Read Data = [03100000 .. 01000000] |
+| | Check that memory read is executed and TM (6,6) contains expected data | | TM(1,1)<br>TM(6,6)<br>TM(1,7) | N = 1, Memory ID = 0, Start Address = 0x40001000, Length = 64, Read Data = [03100000 .. 01000000] |

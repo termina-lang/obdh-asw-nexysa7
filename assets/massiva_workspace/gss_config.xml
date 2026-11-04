@@ -106,6 +106,9 @@
 
 	<TestCase name="TP_0170_ASW_PUS_TC_6_5_REJECT_READ_BYTES_FROM_INVALID_MEMORY_ID" 
 		procedure="FT_PROCS/st06/tp_0170_asw_pus_tc_6_5_reject_read_bytes_from_invalid_memory_id.xml"/>
+
+	<TestCase name="TP_0175_ASW_PUS_TC_6_5_REJECT_READ_BYTES_OUT_OF_MEMORY_ID_REGION"
+		procedure="FT_PROCS/st06/tp_0175_asw_pus_tc_6_5_reject_read_bytes_out_of_memory_id_region.xml"/>
 	
 	<TestCase name="TP_0180_ASW_PUS_TC_6_2_REJECT_WRITE_BYTES_TO_READ_ONLY_MEMORY" 
 		procedure="FT_PROCS/st06/tp_0180_asw_pus_tc_6_2_reject_write_bytes_to_read_only_memory.xml"/>

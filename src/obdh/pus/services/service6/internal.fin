@@ -34,7 +34,7 @@ enum PUSService6Error {
     AppDataOutOfRange(usize),       /**< TC shorter than its fields, with its length in bytes */
     AppDataOverflow,                /**< The data of a TM[6,6] or TM[6,10] does not fit in the packet */
     NumOfInstrNotValid(u8),         /**< Number of instructions other than 1 */
-    MemAddressNotValid(u8, u32),    /**< Memory ID and address out of the memory banks */
+    MemAddressNotValid(u8, u32),    /**< Memory ID unknown, or address range out of its region */
     MemIDReadOnly(u8)               /**< Memory ID without write permission */
 };
 

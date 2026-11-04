@@ -4,7 +4,7 @@
 	<settings>
 		<settingFromConst value="0" toFieldRef="MemoryID"/>
 		<settingFromConst value="1" toFieldRef="N"/>
-		<settingFromConst value="0x1000" toFieldRef="StartAddress"/>		
+		<settingFromConst value="0x40001000" toFieldRef="StartAddress"/>		
 		<settingFromConst value="0x40" toFieldRef="Length"/>		
 	</settings>
 </Export>

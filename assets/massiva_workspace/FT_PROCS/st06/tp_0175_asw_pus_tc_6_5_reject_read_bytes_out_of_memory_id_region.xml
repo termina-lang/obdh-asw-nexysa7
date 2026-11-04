@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE test_proc SYSTEM "../../DTDs/test_proc.dtd">
+
+<!--
+
+ID: TP_0175_ASW_PUS_TC_6_5_REJECT_READ_BYTES_OUT_OF_MEMORY_ID_REGION
+Description:
+
+The test checks that telecommand TC(6,5) whose start address lies outside the
+region of its memory ID is effectively rejected and the TM (1,1) and TM (1,4)
+are received with error code 8 (invalid memory ID or address).
+
+-->
+
+<test_proc name="TP_0175_ASW_PUS_TC_6_5_REJECT_READ_BYTES_OUT_OF_MEMORY_ID_REGION">
+	<step name="tc_6_5_read_bytes_out_of_memory_id_region" id="0" prev_step_idref="NULL" output_idref_from_prev_step="NULL" mode="continuous">
+		<inputs>
+
+			<input_level_2 name="tc_6_5" ifRef="0" delay_value="120" delay_unit="miliseconds">
+				<level2 format="TC_Formats/Level2/st06/asw_pus_tc_6_5_format.xml"/>
+				<app_to_level2 export="STEPS_XML/INPUTS/tc_6_5/tc_6_5_read_bytes_out_of_memory_id_region.xml"/>
+				<level1 format="DEFAULT"/>
+				<level2_to_level1 export="TC_Formats/Lv2_To_Lv1/st06/asw_pus_tc_6_5_to_asw_pus_v2_tc_ack_0b1001.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_to_level0 export="DEFAULT"/>
+			</input_level_2>
+
+		</inputs>
+		<outputs checkmode="all" valid_time_interval_value="2000" valid_time_interval_unit="miliseconds">
+			<output_level_1 name="tm_1_1" id="0" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_1_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+			<output_level_2 name="tm_1_4" id="1" ifRef="0">
+				<level2 format="TM_Formats/Level2/st01/asw_pus_v2_tm_1_4_error_uint8_uint32_data.xml"/>
+				<level2_filter apply_def_filter="no" extra_filter="TM_Filters/Level2/st01/asw_pus_tm_1_4_error_8_memory_id_01_address_40001000_filter.xml"/>
+				<level1 format="DEFAULT"/>
+ 				<level2_from_level1 import="TM_Formats/Lv2_From_Lv1/st01/asw_pus_tm_1_4_from_asw_pus_v2_tm.xml"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_4_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_2>
+		</outputs>
+	</step>
+</test_proc>
