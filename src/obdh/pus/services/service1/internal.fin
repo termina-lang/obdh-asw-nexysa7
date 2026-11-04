@@ -72,15 +72,21 @@ enum TCVerifyStage {
 
 /**
  * @brief Verifies if the CRC of the given TC packet is valid.
+ * A packet whose length field does not match the bytes received is not.
  * @param tc_descriptor Pointer to the telecommand descriptor.
  * @return true if CRC is valid, false otherwise.
  */
 function is_crc_valid(tc_descriptor : &TCDescriptor) -> bool {
 
-    let cal_crc_value : u16 = cal_crc_16(&(tc_descriptor->tc_bytes), (tc_descriptor->tc_num_bytes - 2));
-    var packet_error_ctrl : u16 = get_packet_seq_ctrl(&(tc_descriptor->tc_bytes));
+    var is_valid : bool = false;
 
-    var is_valid : bool = (cal_crc_value == packet_error_ctrl);
+    if (get_packet_length(&(tc_descriptor->tc_bytes)) as usize + 7 : usize == tc_descriptor->tc_num_bytes) {
+
+        let cal_crc_value : u16 = cal_crc_16(&(tc_descriptor->tc_bytes), (tc_descriptor->tc_num_bytes - 2));
+        var packet_error_ctrl : u16 = get_packet_seq_ctrl(&(tc_descriptor->tc_bytes));
+
+        is_valid = (cal_crc_value == packet_error_ctrl);
+    }
 
     return is_valid;
 }

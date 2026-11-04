@@ -196,10 +196,15 @@ function tc_get_fields(tc_bytes : &[u8 ; max_tc_size],
     p_tc_df_header->subtype = (*tc_bytes)[8 : usize];
     p_tc_df_header->sourceID = deserialize_uint16(&(*tc_bytes)[9 : usize .. 11 : usize]);
 
-    // Deserialize Packet Error Control and store it at p_tc_packet_err_ctrl
+    // Deserialize Packet Error Control and store it at p_tc_packet_err_ctrl,
+    // or 0 if the packet length places it out of the TC
+    let crc_offset : usize = (*p_tc_packet_header).packet_length as usize + 5 : usize;
     var packet_error_ctrl : [u8 ; 2] = [0 : u8 ; 2];
-    packet_error_ctrl[0 : usize] = (*tc_bytes)[((*p_tc_packet_header).packet_length + 5 : u16) as usize];
-    packet_error_ctrl[1 : usize] = (*tc_bytes)[((*p_tc_packet_header).packet_length + 6 : u16) as usize];
+
+    if (crc_offset + 2 : usize <= max_tc_size) {
+        packet_error_ctrl[0 : usize] = (*tc_bytes)[crc_offset];
+        packet_error_ctrl[1 : usize] = (*tc_bytes)[crc_offset + 1 : usize];
+    }
 
     *p_tc_packet_err_ctrl = deserialize_uint16(&packet_error_ctrl);
 
