@@ -1,20 +1,13 @@
 {
     "version": "2.0.0",
     "tasks": [
-      {
-        "type": "shell",
-        "label": "build",
-        "command": "termina build",
-        "presentation": {
-            "echo": true,
-            "reveal": "silent",
-            "focus": false,
-            "panel": "dedicated",
-            "clear": true
-        },
-        "options": {
-          "cwd": "${workspaceFolder}"
+        {
+            "label": "termina: build",
+            "type": "shell",
+            "command": "termina build",
+            "options": { "cwd": "${workspaceFolder}" },
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": []
         }
-      }
     ]
 }

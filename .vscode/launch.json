@@ -1,22 +1,6 @@
 {
     "version": "0.2.0",
     "configurations": [
-        {
-          "name": "(gdb) Launch",
-          "type": "cppdbg",
-          "request": "launch",
-          "program": "${workspaceFolder}/output/app/bin/obdh-asw-nexysa7",
-          "preLaunchTask": "build",
-          "args": [],
-          "stopAtEntry": false,
-          "cwd": "${workspaceFolder}",
-          "environment": [],
-          "externalConsole": false,
-          "MIMode": "gdb",
-          "miDebuggerPath": "/opt/rcc/bin/sparc-gaisler-rtems5-gdb",
-          //"miDebuggerServerAddress": "localhost:1234",
-          "miDebuggerServerAddress": "localhost:2222",
-          "useExtendedRemote": true
-        }
-      ]
+        { "name": "Debug", "type": "termina", "request": "launch" }
+    ]
 }
