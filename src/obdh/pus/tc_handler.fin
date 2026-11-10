@@ -85,7 +85,7 @@ function tc_handler_is_valid_next_appdata_field (tc_handler : &TCHandler, field_
 
     var required_size : usize = tc_handler->app_data_index + field_size;
 
-    if (required_size <= tc_handler->tc_descriptor.tc_num_bytes){ 
+    if (required_size + 2 <= tc_handler->tc_descriptor.tc_num_bytes){
         res = true;
     }
 
