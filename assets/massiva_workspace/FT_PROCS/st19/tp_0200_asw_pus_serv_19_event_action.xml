@@ -8,7 +8,9 @@ Description:
 
 The test checks that PUS service 19 (event-action) functionality works correctly
 by setting up parameter monitoring, programming an automated action, and
-verifying that the action is triggered when a limit violation occurs. 
+verifying that the action is triggered when a limit violation occurs. At the
+end it disables and deletes the action with TC(19,5) and TC(19,2), so that the
+test can run again without restarting the software.
 
 -->
 
@@ -249,6 +251,62 @@ verifying that the action is triggered when a limit violation occurs.
 				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
 			</output_level_1>
 
-		</outputs>			
+		</outputs>
+	</step>
+	<step name="tc_19_5_disable_action_0x2002_event" id="7" prev_step_idref="NULL" output_idref_from_prev_step="NULL" mode="continuous">
+		<inputs>
+			<input_level_2 name="tc_19_5" ifRef="0" delay_value="1000" delay_unit="miliseconds">
+				<level2 format="TC_Formats/Level2/st19/asw_pus_tc_19_5_format.xml"/>
+				<app_to_level2 export="STEPS_XML/INPUTS/tc_19_5/tc_19_5_disable_0x2002_action.xml"/>
+				<level1 format="DEFAULT"/>
+				<level2_to_level1 export="TC_Formats/Lv2_To_Lv1/st19/asw_pus_tc_19_5_to_asw_pus_v2_tc_ack.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_to_level0 export="DEFAULT"/>
+			</input_level_2>
+		</inputs>
+		<outputs checkmode="all" valid_time_interval_value="2000" valid_time_interval_unit="miliseconds">
+			<output_level_1 name="tm_1_1" id="0" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_1_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+			<output_level_1 name="tm_1_7" id="1" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_7_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+		</outputs>
+	</step>
+	<step name="tc_19_2_delete_action_0x2002_event" id="8" prev_step_idref="NULL" output_idref_from_prev_step="NULL" mode="continuous">
+		<inputs>
+			<input_level_2 name="tc_19_2" ifRef="0" delay_value="200" delay_unit="miliseconds">
+				<level2 format="TC_Formats/Level2/st19/asw_pus_tc_19_2_format.xml"/>
+				<app_to_level2 export="STEPS_XML/INPUTS/tc_19_2/tc_19_2_delete_0x2002_action.xml"/>
+				<level1 format="DEFAULT"/>
+				<level2_to_level1 export="TC_Formats/Lv2_To_Lv1/st19/asw_pus_tc_19_2_to_asw_pus_v2_tc_ack.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_to_level0 export="DEFAULT"/>
+			</input_level_2>
+		</inputs>
+		<outputs checkmode="all" valid_time_interval_value="2000" valid_time_interval_unit="miliseconds">
+			<output_level_1 name="tm_1_1" id="0" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_1_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+			<output_level_1 name="tm_1_7" id="1" ifRef="0">
+				<level1 format="DEFAULT"/>
+				<level1_filter apply_def_filter="yes" extra_filter="TM_Filters/Level1/st01/asw_pus_v2_tm_1_7_filter.xml"/>
+				<level0 format="DEFAULT"/>
+				<level1_from_level0 import="DEFAULT"/>
+				<level0_filter apply_def_filter="yes" extra_filter="NULL"/>
+			</output_level_1>
+		</outputs>
 	</step>
 </test_proc>

@@ -53,7 +53,7 @@ received.
     <step name="tc_3_5_enable_sid_0" id="1" prev_step_idref="NULL" output_idref_from_prev_step="NULL" mode="continuous">
 		<inputs>
 			
-			<input_level_2 name="tc_3_5" ifRef="0" delay_value="24000" delay_unit="miliseconds">
+			<input_level_2 name="tc_3_5" ifRef="0" delay_value="10000" delay_unit="miliseconds">
 				<level2 format="TC_Formats/Level2/st03/asw_pus_tc_3_5_tc_3_6_format.xml"/>
 				<app_to_level2 export="STEPS_XML/INPUTS/tc_3_5/tc_3_5_enable_hk_period_sid0.xml"/>
 				<level1 format="DEFAULT"/>

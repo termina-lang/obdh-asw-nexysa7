@@ -12,7 +12,7 @@ received.
 | | Send the TC (3,6) to disable SID 0 report | | TC(3,6) | SID = 0 |
 | | | **OUTPUTS** | **TM** | **App Data Filter** |
 | | Check that the received sequence is TM (1,1), TM (1,3), TM (1,7)<br>Check that no telemetry from SID 0 is received until it is enabled again | | TM(1,1)<br>TM(1,3)<br>TM(1,7) | |
-| **TO + 240** | **STEP1** | | | |
+| **TO + 100** | **STEP1** | | | |
 | | | **INPUTS** | **TC** | **App Data** |
 | | Send the TC (3,5) to enable SID 0 report | | TC(3,5) | SID = 0 |
 | | | **OUTPUTS** | **TM** | **App Data Filter** |
