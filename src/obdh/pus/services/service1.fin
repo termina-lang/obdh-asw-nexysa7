@@ -418,7 +418,7 @@ resource class CPUSService1 provides IPUSService1 {
                 var status : Status<TMHandlerError> = append_u16_appdata_field(&mut b_tm_handler, tc_handler->packet_header.packet_id);
 
                 if (status is Success) {
-                    status = append_u16_appdata_field(&mut b_tm_handler, tc_handler->packet_error_ctrl);
+                    status = append_u16_appdata_field(&mut b_tm_handler, tc_handler->packet_header.packet_seq_ctrl);
                 }
                 
                 if (status is Success) {
