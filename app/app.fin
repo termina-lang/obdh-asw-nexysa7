@@ -28,7 +28,7 @@ import obdh.manager;
 import obdh.hk_fdir;
 
 emitter hk_fdir_timer : PeriodicTimer = {
-    period = {tv_sec = 1 : u32, tv_usec = 0 : u32} : TimeVal
+    period = {tv_sec = 1, tv_usec = 0} : TimeVal
 } : PeriodicTimer;
 
 channel tc_message_queue : MsgQueue<box TCHandler;10>;

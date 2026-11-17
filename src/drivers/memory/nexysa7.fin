@@ -6,8 +6,8 @@ import checksum.crc16;
  * banks of 16 MB numbered as the memory identifiers of the telecommands:
  * bank n starts at 0x40000000 + n * 0x01000000. Bank 0 holds the image.
  */
-constexpr nexysa7_ddr2_base : usize = 0x40000000 : usize;
-constexpr nexysa7_num_banks : usize = 8 : usize;
+constexpr nexysa7_ddr2_base : usize = 0x40000000;
+constexpr nexysa7_num_banks : usize = 8;
 constexpr nexysa7_bank_size : usize = 1 << 24 : usize;
 
 resource class CNexysA7Memory provides IByteMemoryAccess {
@@ -60,8 +60,8 @@ resource class CNexysA7Memory provides IByteMemoryAccess {
 
         let offset : usize = address - nexysa7_ddr2_base - (mem_id as usize) * nexysa7_bank_size;
 
-        for i : usize in 0 : usize .. max_memory_access_length while (i < length) {
-            (*dst)[i] = self->ddr2[mem_id as usize][offset + i];
+        for i : usize in 0 .. max_memory_access_length while (i < length) {
+            dst[i] = self->ddr2[mem_id as usize][offset + i];
         }
 
         return;
@@ -72,8 +72,8 @@ resource class CNexysA7Memory provides IByteMemoryAccess {
 
         let offset : usize = address - nexysa7_ddr2_base - (mem_id as usize) * nexysa7_bank_size;
 
-        for i : usize in 0 : usize .. max_memory_access_length while (i < length) {
-            self->ddr2[mem_id as usize][offset + i] = (*src)[i];
+        for i : usize in 0 .. max_memory_access_length while (i < length) {
+            self->ddr2[mem_id as usize][offset + i] = src[i];
         }
 
         return;
@@ -85,7 +85,7 @@ resource class CNexysA7Memory provides IByteMemoryAccess {
         var crc : u16 = crc16_initial;
         let offset : usize = address - nexysa7_ddr2_base - (mem_id as usize) * nexysa7_bank_size;
 
-        for i : usize in 0 : usize .. max_memory_access_length while (i < length) {
+        for i : usize in 0 .. max_memory_access_length while (i < length) {
             crc = crc16_update(crc, self->ddr2[mem_id as usize][offset + i]);
         }
 

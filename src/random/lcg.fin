@@ -12,19 +12,19 @@ function random_gen (mutseed : &mut u32) -> u32 {
     
     var next : u32 = *mutseed;
 
-    next = next * 1103515245 : u32;
-    next = next + 12345 : u32;
-    var result : u32 = (next / 65536 : u32) % 2048 : u32;
+    next = next * 1103515245;
+    next = next + 12345;
+    var result : u32 = (next / 65536) % 2048;
 
-    next = next * 1103515245 : u32;
-    next = next + 12345 : u32;
+    next = next * 1103515245;
+    next = next + 12345;
     result = result << 10 : u32;
-    result = result ^(next / 65536 : u32) % 1024 : u32;
+    result = result ^(next / 65536) % 1024;
 
-    next = next * 1103515245 : u32;
-    next = next + 12345 : u32;
+    next = next * 1103515245;
+    next = next + 12345;
     result = result << 10 : u32;
-    result = result ^ (next / 65536 : u32) % 1024 : u32;
+    result = result ^ (next / 65536) % 1024;
 
     *mutseed = next;
 

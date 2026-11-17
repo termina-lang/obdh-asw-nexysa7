@@ -121,7 +121,7 @@ resource class CPUSService6 provides IPUSService6 {
                 case Some(b_tm_handler) => {
 
                     var current_obt : CUCTime = {seconds = 0, finetime = 0};
-                    var tm_count : u16 = 0 : u16;
+                    var tm_count : u16 = 0;
 
                     self->tm_counter.get_next_tm_count(&mut tm_count);
                     self->obt_manager.get_current_obt(&mut current_obt);
@@ -189,7 +189,7 @@ resource class CPUSService6 provides IPUSService6 {
                 case Some(b_tm_handler) => {
 
                     var current_obt : CUCTime = {seconds = 0, finetime = 0};
-                    var tm_count : u16 = 0 : u16;
+                    var tm_count : u16 = 0;
                     self->tm_counter.get_next_tm_count(&mut tm_count);
                     self->obt_manager.get_current_obt(&mut current_obt);
 

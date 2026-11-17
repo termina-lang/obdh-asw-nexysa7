@@ -34,9 +34,9 @@ resource class CPUSService2 provides IPUSService2 {
 
         var is_valid : bool = false;
 
-        if ((dev_address & 0x0FFFFFFE : u32) == 0 : u32) {
+        if ((dev_address & 0x0FFFFFFE) == 0) {
 
-            let device : usize = ((dev_address & 0xF0000000 : u32) >> 28 : u32) as usize;
+            let device : usize = ((dev_address & 0xF0000000) >> 28 : u32) as usize;
 
             match self->device_pins[device] {
                 case Some(_pin) => {
@@ -83,11 +83,11 @@ resource class CPUSService2 provides IPUSService2 {
 
     method dev_drv_on_off(&priv self, tc_request: &PS2TCRequest) {
 
-        let device : usize = ((tc_request->dev_address & 0xF0000000 : u32) >> 28 : u32) as usize;
+        let device : usize = ((tc_request->dev_address & 0xF0000000) >> 28 : u32) as usize;
 
         match self->device_pins[device] {
             case Some(pin) => {
-                if ((tc_request->dev_address & 0x00000001 : u32) == 0 : u32) {
+                if ((tc_request->dev_address & 0x00000001) == 0) {
                     self->gpio.write_pin(pin, GPIOPinState::Low);
                 } else {
                     self->gpio.write_pin(pin, GPIOPinState::High);

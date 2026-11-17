@@ -45,7 +45,7 @@ resource class CTMCounter provides ITMCounter {
     procedure get_next_tm_count(&mut self, count : &mut u16) {
 
         *count = self->tm_count;
-        self->tm_count = (self->tm_count + 1 : u16) & 0x3FFF : u16;
+        self->tm_count = (self->tm_count + 1) & 0x3FFF;
 
         return;
     }

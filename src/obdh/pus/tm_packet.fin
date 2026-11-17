@@ -43,7 +43,7 @@ struct TMDescriptor {
  */
 function ccsds_pus_tm_build_packet_id(apid : u16) -> u16 {
     
-    return (((1 : u16 << 14 : u16) | (1 : u16 << 11 : u16) | ((apid) & 0x07FF : u16)));
+    return (((1 << 14 : u16) | (1 << 11 : u16) | ((apid) & 0x07FF)));
 
 }
 
@@ -57,7 +57,7 @@ function ccsds_pus_tm_build_packet_id(apid : u16) -> u16 {
  */
 function ccsds_pus_tm_build_packet_seq_ctrl(sequence_flags : u16, tm_count : u16) -> u16 {
 
-    return (((sequence_flags &0x3) << 14 : u16) | (tm_count) & 0x3FFF : u16);
+    return (((sequence_flags &0x3) << 14 : u16) | (tm_count) & 0x3FFF);
 }
 
 
@@ -71,7 +71,7 @@ function ccsds_pus_tm_build_packet_seq_ctrl(sequence_flags : u16, tm_count : u16
  */
 function ccsds_pus_tm_build_df_header(service_type : u8,service_subtype : u8,destination_id : u8) -> u32 {
 
-    return (0x10 : u32 << 24 : u32)| (service_type as u32 << 16 : u32) | (service_subtype as u32 << 8 : u32) | destination_id as u32;
+    return (0x10 << 24 : u32)| (service_type as u32 << 16 : u32) | (service_subtype as u32 << 8 : u32) | destination_id as u32;
 
 }
  
@@ -84,7 +84,7 @@ function ccsds_pus_tm_build_df_header(service_type : u8,service_subtype : u8,des
  */
 function ccsds_pus_tm_build_df_header_version(version : u8) -> u8 {
     
-    return (((version) & 0xF : u8) << 4 : u8);
+    return (((version) & 0xF) << 4 : u8);
 } 
 
 
@@ -100,34 +100,34 @@ function ccsds_pus_tm_set_fields(tm_bytes : &mut[u8 ; 19],
         p_tm_df_header : &CCSDSPUSTMDFHeader) {
 
     // Serialize Packet ID (bytes 0-1)
-    serialize_uint16(p_tm_packet_header->packet_id, &mut(*tm_bytes)[0 : usize .. 2 : usize]);
+    serialize_uint16(p_tm_packet_header->packet_id, &mut(*tm_bytes)[0 .. 2]);
 
     // Serialize Packet Sequence Control (bytes 2-3)
-    serialize_uint16(p_tm_packet_header->packet_seq_ctrl, &mut(*tm_bytes)[2 : usize .. 4 : usize]);
+    serialize_uint16(p_tm_packet_header->packet_seq_ctrl, &mut(*tm_bytes)[2 .. 4]);
 
     // Serialize Packet Length (bytes 4-5)
-    serialize_uint16(p_tm_packet_header->packet_length, &mut(*tm_bytes)[4 : usize .. 6 : usize]);
+    serialize_uint16(p_tm_packet_header->packet_length, &mut(*tm_bytes)[4 .. 6]);
 
     // Store version field (byte 6)
-    (*tm_bytes)[6 : usize] = p_tm_df_header->version;
+    tm_bytes[6] = p_tm_df_header->version;
 
     // Store type (byte 7)
-    (*tm_bytes)[7 : usize] = p_tm_df_header->type;
+    tm_bytes[7] = p_tm_df_header->type;
 
     // Store subtype (byte 8)
-    (*tm_bytes)[8 : usize] = p_tm_df_header->subtype;
+    tm_bytes[8] = p_tm_df_header->subtype;
 
     // Serialize msg_type_counter (bytes 9-10)
-    serialize_uint16(p_tm_df_header->msg_type_counter, &mut(*tm_bytes)[9 : usize .. 11 : usize]);
+    serialize_uint16(p_tm_df_header->msg_type_counter, &mut(*tm_bytes)[9 .. 11]);
 
     // Serialize destinationID (bytes 11-12)
-    serialize_uint16(p_tm_df_header->destinationID, &mut(*tm_bytes)[11 : usize .. 13 : usize]);
+    serialize_uint16(p_tm_df_header->destinationID, &mut(*tm_bytes)[11 .. 13]);
 
     // Serialize obt_secs (bytes 13-16)
-    serialize_uint32(p_tm_df_header->obt_secs, &mut(*tm_bytes)[13 : usize .. 17 : usize]);
+    serialize_uint32(p_tm_df_header->obt_secs, &mut(*tm_bytes)[13 .. 17]);
 
     // Serialize obt_finetime (bytes 17-18)
-    serialize_uint16(p_tm_df_header->obt_finetime, &mut(*tm_bytes)[17 : usize .. 19 : usize]);
+    serialize_uint16(p_tm_df_header->obt_finetime, &mut(*tm_bytes)[17 .. 19]);
 
     return;
 }

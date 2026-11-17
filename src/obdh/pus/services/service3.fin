@@ -296,7 +296,7 @@ resource class CPUSService3 provides IPUSService3 {
 
                         case Some(b_tm_handler) => {
 
-                        var tm_count : u16 = 0 : u16;
+                        var tm_count : u16 = 0;
                         self->tm_counter.get_next_tm_count(&mut tm_count);
 
                         startup_tm(&mut b_tm_handler);

@@ -55,7 +55,7 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
      * @brief Enables UART transmission.
      */
     method enable_TX(&priv self) {
-        let riscv_uart_txe : u32 = 0x00000002 : u32;
+        let riscv_uart_txe : u32 = 0x00000002;
         self->registers.control = self->registers.control | riscv_uart_txe;
         return;
     }
@@ -65,7 +65,7 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
      * @brief Enables UART reception.
      */
     method enable_RX(&priv self) {
-        let riscv_uart_rxe : u32 = 0x00000001 : u32;
+        let riscv_uart_rxe : u32 = 0x00000001;
         self->registers.control = self->registers.control | riscv_uart_rxe;
         return;
     }
@@ -75,7 +75,7 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
      * @brief Enables reception interrupts.
      */
     method enable_RI(&priv self) {
-        let riscv_uart_ri : u32 = 0x00000004 : u32;
+        let riscv_uart_ri : u32 = 0x00000004;
         self->registers.control = self->registers.control | riscv_uart_ri;
         return;
     }
@@ -85,7 +85,7 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
      * @brief Enables transmission interrupts.
      */
     method enable_TI(&priv self) {
-        let riscv_uart_ti : u32 = 0x00000008 : u32;
+        let riscv_uart_ti : u32 = 0x00000008;
         self->registers.control = self->registers.control | riscv_uart_ti;
         return;
     }
@@ -95,7 +95,7 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
      * @brief Disables transmission interrupts.
      */
     method disable_TI(&priv self) {
-        let riscv_uart_ti : u32 = 0xFFFFFFF7 : u32;
+        let riscv_uart_ti : u32 = 0xFFFFFFF7;
         self->registers.control = self->registers.control & riscv_uart_ti;
         return;
     }
@@ -105,7 +105,7 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
      * @brief Disables transmission FIFO.
      */
     method disable_TF(&priv self) {
-        let riscv_uart_tf : u32 = 0xFFFFFCFF : u32;
+        let riscv_uart_tf : u32 = 0xFFFFFCFF;
         self->registers.control = self->registers.control & riscv_uart_tf;
         return;
     }
@@ -115,7 +115,7 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
      * @brief Disables reception FIFO.
      */
     method disable_RF(&priv self) {
-        let riscv_uart_rf : u32 = 0xFFFFFBFF : u32;
+        let riscv_uart_rf : u32 = 0xFFFFFBFF;
         self->registers.control = self->registers.control & riscv_uart_rf;
         return;
     }
@@ -123,7 +123,7 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
 
     procedure read_byte(&mut self, byte : &mut Option<u8>) {
 
-        if ((self->registers.status & uart_dr) != 0 : u32) {
+        if ((self->registers.status & uart_dr) != 0) {
             *byte = Some(self->registers.data as u8);
         } else {
             *byte = None;
@@ -136,7 +136,7 @@ resource class CAPBUARTDriver provides ICharDev, IAPBUARTInit {
 
     procedure tx_ready(&mut self, ready : &mut bool) {
 
-        *ready = ((self->registers.status & uart_te) != 0 : u32);
+        *ready = ((self->registers.status & uart_te) != 0);
 
         return;
 

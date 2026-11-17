@@ -88,9 +88,9 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
         var type : u8 = get_type(&(tc_descriptor->tc_bytes));
         var subtype : u8 = get_subtype(&(tc_descriptor->tc_bytes));
 
-        if (9 : u8 == type) {
+        if (9 == type) {
         
-            if (129 : u8 == subtype) {
+            if (129 == subtype) {
 
                 tc_status.acceptation_status = TCAcceptationStatus::Accepted;
                 tc_status.execution_status = TCExecutionCtrl::ExecCtrlPrioTC;
@@ -100,9 +100,9 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
                 tc_status.error_code = TCErrorType::SubTypeError;
             }
 
-        } else if (17 : u8 == type) {
+        } else if (17 == type) {
         
-            if (1 : u8 == subtype) {
+            if (1 == subtype) {
 
                 tc_status.acceptation_status = TCAcceptationStatus::Accepted;
                 tc_status.execution_status = TCExecutionCtrl::ExecCtrlPrioTC;
@@ -111,9 +111,9 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
                 tc_status.acceptation_status = TCAcceptationStatus::Rejected;
                 tc_status.error_code = TCErrorType::SubTypeError;
             }
-        } else if (4 : u8 == type) {
+        } else if (4 == type) {
         
-            if (1 : u8 == subtype || 6 : u8 == subtype || 7 : u8 == subtype) {
+            if (1 == subtype || 6 == subtype || 7 == subtype) {
 
                 tc_status.acceptation_status = TCAcceptationStatus::Accepted;
                 tc_status.execution_status = TCExecutionCtrl::ExecCtrlHK_FDIRTC;
@@ -123,9 +123,9 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
                 tc_status.acceptation_status = TCAcceptationStatus::Rejected;
                 tc_status.error_code = TCErrorType::SubTypeError;
             }
-        } else if (2 : u8 == type) {
+        } else if (2 == type) {
         
-            if (1 : u8 == subtype) {
+            if (1 == subtype) {
 
                 tc_status.acceptation_status = TCAcceptationStatus::Accepted;
                 tc_status.execution_status = TCExecutionCtrl::ExecCtrlPrioTC;
@@ -135,9 +135,9 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
                 tc_status.error_code = TCErrorType::SubTypeError;
             }
 
-        } else if (3 : u8 == type) {
+        } else if (3 == type) {
         
-            if (5 : u8 == subtype || 6 : u8 == subtype || 31 : u8 == subtype) {
+            if (5 == subtype || 6 == subtype || 31 == subtype) {
 
                 tc_status.acceptation_status = TCAcceptationStatus::Accepted;
                 tc_status.execution_status = TCExecutionCtrl::ExecCtrlHK_FDIRTC;
@@ -149,9 +149,9 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
                 tc_status.error_code = TCErrorType::SubTypeError;
             }
 
-        } else if (20 : u8 == type) {
+        } else if (20 == type) {
         
-            if (1 : u8 == subtype || 3 : u8 == subtype) {
+            if (1 == subtype || 3 == subtype) {
 
                 tc_status.acceptation_status = TCAcceptationStatus::Accepted;
                 tc_status.execution_status = TCExecutionCtrl::ExecCtrlBKGTC;
@@ -163,9 +163,9 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
                 tc_status.error_code = TCErrorType::SubTypeError;
             }
 
-        } else if (5 : u8 == type) {
+        } else if (5 == type) {
         
-            if (5 : u8 == subtype || 6 : u8 == subtype) {
+            if (5 == subtype || 6 == subtype) {
 
                 tc_status.acceptation_status = TCAcceptationStatus::Accepted;
                 tc_status.execution_status = TCExecutionCtrl::ExecCtrlHK_FDIRTC;
@@ -177,7 +177,7 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
                 tc_status.error_code = TCErrorType::SubTypeError;
             }
 
-        } else if (12 : u8 == type) {
+        } else if (12 == type) {
         
             if (1 == subtype || 2 == subtype || 5 == subtype || 6  == subtype) {
 
@@ -191,9 +191,9 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
                 tc_status.error_code = TCErrorType::SubTypeError;
             }
 
-        } else if (19 : u8 == type) {
+        } else if (19 == type) {
         
-            if (1 : u8 == subtype || 2 : u8 == subtype || 4 : u8 == subtype || 5 : u8 == subtype) {
+            if (1 == subtype || 2 == subtype || 4 == subtype || 5 == subtype) {
 
                 tc_status.acceptation_status = TCAcceptationStatus::Accepted;
                 tc_status.execution_status = TCExecutionCtrl::ExecCtrlHK_FDIRTC;
@@ -204,9 +204,9 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
                 tc_status.acceptation_status = TCAcceptationStatus::Rejected;
                 tc_status.error_code = TCErrorType::SubTypeError;
             }
-        } else if (128 : u8 == type) {
+        } else if (128 == type) {
         
-            if (1 : u8 == subtype) {
+            if (1 == subtype) {
 
                 tc_status.acceptation_status = TCAcceptationStatus::Accepted;
                 tc_status.execution_status = TCExecutionCtrl::ExecCtrlPrioTC;
@@ -216,9 +216,9 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
                 tc_status.acceptation_status = TCAcceptationStatus::Rejected;
                 tc_status.error_code = TCErrorType::SubTypeError;
             }
-        } else if (6 : u8 == type) {
+        } else if (6 == type) {
         
-            if (2 : u8 == subtype || 5 : u8 == subtype || 9 : u8 == subtype) {
+            if (2 == subtype || 5 == subtype || 9 == subtype) {
 
                 tc_status.acceptation_status = TCAcceptationStatus::Accepted;
                 tc_status.execution_status = TCExecutionCtrl::ExecCtrlBKGTC;

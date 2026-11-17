@@ -70,7 +70,7 @@ resource class CGRGPIODriver provides IGPIO, IGRGPIOInit {
 
     procedure read_pin(&mut self, pin : GPIOPinId, state : &mut GPIOPinState) {
 
-        if ((self->registers.Data & (1 << (pin.pin as u32))) != 0 : u32) {
+        if ((self->registers.Data & (1 << (pin.pin as u32))) != 0) {
             *state = GPIOPinState::High;
         } else {
             *state = GPIOPinState::Low;

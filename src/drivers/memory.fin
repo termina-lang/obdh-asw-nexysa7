@@ -1,7 +1,7 @@
 /**
  * @brief Size of the buffers that read and write copy from and to.
  */
-constexpr max_memory_access_length : usize = 256 : usize;
+constexpr max_memory_access_length : usize = 256;
 
 /**
  * @enum MemAccessError
