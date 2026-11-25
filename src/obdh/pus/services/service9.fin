@@ -1,6 +1,5 @@
-/**
- * @file pus_service9.fin
- * @brief Implementation of PUS Service 9: Time Management.
+/*!
+ * Implementation of PUS Service 9: Time Management.
  */
 
 import obdh.pus.tm_handler;
@@ -10,8 +9,7 @@ import obdh.pus.services.service9.types;
 
 
 /**
- * @interface IPUSService9
- * @brief Interface for PUS Service 9 Time Management.
+ * Interface for PUS Service 9 Time Management.
  *
  * Defines the methods required to get the current on-board time (OBT) and
  * to execute telecommands related to time managemen service.
@@ -23,8 +21,7 @@ interface IPUSService9 {
 };
 
 /**
- * @resourceclass CPUSService9
- * @brief Resource class implementing PUS Service 9: Time Management.
+ * Resource class implementing PUS Service 9: Time Management.
  *
  * Provides on-board time tracking, telecommand execution, and telemetry generation
  * for time management telecommands according to PUS specifications. It implements
@@ -37,7 +34,7 @@ resource class CPUSService9 provides IPUSService9 {
     pus_service_1 : access IPUSService1;
 
     /**
-     * @brief Execute TC subtype 129 (specific time management TC - set current OBT).
+     * Execute TC subtype 129 (specific time management TC - set current OBT).
      *
      * Handles execution of the TC with subtype 129 by generating telemetry
      * reports TM[1,3] and TM[1,7] as acknowledgments, updating internal status,
@@ -64,7 +61,7 @@ resource class CPUSService9 provides IPUSService9 {
     }
 
     /**
-     * @brief Execute a time management telecommand.
+     * Execute a time management telecommand.
      *
      * Main telecommand execution procedure that manages the TC lifecycle,
      * including parameter extraction, execution based on subtype, and error handling.

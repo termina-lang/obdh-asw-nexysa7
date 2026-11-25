@@ -1,6 +1,5 @@
-/**
- * @file pus_service4_help.fin
- * @brief Imports and definitions related to PUS Service 4.
+/*!
+ * Imports and definitions related to PUS Service 4.
  */
 
 import obdh.pus.services.service1;
@@ -25,8 +24,7 @@ struct StatsConfig {
 };
 
 /**
- * @struct PS4TCRequest
- * @brief Fields of a TC[4,x] that its execution needs, decoded by exec_tc, and the index of the statistics it works on.
+ * Fields of a TC[4,x] that its execution needs, decoded by exec_tc, and the index of the statistics it works on.
  */
 struct PS4TCRequest {
     packet_id : u16;
@@ -49,8 +47,7 @@ constexpr ps4_init_tc_request : PS4TCRequest = {
 };
 
 /**
- * @enum PUSService4Error
- * @brief Reasons why PUS service 4 rejects or fails a TC, with the data of the TM[1,4] or TM[1,8] that reports each one.
+ * Reasons why PUS service 4 rejects or fails a TC, with the data of the TM[1,4] or TM[1,8] that reports each one.
  */
 enum PUSService4Error {
     ErrorInAcceptance,          /**< Subtype not supported */

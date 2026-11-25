@@ -1,6 +1,5 @@
-/**
- * @file pus_service19_help.fin
- * @brief Imports and definitions related to PUS Service 19.
+/*!
+ * Imports and definitions related to PUS Service 19.
  */
 
 import obdh.pus.services.service5;
@@ -37,8 +36,7 @@ struct FoundID {
 };
 
 /**
- * @struct PS19TCRequest
- * @brief Fields of a TC[19,x] that its execution needs, decoded by exec_tc, and the event-action slot it works on.
+ * Fields of a TC[19,x] that its execution needs, decoded by exec_tc, and the event-action slot it works on.
  */
 struct PS19TCRequest {
     tc_data : PS19TCData;
@@ -68,7 +66,6 @@ constexpr ps19_init_tc_request : PS19TCRequest = {
  
 
 
-
 enum TC19_1_Error {
     NoError,
     EvIDEnabled,
@@ -76,8 +73,7 @@ enum TC19_1_Error {
 };
 
 /**
- * @enum PUSService19Error
- * @brief Reasons why PUS service 19 rejects or fails a TC, with the data of the TM[1,4] or TM[1,8] that reports each one.
+ * Reasons why PUS service 19 rejects or fails a TC, with the data of the TM[1,4] or TM[1,8] that reports each one.
  */
 enum PUSService19Error {
     ErrorInAcceptance,              /**< Subtype not supported */

@@ -2,8 +2,7 @@ import obdh.pus.tc_packet;
 
 
 /**
- * @enum TCHandlerError
- * @brief Errors when reading the application data of a TC packet.
+ * Errors when reading the application data of a TC packet.
  */
 enum TCHandlerError {
     AppDataOutOfRange     /**< The field goes beyond the end of the application data */
@@ -11,7 +10,7 @@ enum TCHandlerError {
 
 
 /**
- * @brief Structure to handle telecommands (TC) and facilitate field extraction
+ * Structure to handle telecommands (TC) and facilitate field extraction
  *
  * This structure holds the parsed components of a TC packet, including headers and
  * indexing information for accessing application data fields.
@@ -26,7 +25,7 @@ struct TCHandler {
 
 
 /**
- * @brief Initializes a TC handler structure with default values
+ * Initializes a TC handler structure with default values
  *
  * @return A new TCHandler instance with all fields set to zero or empty
  */
@@ -51,12 +50,11 @@ constexpr tc_handler_init : TCHandler  = {
 };
 
 /**
- * @brief Fills a TC handler with data from a telecommand descriptor
+ * Fills a TC handler with data from a telecommand descriptor
  *
  * Parses the TC header and DF header and sets the internal app data index.
  *
- * @param tc_handler Pointer to the TC handler structure to populate
- * @param telecommand Pointer to the telecommand descriptor to parse
+ * @param tc_handler TC handler to populate, with its telecommand descriptor already filled
  */
 function tc_handler_build(tc_handler : &mut TCHandler) {
 
@@ -72,7 +70,7 @@ function tc_handler_build(tc_handler : &mut TCHandler) {
 }
 
 /**
- * @brief Checks if the next application data field can be read safely
+ * Checks if the next application data field can be read safely
  *
  * @param tc_handler Pointer to the TC handler
  * @param field_size Number of bytes to check
@@ -95,7 +93,7 @@ function tc_handler_is_valid_next_appdata_field (tc_handler : &TCHandler, field_
 
 
 /**
- * @brief Extracts a single byte from the application data
+ * Extracts a single byte from the application data
  *
  * Advances the internal application data index by 1 if successful.
  *
@@ -124,7 +122,7 @@ function tc_handler_get_u8_appdata_field (tc_handler : &mut TCHandler, data : &m
 }
 
 /**
- * @brief Extracts a 16-bit unsigned integer from the application data
+ * Extracts a 16-bit unsigned integer from the application data
  *
  * Advances the internal application data index by 2 if successful.
  *
@@ -153,7 +151,7 @@ function tc_handler_get_u16_appdata_field (tc_handler : &mut TCHandler, data : &
 }
 
 /**
- * @brief Extracts a 32-bit unsigned integer from the application data
+ * Extracts a 32-bit unsigned integer from the application data
  *
  * Advances the internal application data index by 4 if successful.
  *

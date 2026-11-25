@@ -1,5 +1,5 @@
 /**
- * @brief Generates a pseudo-random number using a linear congruential generator
+ * Generates a pseudo-random number using a linear congruential generator
  * 
  * This function implements a simple reentrant pseudo-random number generator.
  * The seed is updated on each call, allowing deterministic sequences per seed value.

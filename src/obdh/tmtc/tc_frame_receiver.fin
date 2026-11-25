@@ -3,8 +3,7 @@ import obdh.pus.tc_packet;
 import obdh.pus.tc_handler;
 
 /**
- * @enum TCFrameRxStatus
- * @brief State of the search for the start of a frame.
+ * State of the search for the start of a frame.
  *
  * While the bytes of a frame arrive, its TC is parked in the deque of the
  * receiver, and this state is not used.
@@ -16,8 +15,7 @@ enum TCFrameRxStatus {
 
 
 /**
- * @interface ITCFrameReceiver
- * @brief Interface for receiving TC frames byte by byte.
+ * Interface for receiving TC frames byte by byte.
  */
 interface ITCFrameReceiver {
     procedure receive(&mut self, byte : u8, complete : &mut bool);
@@ -26,8 +24,7 @@ interface ITCFrameReceiver {
 
 
 /**
- * @class CTCFrameReceiver
- * @brief Receives TC frames made of a sync word, a 2-byte length and the
+ * Receives TC frames made of a sync word, a 2-byte length and the
  * bytes of the packet.
  *
  * The bytes of a frame are written directly into a TC handler from the pool,
@@ -38,25 +35,33 @@ resource class CTCFrameReceiver provides ITCFrameReceiver {
 
     sync_word : [u8; 4]; //{0xBE, 0xBA, 0xBE, 0xEF}
 
-    /** @brief Next byte of the sync word or of the length */
+    /**
+     * Next byte of the sync word or of the length
+     */
     sync_index : usize;
     raw_rx_tc_length : [u8; 2];
 
-    /** @brief Next byte of the TC being received */
+    /**
+     * Next byte of the TC being received
+     */
     rx_index : usize;
 
     rx_status : TCFrameRxStatus;
 
-    /** @brief True when the TC in the deque has all its bytes */
+    /**
+     * True when the TC in the deque has all its bytes
+     */
     tc_complete : bool;
 
-    /** @brief TC being received */
+    /**
+     * TC being received
+     */
     tc_frame : access DequeAccess<TCHandler>;
 
     tc_handler_pool : access Allocator<TCHandler>;
 
     /**
-     * @brief Looks for the sync word and the length of the next frame.
+     * Looks for the sync word and the length of the next frame.
      *
      * @param[in] byte Received byte.
      * @return Length of the TC once it is complete and valid, 0 otherwise.
@@ -106,7 +111,7 @@ resource class CTCFrameReceiver provides ITCFrameReceiver {
     }
 
     /**
-     * @brief Receives a byte from the character device. The bytes received
+     * Receives a byte from the character device. The bytes received
      * while a complete TC waits for take_tc are dropped.
      *
      * @param[in] byte       Received byte.
@@ -165,7 +170,7 @@ resource class CTCFrameReceiver provides ITCFrameReceiver {
     }
 
     /**
-     * @brief Takes the TC out of the receiver once its last byte has arrived.
+     * Takes the TC out of the receiver once its last byte has arrived.
      *
      * @param[out] tc_handler  The complete TC, or None.
      */

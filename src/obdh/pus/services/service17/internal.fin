@@ -1,14 +1,12 @@
-/**
- * @file pus_service17_help.fin
- * @brief Imports and definitions related to PUS Service 17.
+/*!
+ * Imports and definitions related to PUS Service 17.
  */
 
 import obdh.tmtc.tm_channel;
 import obdh.obt_manager;
 
 /**
- * @struct PS17TCRequest
- * @brief Fields of a TC[17,x] that its execution needs, decoded by exec_tc.
+ * Fields of a TC[17,x] that its execution needs, decoded by exec_tc.
  */
 struct PS17TCRequest {
     packet_id : u16;            /**< TC Packet identifier */
@@ -17,7 +15,7 @@ struct PS17TCRequest {
 };
 
 /**
- * @brief Initial value of the local PS17TCRequest of exec_tc, with zeroed fields.
+ * Initial value of the local PS17TCRequest of exec_tc, with zeroed fields.
  */
 constexpr ps17_init_tc_request : PS17TCRequest = {
     packet_id = 0,
@@ -26,8 +24,7 @@ constexpr ps17_init_tc_request : PS17TCRequest = {
 };
 
 /**
- * @enum PUSService17Error
- * @brief Reasons why PUS service 17 rejects a TC, reported with a TM[1,4].
+ * Reasons why PUS service 17 rejects a TC, reported with a TM[1,4].
  */
 enum PUSService17Error {
     ErrorInAcceptance       /**< Subtype not supported */

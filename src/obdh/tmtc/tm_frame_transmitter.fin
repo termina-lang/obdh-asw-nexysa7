@@ -1,6 +1,5 @@
-/**
- * @file tm_frame_transmitter.fin
- * @brief Telemetry channel that sends each TM as a frame over a character device.
+/*!
+ * Telemetry channel that sends each TM as a frame over a character device.
  */
 
 import drivers.char_dev;
@@ -11,16 +10,19 @@ import obdh.pus.tm_packet;
 import obdh.pus.tm_handler;
 
 
-/** @brief Bytes of the frame header: sync word and 2-byte length */
+/**
+ * Bytes of the frame header: sync word and 2-byte length
+ */
 constexpr tm_frame_header_size : usize = 6;
 
-/** @brief Bytes of the longest TM frame, bound of the bytes written per call to pump */
+/**
+ * Bytes of the longest TM frame, bound of the bytes written per call to pump
+ */
 constexpr tm_frame_max_size : usize = tm_frame_header_size + max_send_size;
 
 
 /**
- * @interface ITMFrameTransmitter
- * @brief Interface for the interrupt that moves the TM frames out byte by byte.
+ * Interface for the interrupt that moves the TM frames out byte by byte.
  */
 interface ITMFrameTransmitter {
     procedure transmit(&mut self);
@@ -28,8 +30,7 @@ interface ITMFrameTransmitter {
 
 
 /**
- * @class CTMFrameTransmitter
- * @brief Sends each TM packet as a frame made of a sync word (0xBEBA BEEF),
+ * Sends each TM packet as a frame made of a sync word (0xBEBA BEEF),
  * a 2-byte length and the bytes of the packet.
  *
  * Each TM stays in its handler, parked in the deque of the transmitter, until
@@ -44,17 +45,23 @@ resource class CTMFrameTransmitter provides ITMChannel, ITMFrameTransmitter {
 
     tm_handler_pool : access Allocator<TMHandler>;
 
-    /** @brief Counter of the TMs lost when the deque of frames is full */
+    /**
+     * Counter of the TMs lost when the deque of frames is full
+     */
     tm_counter : access ITMCounter;
 
-    /** @brief TMs waiting to be sent, the one at the front in transmission */
+    /**
+     * TMs waiting to be sent, the one at the front in transmission
+     */
     tm_frames : access DequeAccess<TMHandler>;
 
-    /** @brief Next byte of the frame at the front */
+    /**
+     * Next byte of the frame at the front
+     */
     tx_index : usize;
 
     /**
-     * @brief Gives the next byte of the frame at the front.
+     * Gives the next byte of the frame at the front.
      *
      * Puts the TM back at the front while bytes remain, and frees it after
      * the last byte of its frame.
@@ -107,7 +114,7 @@ resource class CTMFrameTransmitter provides ITMChannel, ITMFrameTransmitter {
     }
 
     /**
-     * @brief Writes bytes while the transmitter can take them and enables the
+     * Writes bytes while the transmitter can take them and enables the
      * transmit interrupt for the ones after, or disables the interrupt when
      * there is nothing left to send.
      */
@@ -140,7 +147,7 @@ resource class CTMFrameTransmitter provides ITMChannel, ITMFrameTransmitter {
     }
 
     /**
-     * @brief Queues a TM packet for transmission and starts the transmitter
+     * Queues a TM packet for transmission and starts the transmitter
      * if it is idle.
      *
      * A TM that does not fit in the queue of frames is freed and counted as lost.
@@ -168,7 +175,7 @@ resource class CTMFrameTransmitter provides ITMChannel, ITMFrameTransmitter {
     }
 
     /**
-     * @brief Moves the next byte out. Called from the interrupt handler.
+     * Moves the next byte out. Called from the interrupt handler.
      */
     procedure transmit(&mut self) {
 

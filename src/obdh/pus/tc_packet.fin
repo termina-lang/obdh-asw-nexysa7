@@ -2,12 +2,12 @@ import encoding.binary;
 
 
 /**
- * @brief Maximum size in bytes of a TC packet
+ * Maximum size in bytes of a TC packet
  */
 constexpr max_tc_size : usize = 256;
 
 /**
- * @brief CCSDS PUS TC Packet Header structure
+ * CCSDS PUS TC Packet Header structure
  */
 struct CCSDSPUSTCPacketHeader {
 
@@ -19,7 +19,7 @@ struct CCSDSPUSTCPacketHeader {
 
 
 /**
- * @brief CCSDS PUS TC Data Field Header structure
+ * CCSDS PUS TC Data Field Header structure
  */
 struct CCSDSPUSTCDFHeader {
 
@@ -31,7 +31,7 @@ struct CCSDSPUSTCDFHeader {
 };
 
 /**
- * @brief Descriptor for a TC packet containing data bytes and size
+ * Descriptor for a TC packet containing data bytes and size
  */
  struct TCDescriptor {
 
@@ -41,7 +41,7 @@ struct CCSDSPUSTCDFHeader {
  };
 
 /**
- * @brief Extract the Packet ID field from the TC bytes
+ * Extract the Packet ID field from the TC bytes
  * 
  * @param tc_bytes Byte array representing the TC packet
  * @return u16 Packet ID extracted from bytes 0-1
@@ -55,7 +55,7 @@ struct CCSDSPUSTCDFHeader {
 
 
 /**
- * @brief Extract the APID (Application Process ID) from the Packet ID
+ * Extract the APID (Application Process ID) from the Packet ID
  * 
  * @param tc_bytes Byte array representing the TC packet
  * @return u16 APID (11 least significant bits of packet ID)
@@ -69,7 +69,7 @@ function get_APID(tc_bytes : &[u8 ; max_tc_size]) -> u16 {
 
 
 /**
- * @brief Extract the sequence flags (2 most significant bits) from the packet sequence control field
+ * Extract the sequence flags (2 most significant bits) from the packet sequence control field
  * 
  * @param packet_seq_ctrl Packet sequence control field
  * @return u16 Sequence flags bits
@@ -81,7 +81,7 @@ function get_seq_flags(packet_seq_ctrl : u16) -> u16 {
 
 
 /**
- * @brief Extract the sequence count (14 least significant bits) from the packet sequence control field
+ * Extract the sequence count (14 least significant bits) from the packet sequence control field
  * 
  * @param packet_seq_ctrl Packet sequence control field
  * @return u16 Sequence count bits
@@ -92,7 +92,7 @@ function get_seq_count(packet_seq_ctrl : u16) -> u16 {
 }
 
 /**
- * @brief Extract the packet length field from the TC bytes
+ * Extract the packet length field from the TC bytes
  * 
  * @param tc_bytes Byte array representing the TC packet
  * @return u16 Packet length extracted from bytes 4-5
@@ -104,7 +104,7 @@ function get_packet_length(tc_bytes : &[u8 ; max_tc_size]) -> u16 {
 
 
 /**
- * @brief Extract the packet error control field from the TC bytes
+ * Extract the packet error control field from the TC bytes
  * 
  * @param tc_bytes Byte array representing the TC packet
  * @return u16 Packet error control (CRC) field
@@ -118,7 +118,7 @@ function get_packet_seq_ctrl(tc_bytes : &[u8 ; max_tc_size]) -> u16 {
 }
 
 /**
- * @brief Extract the acknowledgment (ACK) value from the flag_ver_ack byte
+ * Extract the acknowledgment (ACK) value from the flag_ver_ack byte
  * 
  * @param flag_ver_ack Byte containing flags for version and acknowledgment
  * @return u8 ACK value (lowest 4 bits)
@@ -129,7 +129,7 @@ function get_ack(flag_ver_ack : u8) -> u8 {
 } 
 
 /**
- * @brief Extract the 'type' field from the TC bytes
+ * Extract the 'type' field from the TC bytes
  * 
  * @param tc_bytes Byte array representing the TC packet
  * @return u8 Packet type (byte 7)
@@ -141,7 +141,7 @@ function get_type(tc_bytes : &[u8 ; max_tc_size]) -> u8 {
 }
 
 /**
- * @brief Extract the 'subtype' field from the TC bytes
+ * Extract the 'subtype' field from the TC bytes
  * 
  * @param tc_bytes Byte array representing the TC packet
  * @return u8 Packet subtype (byte 8)
@@ -154,7 +154,7 @@ function get_subtype(tc_bytes : &[u8 ; max_tc_size]) -> u8 {
 
 
 /**
- * @brief Extract the sourceID field from the TC bytes
+ * Extract the sourceID field from the TC bytes
  * 
  * @param tc_bytes Byte array representing the TC packet
  * @return u16 Source identifier extracted from bytes 9-10
@@ -167,7 +167,7 @@ function get_source_id(tc_bytes : &[u8 ; max_tc_size]) -> u16 {
 
 
 /**
- * @brief Parses and fills the fields of the TC packet header, data field header, and packet error control from the TC byte array
+ * Parses and fills the fields of the TC packet header, data field header, and packet error control from the TC byte array
  * 
  * @param tc_bytes Byte array representing the TC packet
  * @param p_tc_packet_header Pointer to a structure to store the TC packet header fields

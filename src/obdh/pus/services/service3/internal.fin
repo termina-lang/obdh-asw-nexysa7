@@ -1,6 +1,5 @@
-/**
- * @file pus_service3_help.fin
- * @brief Imports and definitions related to PUS Service 3.
+/*!
+ * Imports and definitions related to PUS Service 3.
  */
 
 import obdh.system_data_pool;
@@ -19,8 +18,7 @@ struct IndexFound {
 };
 
 /**
- * @struct PS3TCRequest
- * @brief Fields of a TC[3,x] that its execution needs, decoded by exec_tc.
+ * Fields of a TC[3,x] that its execution needs, decoded by exec_tc.
  */
 struct PS3TCRequest {
     packet_id : u16;
@@ -33,8 +31,7 @@ struct PS3TCRequest {
 };
 
 /**
- * @enum PUSService3Error
- * @brief Reasons why PUS service 3 rejects a TC, with the data of the TM[1,4] that reports each one.
+ * Reasons why PUS service 3 rejects a TC, with the data of the TM[1,4] that reports each one.
  */
 enum PUSService3Error {
     ErrorInAcceptance,          /**< Subtype not supported */

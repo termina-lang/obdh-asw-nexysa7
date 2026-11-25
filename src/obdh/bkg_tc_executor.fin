@@ -9,7 +9,7 @@ import obdh.tm_counter;
 
 
 /**
- * @brief Task class responsible for executing background telecommands (TCs).
+ * Task class responsible for executing background telecommands (TCs).
  * 
  * Handles incoming telecommands from a message queue, dispatching them to the appropriate
  * PUS service handler based on the telecommand type. Manages resource allocation and freeing
@@ -18,7 +18,7 @@ import obdh.tm_counter;
 task class CBKGTCExecutorTask {
 
     /**
-     * @brief Input message queue for background telecommands.
+     * Input message queue for background telecommands.
      * 
      * Telecommands received in this queue trigger the execution action.
      */
@@ -36,7 +36,7 @@ task class CBKGTCExecutorTask {
     pus_service_1 : access IPUSService1;
 
     /**
-     * @brief Executes an incoming telecommand.
+     * Executes an incoming telecommand.
      * 
      * Inspects the telecommand type and delegates execution to the corresponding
      * PUS service. If the type is not supported, it triggers the generation of a

@@ -1,26 +1,25 @@
 /**
- * @brief Total number of parameters of type u32 in the system data pool.
+ * Total number of parameters of type u32 in the system data pool.
  */
 constexpr sdp_num_u32_params : usize = 12;
 
 /**
- * @brief Total number of parameters of type u8 in the system data pool.
+ * Total number of parameters of type u8 in the system data pool.
  */
 constexpr sdp_num_u8_params : usize = 18;
 
 /**
- * @brief First parameter ID for u8-type parameters. The u32 parameters take PIDs 0 to sdp_num_u32_params - 1.
+ * First parameter ID for u8-type parameters. The u32 parameters take PIDs 0 to sdp_num_u32_params - 1.
  */
 constexpr sdp_first_u8_param_id : usize = sdp_num_u32_params;
 
 /**
- * @brief Number of valid PIDs (u32 + u8).
+ * Number of valid PIDs (u32 + u8).
  */
 constexpr sdp_num_params : usize = sdp_num_u32_params + sdp_num_u8_params;
 
 /**
- * @enum DataPoolItem
- * @brief Item of the system data pool that a PID designates, with its index in the array of its type.
+ * Item of the system data pool that a PID designates, with its index in the array of its type.
  */
 enum DataPoolItem {
     U32Item(usize),   /**< 32-bit unsigned integer parameter, index in the u32 array */
@@ -29,7 +28,7 @@ enum DataPoolItem {
 };
 
 /**
- * @brief Returns the item of the system data pool that a PID designates.
+ * Returns the item of the system data pool that a PID designates.
  *
  * @param PID Parameter identifier (PID).
  * @return DataPoolItem U32Item or U8Item with the index in its array, or NoValidPID if the ID is out of range.
@@ -56,7 +55,7 @@ function sys_data_pool_get_item (PID : u16) -> DataPoolItem {
 }
 
 /**
- * @brief Checks whether a PID is valid in the system data pool.
+ * Checks whether a PID is valid in the system data pool.
  *
  * @param PID Parameter identifier.
  * @return bool True if the PID is valid, false otherwise.
@@ -70,7 +69,7 @@ function sys_data_pool_is_valid_PID (PID : u16) -> bool {
 
 
 /**
- * @brief Determines if a PID can be updated via telecommands.
+ * Determines if a PID can be updated via telecommands.
  *
  * This function returns true for PIDs greater than or equal to 5.
  *

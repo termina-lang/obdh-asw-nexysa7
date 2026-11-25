@@ -1,6 +1,5 @@
-/**
- * @file pus_service12_help.fin
- * @brief Imports and definitions related to PUS Service 12.
+/*!
+ * Imports and definitions related to PUS Service 12.
  */
 
 import obdh.obt_manager;
@@ -105,8 +104,7 @@ struct ParamMonitoringTransition {
 };
 
 /**
- * @enum MonitoringOutcome
- * @brief What the check of a parameter monitor reports to do_monitoring.
+ * What the check of a parameter monitor reports to do_monitoring.
  */
 enum MonitoringOutcome {
     EventTriggered(u16, FaultInfo), /**< Transition that triggers an event, with its event ID and fault info */
@@ -127,8 +125,7 @@ struct PS12TC_5_Data {
 };
 
 /**
- * @enum PUSService12Error
- * @brief Reasons why PUS service 12 rejects a TC, with the data of the TM[1,4] that reports each one.
+ * Reasons why PUS service 12 rejects a TC, with the data of the TM[1,4] that reports each one.
  */
 enum PUSService12Error {
     ErrorInAcceptance,              /**< Subtype not supported */
@@ -142,8 +139,7 @@ enum PUSService12Error {
 };
 
 /**
- * @struct PS12TCRequest
- * @brief Fields of a TC[12,x] that its execution needs, decoded by exec_tc.
+ * Fields of a TC[12,x] that its execution needs, decoded by exec_tc.
  */
 struct PS12TCRequest {
     packet_id : u16;
@@ -301,7 +297,6 @@ function are_status_equal (status1 : CheckState, status2 : CheckState) -> bool {
 
     return equal;
 }
-
 
 
 function is_PMONID_valid(PMONID : u16) -> bool {

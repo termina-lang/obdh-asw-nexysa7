@@ -16,7 +16,7 @@ resource class COBTManager provides IOBTManager {
     system_api : access SystemAPI;
 
     /**
-     * @brief Set the onboard time (OBT) reference.
+     * Set the onboard time (OBT) reference.
      *
      * Updates the internal reference OBT and captures the current system uptime. This
      * tuple is used for future OBT calculations using the following formula:
@@ -33,7 +33,7 @@ resource class COBTManager provides IOBTManager {
 
 
     /**
-     * @brief Compute and retrieve the current onboard time (OBT).
+     * Compute and retrieve the current onboard time (OBT).
      *
      * Calculates the current OBT by adding the elapsed system uptime since
      * the last reference to the stored reference OBT.

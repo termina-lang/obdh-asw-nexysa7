@@ -3,22 +3,22 @@ import obdh.system_data_pool;
 import drivers.gaisler.grgpio;
 
 /**
- * @brief Constant value representing zero base offset
+ * Constant value representing zero base offset
  */
 const Zero : u32 = 2048;
 
 /**
- * @brief Constant unit value used for system data pool initialization
+ * Constant unit value used for system data pool initialization
  */
 const Unit : u32 = 204;
 
 /**
- * @brief Constant decimal multiplier used for system data pool initialization
+ * Constant decimal multiplier used for system data pool initialization
  */
 const Dec : u32 = 20;
 
 /**
- * @brief Initialization handler class responsible for system startup tasks
+ * Initialization handler class responsible for system startup tasks
  */
 handler class CInitHandler {
 
@@ -29,9 +29,8 @@ handler class CInitHandler {
     system_init_ev : sink TimeVal triggers init;      /**< Event sink that triggers initialization */
 
     /**
-    * @brief Initializes hardware drivers and system data pool values at boot time
+    * Initializes hardware drivers and system data pool values at boot time
     * 
-    * @details
     * This function should access permanent memory and extract the real system_data_pool values.
     * It performs initialization of UART and GPIO drivers,
     * and fills the system data pools with predefined values.

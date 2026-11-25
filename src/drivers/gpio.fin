@@ -1,6 +1,5 @@
 /**
- * @enum GPIOPinState
- * @brief Level of a GPIO pin.
+ * Level of a GPIO pin.
  */
 enum GPIOPinState {
     Low,
@@ -8,8 +7,7 @@ enum GPIOPinState {
 };
 
 /**
- * @struct GPIOPinId
- * @brief A pin of the board, as a port and the pin within it. Each driver
+ * A pin of the board, as a port and the pin within it. Each driver
  * numbers its ports and pins as its hardware does.
  */
 struct GPIOPinId {
@@ -18,27 +16,29 @@ struct GPIOPinId {
 };
 
 /**
- * @interface IGPIO
- * @brief Reading and writing of GPIO pins already configured by the driver
+ * Reading and writing of GPIO pins already configured by the driver
  * of the board.
  */
 interface IGPIO {
 
     /**
-     * @brief Drives an output pin to a level.
+     * Drives an output pin to a level.
+     *
      * @param[in] pin Pin to write.
      * @param[in] state Level to drive.
      */
     procedure write_pin(&mut self, pin : GPIOPinId, state : GPIOPinState);
 
     /**
-     * @brief Inverts the level of an output pin.
+     * Inverts the level of an output pin.
+     *
      * @param[in] pin Pin to toggle.
      */
     procedure toggle_pin(&mut self, pin : GPIOPinId);
 
     /**
-     * @brief Reads the level of a pin.
+     * Reads the level of a pin.
+     *
      * @param[in] pin Pin to read.
      * @param[out] state Level read.
      */

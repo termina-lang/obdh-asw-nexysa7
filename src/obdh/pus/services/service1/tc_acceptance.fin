@@ -1,12 +1,11 @@
-/**
- * @file pus_service1.fin
- * @brief Implementation of PUS Service 1 (Request Verification Service)
+/*!
+ * Implementation of PUS Service 1 (Request Verification Service)
  */
 
 import obdh.pus.services.service1.internal;
 
 /**
- * @brief Determines the execution control strategy for a given telecommand.
+ * Determines the execution control strategy for a given telecommand.
  *
  * This function classifies the telecommand (TC) based on its type, 
  * and selects an appropriate execution control category.
@@ -48,7 +47,7 @@ function handle_tc(tc_descriptor: &TCDescriptor) -> TCExecutionCtrl {
 
 
 /**
- * @brief Verifies whether a telecommand (TC) is acceptable for execution.
+ * Verifies whether a telecommand (TC) is acceptable for execution.
  *
  * This function performs acceptation checks on a TC based on:
  * - CRC validity
@@ -240,7 +239,5 @@ function try_tc_acceptation(tc_descriptor: &TCDescriptor) -> TCStatus {
 
     return tc_status;
 }
-
-
 
 

@@ -1,8 +1,6 @@
-/**
- * @file pus_service5_help.fin
- * @brief Imports and definitions related to PUS Service 5.
+/*!
+ * Imports and definitions related to PUS Service 5.
  */
-
 
 import obdh.pus.services.service1;
 import obdh.tmtc.tm_channel;
@@ -17,8 +15,7 @@ enum Ev_IDType {
 };
 
 /**
- * @enum PUSService5Error
- * @brief Reasons why PUS service 5 rejects a TC, with the data of the TM[1,4] that reports each one.
+ * Reasons why PUS service 5 rejects a TC, with the data of the TM[1,4] that reports each one.
  */
 enum PUSService5Error {
     ErrorInAcceptance,          /**< Subtype not supported */
@@ -55,8 +52,7 @@ struct ParamFaultValueInfo {
 };
 
 /**
- * @struct PS5TCRequest
- * @brief Fields of a TC[5,x] that its execution needs, decoded by exec_tc.
+ * Fields of a TC[5,x] that its execution needs, decoded by exec_tc.
  */
 struct PS5TCRequest {
     packet_id : u16;
@@ -111,7 +107,6 @@ function is_Ev_ID_valid (evID : u16) -> bool {
 }
 
 
-
 function get_Ev_ID_enable_config_index(Ev_ID : u16) -> usize {
 
     var Ev_ID_type : Ev_IDType = get_Ev_ID_type(Ev_ID);
@@ -140,7 +135,6 @@ function get_Ev_ID_enable_config_offset(Ev_ID : u16) -> u8 {
 
     return (Ev_ID & offset_mask) as u8;
 } 
-
 
 
 function build_tm_5_x_param_out_of_limit(p_tm_handler : &mut TMHandler, tm_seq_counter: u16, fault_info : ParamOutOfLimitInfo, ev_ID : u16, current_obt : CUCTime) -> Status<TMHandlerError> {

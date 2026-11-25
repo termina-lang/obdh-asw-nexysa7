@@ -619,7 +619,7 @@ resource class CPUSService12 provides IPUSService12 {
     }
 
     /**
-     * @brief Checks a parameter monitor when it is enabled and its interval has elapsed.
+     * Checks a parameter monitor when it is enabled and its interval has elapsed.
      *
      * @param PMONID Parameter monitor ID.
      * @param[in,out] evID Event ID, overwritten when the check triggers an event.

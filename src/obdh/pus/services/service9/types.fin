@@ -1,14 +1,12 @@
-/**
- * @file pus_service9_help.fin
- * @brief Imports and definitions related to PUS Service 9.
+/*!
+ * Imports and definitions related to PUS Service 9.
  */
 
 import obdh.obt_manager;
 
 
 /**
- * @struct PS9TCRequest
- * @brief Fields of a TC[9,x] that its execution needs, decoded by exec_tc.
+ * Fields of a TC[9,x] that its execution needs, decoded by exec_tc.
  */
 struct PS9TCRequest {
     packet_id : u16;
@@ -20,8 +18,7 @@ struct PS9TCRequest {
 
 
 /**
- * @enum PUSService9Error
- * @brief Reasons why PUS service 9 rejects a TC, with the data of the TM[1,4] that reports each one.
+ * Reasons why PUS service 9 rejects a TC, with the data of the TM[1,4] that reports each one.
  */
 enum PUSService9Error {
     ErrorInAcceptance,          /**< Subtype not supported */
@@ -30,7 +27,7 @@ enum PUSService9Error {
 
 
 /**
- * @brief Initial value of the local PS9TCRequest of exec_tc, with zeroed fields.
+ * Initial value of the local PS9TCRequest of exec_tc, with zeroed fields.
  */
 constexpr ps9_init_tc_request : PS9TCRequest = {
     packet_id = 0, packet_seq_ctrl = 0, flags_ack = 0, tc_num_bytes = 0, next_OBT = {seconds = 0, finetime = 0}

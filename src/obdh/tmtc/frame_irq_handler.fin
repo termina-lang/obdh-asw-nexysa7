@@ -4,11 +4,13 @@ import obdh.tmtc.tm_frame_transmitter;
 import obdh.pus.tc_handler;
 import obdh.pus.tc_packet;
 
-/** @brief Bytes of the longest TC frame, bound of the bytes read per interrupt */
+/**
+ * Bytes of the longest TC frame, bound of the bytes read per interrupt
+ */
 constexpr tc_frame_max_size : usize = tm_frame_header_size + max_tc_size;
 
 /**
- * @brief Interrupt handler of the character device that carries the TM/TC frames
+ * Interrupt handler of the character device that carries the TM/TC frames
  *
  * Lets the TM frame transmitter write its next bytes. Then reads the received
  * bytes, hands each one to the TC frame receiver and stops when there are none

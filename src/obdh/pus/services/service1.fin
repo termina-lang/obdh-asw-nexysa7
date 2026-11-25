@@ -6,9 +6,7 @@ import obdh.tmtc.tm_channel;
 import obdh.tm_counter;
 import obdh.obt_manager;
 
-/// @defgroup TM_1_4_ErrorCodes Error Codes for TM[1,4] Packets
-/// @{
-/// Error codes used to indicate failure reasons in TM[1,4] packets.
+// Error codes used to indicate failure reasons in TM[1,4] packets.
 
 const TM_1_4_TC_X_Y_TC_SHORT_PACK_LENGTH       : u8 = 1;  ///< TC packet is too short.
 const TM_1_4_TC_X_Y_TC_NOT_VALID_NUM_OF_INSTR  : u8 = 2;  ///< Invalid number of instructions.
@@ -34,12 +32,9 @@ const TM_1_4_TC_19_X_EV_ACTION_NOT_DEFINED     : u8 = 21; ///< Event action not 
 const TM_1_4_TC_20_X_INVALID_PID               : u8 = 22; ///< Invalid PID.
 const TM_1_4_TC_20_X_PID_READ_ONLY_VIA_TC      : u8 = 23; ///< PID is read-only via TC.
 const TM_1_4_ERROR_IN_ACCEPTANCE               : u8 = 24; ///< Error occurred during acceptance.
-/// @}
 
 
-/// @defgroup TM_1_8_ErrorCodes Error Codes for TM[1,8] Packets
-/// @{
-/// Error codes used to indicate failure reasons in TM[1,8] packets.
+// Error codes used to indicate failure reasons in TM[1,8] packets.
 
 const TM_1_8_TM_X_Y_TM_EXCEED_LIMIT_APPDATA    : u8 = 1; ///< Application data exceeded limits.
 const TM_1_8_TM_2_1_DEV_COMMAND_EXEC_ERROR     : u8 = 2; ///< Device command execution error.
@@ -47,12 +42,11 @@ const TM_1_8_TC_4_1_NOT_FREE_PID_STATS_CONFIG  : u8 = 3; ///< No free PID stats 
 const TM_1_8_TC_6_X_MEM_ACCESS_FAIL            : u8 = 4; ///< Memory access failure.
 const TM_1_8_TC_11_X_SCHED_TC_POOL_EMPTY       : u8 = 5; ///< Schedule TC pool is empty.
 const TM_1_8_TC_19_1_MAX_EV_ACTIONS_REACHED    : u8 = 6; ///< Maximum event actions reached.
-/// @}
 
 interface IPUSService1 {
 
     /**
-    * @brief Sends TM[1,1] packet (TC acceptance report).
+    * Sends TM[1,1] packet (TC acceptance report).
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -62,7 +56,7 @@ interface IPUSService1 {
                             tc_packet_seq_ctrl: u16, flags_ack : u8);
 
     /**
-    * @brief Sends a TM[1,2] packet (TC rejection report) with specific error information.
+    * Sends a TM[1,2] packet (TC rejection report) with specific error information.
     *
     * @param tc_status Reference to the TC status containing the rejection reason.
     * @param tc_handler Reference to the TC handler containing command information.
@@ -71,7 +65,7 @@ interface IPUSService1 {
                           tc_handler: &TCHandler);
 
     /**
-    * @brief Sends a TM[1,3] packet (Start of execution report).
+    * Sends a TM[1,3] packet (Start of execution report).
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -81,7 +75,7 @@ interface IPUSService1 {
                             tc_packet_seq_ctrl: u16, flags_ack : u8);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the TC packet has a too short length.
+    * Sends a TM[1,4] packet indicating that the TC packet has a too short length.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -91,7 +85,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, tc_bytes: usize);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the number of instructions in the TC is not valid.
+    * Sends a TM[1,4] packet indicating that the number of instructions in the TC is not valid.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -101,10 +95,8 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, N : u8);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the device address in the TC is not valid.
+    * Sends a TM[1,4] packet indicating that the device address in the TC is not valid.
     *
-    * @param p_tm_handler Reference to the TM handler used to build the packet.
-    * @param tm_seq_counter TM sequence counter.
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
     * @param device_address Invalid device address.
@@ -113,7 +105,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, device_address : u32);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the SID in the TC is not valid.
+    * Sends a TM[1,4] packet indicating that the SID in the TC is not valid.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -124,7 +116,7 @@ interface IPUSService1 {
     
     
     /**
-    * @brief Sends a TM[1,4] packet indicating an invalid memory address.
+    * Sends a TM[1,4] packet indicating an invalid memory address.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -136,7 +128,7 @@ interface IPUSService1 {
 
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the specified memory ID is read-only.
+    * Sends a TM[1,4] packet indicating that the specified memory ID is read-only.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -146,7 +138,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, mem_id : u8);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the Event ID (EvID) is not valid.
+    * Sends a TM[1,4] packet indicating that the Event ID (EvID) is not valid.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -156,7 +148,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, EvID : u16);
                     
     /**
-    * @brief Sends a TM[1,4] packet indicating that the specified PID is not valid.
+    * Sends a TM[1,4] packet indicating that the specified PID is not valid.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -166,7 +158,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, PID : u16);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the specified PMON ID is undefined.
+    * Sends a TM[1,4] packet indicating that the specified PMON ID is undefined.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -176,18 +168,17 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, PMONID : u16);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the specified PMON ID is already defined.
+    * Sends a TM[1,4] packet indicating that the specified PMON ID is already defined.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
     * @param PMONID Already defined PMON ID.
-    * @param current_obt Current onboard time.
     */
     procedure send_tm_1_4_PMON_defined (&mut self, tc_packet_id : u16, 
                 tc_packet_seq_ctrl: u16, PMONID : u16);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the specified PMON ID is already enabled.
+    * Sends a TM[1,4] packet indicating that the specified PMON ID is already enabled.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -197,7 +188,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, PMONID : u16);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the specified PMON ID is not valid.
+    * Sends a TM[1,4] packet indicating that the specified PMON ID is not valid.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -207,7 +198,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, PMONID : u16);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the specified PMON ID definition is not valid.
+    * Sends a TM[1,4] packet indicating that the specified PMON ID definition is not valid.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -217,7 +208,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, PMONID : u16);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the specified Event-Action ID is enabled.
+    * Sends a TM[1,4] packet indicating that the specified Event-Action ID is enabled.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -227,7 +218,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, event_ID : u16);
 
     /**
-    * @brief Builds a TM[1,4] packet indicating that the specified Event-Action ID is rejected.
+    * Builds a TM[1,4] packet indicating that the specified Event-Action ID is rejected.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -237,7 +228,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, event_ID : u16);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the specified Event-Action ID is undefined.
+    * Sends a TM[1,4] packet indicating that the specified Event-Action ID is undefined.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -247,7 +238,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, event_ID : u16); 
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the specified PID statistics is not defined.
+    * Sends a TM[1,4] packet indicating that the specified PID statistics is not defined.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -258,7 +249,7 @@ interface IPUSService1 {
                     PID : u16);
 
     /**
-    * @brief Sends a TM[1,4] packet indicating that the specified PID is read only via TC.
+    * Sends a TM[1,4] packet indicating that the specified PID is read only via TC.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -268,7 +259,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, PID : u16);
 
     /**
-    * @brief Builds a TM[1,4] packet indicating that an error occurred during the acceptance of a TC packet.
+    * Builds a TM[1,4] packet indicating that an error occurred during the acceptance of a TC packet.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -277,16 +268,17 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16);
 
     /**
-    * @brief Sends a TM[1,7] packet (TC completion report).
+    * Sends a TM[1,7] packet (TC completion report).
     *
+    * @param tc_packet_id TC packet ID.
+    * @param tc_packet_seq_ctrl TC packet sequence control.
     * @param flags_ack Acknowledgment flags from the TC.
-    * @param enabled Output flag indicating whether the packet was generated.
     */
     procedure notify_tm_1_7(&mut self, tc_packet_id: u16, tc_packet_seq_ctrl: u16, 
                     flags_ack : u8);
 
     /**
-    * @brief Sends a TM[1,8] packet indicating that the maximum number of event actions has been reached.
+    * Sends a TM[1,8] packet indicating that the maximum number of event actions has been reached.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -296,7 +288,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, evID: u16);
 
     /**
-    * @brief Sends a TM[1,8] packet indicating that the application data exceeds the limit.
+    * Sends a TM[1,8] packet indicating that the application data exceeds the limit.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -305,7 +297,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16);
 
     /**
-    * @brief Sends a TM[1,8] packet indicating that a device command execution error occurred.
+    * Sends a TM[1,8] packet indicating that a device command execution error occurred.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -315,7 +307,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, on_off_command : u32);
 
     /**
-    * @brief Sends a TM[1,8] packet indicating that there are no free PID statistics configuration slots.
+    * Sends a TM[1,8] packet indicating that there are no free PID statistics configuration slots.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.
@@ -325,7 +317,7 @@ interface IPUSService1 {
                     tc_packet_seq_ctrl: u16, PID : u16);
 
     /**
-    * @brief Sends a TM[1,8] packet indicating a memory access error.
+    * Sends a TM[1,8] packet indicating a memory access error.
     *
     * @param tc_packet_id TC packet ID.
     * @param tc_packet_seq_ctrl TC packet error control.

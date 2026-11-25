@@ -1,14 +1,12 @@
-/**
- * @file tm_channel.fin
- * @brief Interface of the telemetry (TM) channel.
+/*!
+ * Interface of the telemetry (TM) channel.
  */
 
 import obdh.pus.tm_handler;
 
 
 /**
- * @interface ITMChannel
- * @brief Interface for sending telemetry data.
+ * Interface for sending telemetry data.
  */
 interface ITMChannel {
 

@@ -1,12 +1,12 @@
 import encoding.binary;
 
 /**
- * @brief Maximum allowed size for telemetry packet in bytes
+ * Maximum allowed size for telemetry packet in bytes
  */
 constexpr max_send_size : usize = 256;
 
 /**
- * @brief CCSDS PUS TM Packet Header structure
+ * CCSDS PUS TM Packet Header structure
  */
 struct CCSDSPUSTMPacketHeader {
     packet_id : u16;          /**< Packet identifier */
@@ -15,7 +15,7 @@ struct CCSDSPUSTMPacketHeader {
 };
 
 /**
- * @brief CCSDS PUS TM Data Field Header structure
+ * CCSDS PUS TM Data Field Header structure
  */
 struct CCSDSPUSTMDFHeader {
     version : u8;             /**< Version number */
@@ -28,7 +28,7 @@ struct CCSDSPUSTMDFHeader {
 };
 
 /**
- * @brief Descriptor for a TM packet with byte array and valid length
+ * Descriptor for a TM packet with byte array and valid length
  */
 struct TMDescriptor {
     tm_bytes : [u8 ; max_send_size]; /**< TM packet bytes */
@@ -36,7 +36,7 @@ struct TMDescriptor {
 };
 
 /**
- * @brief Builds the Packet ID field for a telemetry packet given the APID
+ * Builds the Packet ID field for a telemetry packet given the APID
  * 
  * @param apid Application Process ID (11 bits)
  * @return u16 Packet ID constructed according to CCSDS PUS standard
@@ -49,7 +49,7 @@ function ccsds_pus_tm_build_packet_id(apid : u16) -> u16 {
 
 
 /**
- * @brief Builds the Packet Sequence Control field from sequence flags and telemetry count
+ * Builds the Packet Sequence Control field from sequence flags and telemetry count
  * 
  * @param sequence_flags 2-bit sequence flags
  * @param tm_count 14-bit telemetry packet count
@@ -62,7 +62,7 @@ function ccsds_pus_tm_build_packet_seq_ctrl(sequence_flags : u16, tm_count : u16
 
 
 /**
- * @brief Builds the Data Field header word combining version, service type, subtype, and destination ID
+ * Builds the Data Field header word combining version, service type, subtype, and destination ID
  * 
  * @param service_type Service type byte
  * @param service_subtype Service subtype byte
@@ -77,7 +77,7 @@ function ccsds_pus_tm_build_df_header(service_type : u8,service_subtype : u8,des
  
 
 /**
- * @brief Builds the version field for the Data Field header (left-aligned 4 bits)
+ * Builds the version field for the Data Field header (left-aligned 4 bits)
  * 
  * @param version Version nibble (4 bits)
  * @return u8 Version field shifted to the high nibble position
@@ -89,7 +89,7 @@ function ccsds_pus_tm_build_df_header_version(version : u8) -> u8 {
 
 
 /**
- * @brief Serializes the packet header and data field header into the byte array representing the telemetry packet
+ * Serializes the packet header and data field header into the byte array representing the telemetry packet
  * 
  * @param tm_bytes Byte array buffer to fill with serialized TM header data (at least 19 bytes)
  * @param p_tm_packet_header Pointer to the TM packet header structure

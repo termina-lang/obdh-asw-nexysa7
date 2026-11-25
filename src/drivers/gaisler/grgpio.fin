@@ -1,7 +1,7 @@
 import drivers.gpio;
 
 /**
- * @brief Structure representing the GRGPIO hardware registers.
+ * Structure representing the GRGPIO hardware registers.
  *
  * Contains the registers for data, output, and direction control of GPIO pins.
  */
@@ -15,15 +15,14 @@ struct GPIO_registers {
 };
 
 /**
- * @interface IGRGPIOInit
- * @brief Initialization of the GRGPIO driver.
+ * Initialization of the GRGPIO driver.
  */
 interface IGRGPIOInit {
     procedure init_gpio(&mut self);
 };
 
 /**
- * @brief Driver of the Gaisler GRGPIO, a single port of up to 32 pins.
+ * Driver of the Gaisler GRGPIO, a single port of up to 32 pins.
  *
  * Pins are identified by port 0 and their bit in the registers.
  */
@@ -36,7 +35,7 @@ resource class CGRGPIODriver provides IGPIO, IGRGPIOInit {
     output_mask : u32;
 
     /**
-     * @brief Configures as outputs the pins of output_mask.
+     * Configures as outputs the pins of output_mask.
      */
     procedure init_gpio(&mut self) {
 

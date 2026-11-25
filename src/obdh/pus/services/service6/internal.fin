@@ -6,8 +6,7 @@ import drivers.memory;
 
 
 /**
- * @struct PS6TCRequest
- * @brief Fields of a TC[6,x] that its execution needs, decoded by exec_tc, and the memory data written by a TC[6,2] or read by a TC[6,5].
+ * Fields of a TC[6,x] that its execution needs, decoded by exec_tc, and the memory data written by a TC[6,2] or read by a TC[6,5].
  */
 struct PS6TCRequest {
     packet_id : u16;
@@ -26,8 +25,7 @@ constexpr ps6_init_tc_request : PS6TCRequest = {
 };
 
 /**
- * @enum PUSService6Error
- * @brief Reasons why PUS service 6 rejects or fails a TC, with the data of the TM[1,4] or TM[1,8] that reports each one.
+ * Reasons why PUS service 6 rejects or fails a TC, with the data of the TM[1,4] or TM[1,8] that reports each one.
  */
 enum PUSService6Error {
     ErrorInAcceptance,              /**< Subtype not supported */

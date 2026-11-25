@@ -1,22 +1,29 @@
-/** @file pus_service1_help.fin
- *  @brief Functions and structures related to TC (Telecommand) packet validation and TM[1,x] failure report generation.
+/*!
+ * Functions and structures related to TC (Telecommand) packet validation and TM[1,x] failure report generation.
  */
 
 import checksum.crc16;
 import obdh.pus.tm_handler;
 
-/** @brief Acknowledgement flag for TC[1,x] Accept Acknowledgement. */
+/**
+ * Acknowledgement flag for TC[1,x] Accept Acknowledgement.
+ */
 const ACCEPT_ACK_ENABLED_MASK : u8 = 0x01;
-/** @brief Acknowledgement flag for TC[1,x] Execution Start Acknowledgement. */
+/**
+ * Acknowledgement flag for TC[1,x] Execution Start Acknowledgement.
+ */
 const EXEC_START_ACK_ENABLED_MASK : u8 = 0x02;
-/** @brief Acknowledgement flag for TC[1,x] Execution Progress Acknowledgement. */
+/**
+ * Acknowledgement flag for TC[1,x] Execution Progress Acknowledgement.
+ */
 const EXEC_PROGRESS_ACK_ENABLED_MASK : u8 = 0x04;
-/** @brief Acknowledgement flag for TC[1,x] Execution Completion Acknowledgement. */
+/**
+ * Acknowledgement flag for TC[1,x] Execution Completion Acknowledgement.
+ */
 const EXEC_COMPLETION_ACK_ENABLED_MASK : u8 = 0x08;
 
 /**
- * @enum TCAcceptationStatus
- * @brief statusrepresenting whether a telecommand has been accepted or rejected.
+ * statusrepresenting whether a telecommand has been accepted or rejected.
  */
 enum TCAcceptationStatus{
     Accepted,      /**< TC accepted */
@@ -24,8 +31,7 @@ enum TCAcceptationStatus{
 };
 
 /**
- * @enum TCErrorType
- * @brief Enumeration of possible error types for TC verification failures.
+ * Enumeration of possible error types for TC verification failures.
  */
 enum TCErrorType {
     CRCError,      /**< CRC mismatch error */
@@ -37,8 +43,7 @@ enum TCErrorType {
 };
 
 /**
- * @enum TCExecutionCtrl
- * @brief Represents the type of execution control associated with a TC.
+ * Represents the type of execution control associated with a TC.
  */
 enum TCExecutionCtrl {
     ExecCtrlPrioTC,       /**< Priority command */
@@ -48,8 +53,7 @@ enum TCExecutionCtrl {
 };
 
 /**
- * @struct TCStatus
- * @brief Encapsulates the statusof a TC verification and execution status.
+ * Encapsulates the statusof a TC verification and execution status.
  */
 
  
@@ -60,8 +64,7 @@ struct TCStatus{
 };
 
 /**
- * @enum TCVerifyStage
- * @brief Represents the verification stage for which a TM[1,x] response is issued.
+ * Represents the verification stage for which a TM[1,x] response is issued.
  */
 enum TCVerifyStage {
     Acceptation,     /**< Acceptation stage */
@@ -71,8 +74,9 @@ enum TCVerifyStage {
 };
 
 /**
- * @brief Verifies if the CRC of the given TC packet is valid.
+ * Verifies if the CRC of the given TC packet is valid.
  * A packet whose length field does not match the bytes received is not.
+ *
  * @param tc_descriptor Pointer to the telecommand descriptor.
  * @return true if CRC is valid, false otherwise.
  */
@@ -93,7 +97,8 @@ function is_crc_valid(tc_descriptor : &TCDescriptor) -> bool {
 
 
 /**
- * @brief Validates the APID of the TC packet.
+ * Validates the APID of the TC packet.
+ *
  * @param tc_descriptor Pointer to the telecommand descriptor.
  * @return true if the APID matches the expected value.
  */
@@ -109,7 +114,8 @@ function is_apid_valid(tc_descriptor : &TCDescriptor) -> bool {
 
 
 /**
- * @brief Validates the Source ID field of the TC packet.
+ * Validates the Source ID field of the TC packet.
+ *
  * @param tc_descriptor Pointer to the telecommand descriptor.
  * @return true if Source ID is valid.
  */
@@ -126,7 +132,8 @@ function is_sourceID_valid(tc_descriptor : &TCDescriptor) -> bool {
 
 
 /**
- * @brief Checks if Acceptation Acknowledgement is enabled in the flag byte.
+ * Checks if Acceptation Acknowledgement is enabled in the flag byte.
+ *
  * @param flags_ack The acknowledgement flags byte.
  * @return true if acceptation acknowledgement is enabled.
  */
@@ -144,7 +151,8 @@ function is_tc_ack_accept_enabled(flags_ack : u8) -> bool{
 
 
 /**
- * @brief Checks if Execution Start Acknowledgement is enabled.
+ * Checks if Execution Start Acknowledgement is enabled.
+ *
  * @param flags_ack The acknowledgement flags byte.
  * @return true if execution start acknowledgement is enabled.
  */
@@ -161,7 +169,8 @@ function is_tc_ack_start_exec_enabled(flags_ack : u8) -> bool{
 
 
 /**
- * @brief Checks if Execution Progress Acknowledgement is enabled.
+ * Checks if Execution Progress Acknowledgement is enabled.
+ *
  * @param flags_ack The acknowledgement flags byte.
  * @return true if execution progress acknowledgement is enabled.
  */
@@ -178,7 +187,8 @@ function is_tc_ack_progress_exec_enabled(flags_ack : u8) -> bool{
 
 
 /**
- * @brief Checks if Execution Completion Acknowledgement is enabled.
+ * Checks if Execution Completion Acknowledgement is enabled.
+ *
  * @param flags_ack The acknowledgement flags byte.
  * @return true if execution completion acknowledgement is enabled.
  */
@@ -195,7 +205,8 @@ function is_tc_ack_completion_exec_enabled(flags_ack : u8) -> bool{
 
 
 /**
- * @brief Maps a TC verification stage to the corresponding failure TM[1,x] subtype.
+ * Maps a TC verification stage to the corresponding failure TM[1,x] subtype.
+ *
  * @param verify_stage The verification stage.
  * @return The corresponding TM subtype.
  */
@@ -224,7 +235,8 @@ function get_failure_subtype (verify_stage : TCVerifyStage) -> u8 {
 
 
 /**
- * @brief Builds a TM[1,x] packet with no additional failure data fields.
+ * Builds a TM[1,x] packet with no additional failure data fields.
+ *
  * @param p_tm_handler Reference to the TM handler structure.
  * @param tm_seq_counter TM sequence counter.
  * @param tc_packet_id The TC packet ID.
@@ -232,7 +244,6 @@ function get_failure_subtype (verify_stage : TCVerifyStage) -> u8 {
  * @param verify_stage The TC verification stage.
  * @param failure_code The failure reason code.
  * @param current_obt The current onboard time.
- * @param status status container.
  */
 function build_tm_1_X_no_failure_data(p_tm_handler : &mut TMHandler, tm_seq_counter : u16, tc_packet_id : u16, 
             tc_packet_seq_ctrl: u16, verify_stage : TCVerifyStage, failure_code : u8, current_obt : CUCTime) -> Status<TMHandlerError> {
@@ -256,7 +267,8 @@ function build_tm_1_X_no_failure_data(p_tm_handler : &mut TMHandler, tm_seq_coun
 
 
 /**
- * @brief Builds a TM[1,x] packet including one u8 failure data field.
+ * Builds a TM[1,x] packet including one u8 failure data field.
+ *
  * @param failure_data Failure-specific data (u8).
  */
 function build_tm_1_X_u8_failure_data(p_tm_handler : &mut TMHandler, tm_seq_counter : u16, tc_packet_id : u16,
@@ -284,7 +296,8 @@ function build_tm_1_X_u8_failure_data(p_tm_handler : &mut TMHandler, tm_seq_coun
 
 
 /**
- * @brief Builds a TM[1,x] packet including one u16 failure data field.
+ * Builds a TM[1,x] packet including one u16 failure data field.
+ *
  * @param failure_data Failure-specific data (u16).
  */
 function build_tm_1_X_u16_failure_data(p_tm_handler : &mut TMHandler, tm_seq_counter : u16, tc_packet_id : u16,
@@ -312,7 +325,8 @@ function build_tm_1_X_u16_failure_data(p_tm_handler : &mut TMHandler, tm_seq_cou
 
 
 /**
- * @brief Builds a TM[1,x] packet including one u32 failure data field.
+ * Builds a TM[1,x] packet including one u32 failure data field.
+ *
  * @param failure_data Failure-specific data (u32).
  */
 function build_tm_1_X_u32_failure_data(p_tm_handler : &mut TMHandler, tm_seq_counter : u16, tc_packet_id : u16, tc_packet_seq_ctrl: u16,
@@ -341,7 +355,8 @@ function build_tm_1_X_u32_failure_data(p_tm_handler : &mut TMHandler, tm_seq_cou
 
 
 /**
- * @brief Builds a TM[1,x] packet including one u8 and one u32 failure data fields.
+ * Builds a TM[1,x] packet including one u8 and one u32 failure data fields.
+ *
  * @param failure_data1 First failure data (u8).
  * @param failure_data2 Second failure data (u32).
  */

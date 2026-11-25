@@ -1,6 +1,6 @@
 
 /**
- * @brief Subtracts two TimeVal structures.
+ * Subtracts two TimeVal structures.
  * 
  * Computes the difference between timeval1 and timeval2 and returns the resulting TimeVal.
  * Handles microseconds underflow by borrowing one second.

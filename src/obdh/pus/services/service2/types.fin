@@ -1,12 +1,13 @@
 
 const num_params2 : usize = 64;
 
-/** @brief Number of device indices a device address can carry (bits 28 to 31) */
+/**
+ * Number of device indices a device address can carry (bits 28 to 31)
+ */
 constexpr max_num_devices : usize = 16;
 
 /**
- * @struct PS2TCRequest
- * @brief Fields of a TC[2,x] that its execution needs, decoded by exec_tc.
+ * Fields of a TC[2,x] that its execution needs, decoded by exec_tc.
  */
 struct PS2TCRequest {
     packet_id : u16;
@@ -18,8 +19,7 @@ struct PS2TCRequest {
 };
 
 /**
- * @enum PUSService2Error
- * @brief Reasons why PUS service 2 rejects or fails a TC, with the data of the TM[1,4] or TM[1,8] that reports each one.
+ * Reasons why PUS service 2 rejects or fails a TC, with the data of the TM[1,4] or TM[1,8] that reports each one.
  */
 enum PUSService2Error {
     ErrorInAcceptance,              /**< Subtype not supported */

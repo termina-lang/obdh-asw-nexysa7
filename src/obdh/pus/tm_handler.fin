@@ -4,8 +4,7 @@ import obdh.pus.time;
 
 
 /**
- * @enum TMHandlerError
- * @brief Errors when building a TM packet.
+ * Errors when building a TM packet.
  */
 enum TMHandlerError {
     AppDataOverflow     /**< The application data does not fit in the TM packet */
@@ -13,7 +12,7 @@ enum TMHandlerError {
 
 
 /**
- * @brief Structure for handling CCSDS/PUS TM packet construction
+ * Structure for handling CCSDS/PUS TM packet construction
  *
  * This structure holds all necessary fields to build a complete TM packet,
  * including CCSDS headers, PUS data field headers, and application data.
@@ -29,21 +28,21 @@ struct TMHandler {
 
 
 /**
- * @brief Application Process Identifier (APID) used in TM packet header
+ * Application Process Identifier (APID) used in TM packet header
  *
  * Identifies the originating application or service of the telemetry.
  */
 const APID : u16 = 0x32C;
 
 /**
- * @brief Destination ID for the PUS data field header
+ * Destination ID for the PUS data field header
  *
  * Used to indicate the recipient or logical destination of the TM packet.
  */
 const DESTINATION_ID : u16 = 0x78;
 
 /**
- * @brief Offset in the TM byte array where application data starts
+ * Offset in the TM byte array where application data starts
  *
  * Points to the index immediately after the CCSDS and PUS headers.
  */
@@ -53,7 +52,7 @@ const tm_app_data_offset : usize = 19;
 
 
 /**
- * @brief Appends an 8-bit unsigned integer to the application data field
+ * Appends an 8-bit unsigned integer to the application data field
  *
  * Updates the internal application data index accordingly.
  *
@@ -80,7 +79,7 @@ function append_u8_appdata_field (tm_handler : &mut TMHandler, data : u8) -> Sta
 }
 
 /**
- * @brief Appends a 16-bit unsigned integer to the application data field
+ * Appends a 16-bit unsigned integer to the application data field
  *
  * Serializes the value as big-endian and updates the index.
  *
@@ -106,7 +105,7 @@ function append_u16_appdata_field (tm_handler : &mut TMHandler, data : u16) -> S
 }
 
 /**
- * @brief Appends a 32-bit unsigned integer to the application data field
+ * Appends a 32-bit unsigned integer to the application data field
  *
  * Serializes the value as big-endian and updates the index.
  *
@@ -134,7 +133,7 @@ function append_u32_appdata_field (tm_handler : &mut TMHandler, data : u32) -> S
 
 
 /**
- * @brief Builds the CCSDS packet header for the TM packet
+ * Builds the CCSDS packet header for the TM packet
  *
  * Sets the packet ID, sequence control, and computes the packet length based
  * on the current position of the application data index.
@@ -155,7 +154,7 @@ function tm_handler_build_packet_header (tm_handler : &mut TMHandler, tm_seq_cou
 
 
 /**
- * @brief Builds the PUS Data Field header for the TM packet
+ * Builds the PUS Data Field header for the TM packet
  *
  * Populates the PUS type, subtype, destination ID, and onboard time (OBT).
  *
@@ -179,7 +178,7 @@ function tm_handler_build_df_header (tm_handler : &mut TMHandler, tm_type : u8, 
 
 
 /**
- * @brief Finalizes the TM packet by setting headers and computing length
+ * Finalizes the TM packet by setting headers and computing length
  *
  * This function completes the TM packet by calling the appropriate header
  * build functions and copying the headers into the final TM byte array.
@@ -204,7 +203,7 @@ function close_tm (tm_handler : &mut TMHandler, type : u8, subtype : u8, tm_coun
 
 
 /**
- * @brief Initializes the TM handler before building a packet
+ * Initializes the TM handler before building a packet
  *
  * Sets up the TM descriptor length and resets the app data index
  * to the start of the application data section.

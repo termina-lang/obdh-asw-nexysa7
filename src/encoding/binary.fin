@@ -1,6 +1,6 @@
 
 /**
- * @brief Deserializes a 16-bit unsigned integer from two bytes
+ * Deserializes a 16-bit unsigned integer from two bytes
  *
  * Converts a two-byte array into a 16-bit word, assuming big-endian order
  * (i.e., the most significant byte is first).
@@ -21,7 +21,7 @@ function deserialize_uint16(data_bytes : &[u8 ; 2]) -> u16 {
 
 
 /**
- * @brief Deserializes a 32-bit unsigned integer from four bytes
+ * Deserializes a 32-bit unsigned integer from four bytes
  *
  * Converts a four-byte array into a 32-bit word, assuming big-endian order.
  *
@@ -44,7 +44,7 @@ function deserialize_uint32(data_bytes : &[u8 ; 4]) -> u32 {
 
 
 /**
- * @brief Serializes a 16-bit unsigned integer into two bytes
+ * Serializes a 16-bit unsigned integer into two bytes
  *
  * Stores the big-endian byte representation of a 16-bit word into the provided array.
  *
@@ -61,7 +61,7 @@ function serialize_uint16(aux : u16, data_bytes : &mut[u8 ; 2]) {
 
 
 /**
- * @brief Serializes a 32-bit unsigned integer into four bytes
+ * Serializes a 32-bit unsigned integer into four bytes
  *
  * Stores the big-endian byte representation of a 32-bit word into the provided array.
  *

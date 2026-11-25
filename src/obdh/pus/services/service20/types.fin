@@ -1,6 +1,5 @@
-/**
- * @file pus_service20_help.fin
- * @brief Imports and definitions related to PUS Service 20.
+/*!
+ * Imports and definitions related to PUS Service 20.
  */
 
 import obdh.system_data_pool;
@@ -15,8 +14,7 @@ struct TC20_3Data {
 };
 
 /**
- * @struct PS20TCRequest
- * @brief Fields of a TC[20,x] that its execution needs, decoded by exec_tc.
+ * Fields of a TC[20,x] that its execution needs, decoded by exec_tc.
  */
 struct PS20TCRequest {
     packet_id : u16;
@@ -30,8 +28,7 @@ struct PS20TCRequest {
 
 
 /**
- * @enum PUSService20Error
- * @brief Reasons why PUS service 20 rejects a TC, with the data of the TM[1,4] that reports each one.
+ * Reasons why PUS service 20 rejects a TC, with the data of the TM[1,4] that reports each one.
  */
 enum PUSService20Error {
     ErrorInAcceptance,          /**< Subtype not supported */

@@ -1,12 +1,12 @@
 import obdh.pus.tc_packet;
 
 /**
- * @brief Initial value of the CRC-16-CCITT.
+ * Initial value of the CRC-16-CCITT.
  */
 constexpr crc16_initial : u16 = 0xFFFF;
 
 /**
- * @brief Adds one byte to a CRC-16-CCITT (polynomial 0x1021).
+ * Adds one byte to a CRC-16-CCITT (polynomial 0x1021).
  *
  * @param[in] crc_value CRC of the bytes before, or crc16_initial for the first one
  * @param[in] byte      Next byte
@@ -30,7 +30,7 @@ function crc16_update (crc_value : u16, byte : u8) -> u16 {
 }
 
 /**
- * @brief Computes the CRC-16 checksum of a byte array
+ * Computes the CRC-16 checksum of a byte array
  * 
  * This function implements the CRC-16-CCITT algorithm with the polynomial 0x1021 
  * and initial value 0xFFFF. It is commonly used in CCSDS packet error detection.
