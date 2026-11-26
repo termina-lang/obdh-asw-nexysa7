@@ -100,13 +100,13 @@ function ccsds_pus_tm_set_fields(tm_bytes : &mut[u8 ; 19],
         p_tm_df_header : &CCSDSPUSTMDFHeader) {
 
     // Serialize Packet ID (bytes 0-1)
-    serialize_uint16(p_tm_packet_header->packet_id, &mut(*tm_bytes)[0 .. 2]);
+    serialize_uint16(p_tm_packet_header->packet_id, &muttm_bytes[0 .. 2]);
 
     // Serialize Packet Sequence Control (bytes 2-3)
-    serialize_uint16(p_tm_packet_header->packet_seq_ctrl, &mut(*tm_bytes)[2 .. 4]);
+    serialize_uint16(p_tm_packet_header->packet_seq_ctrl, &muttm_bytes[2 .. 4]);
 
     // Serialize Packet Length (bytes 4-5)
-    serialize_uint16(p_tm_packet_header->packet_length, &mut(*tm_bytes)[4 .. 6]);
+    serialize_uint16(p_tm_packet_header->packet_length, &muttm_bytes[4 .. 6]);
 
     // Store version field (byte 6)
     tm_bytes[6] = p_tm_df_header->version;
@@ -118,16 +118,16 @@ function ccsds_pus_tm_set_fields(tm_bytes : &mut[u8 ; 19],
     tm_bytes[8] = p_tm_df_header->subtype;
 
     // Serialize msg_type_counter (bytes 9-10)
-    serialize_uint16(p_tm_df_header->msg_type_counter, &mut(*tm_bytes)[9 .. 11]);
+    serialize_uint16(p_tm_df_header->msg_type_counter, &muttm_bytes[9 .. 11]);
 
     // Serialize destinationID (bytes 11-12)
-    serialize_uint16(p_tm_df_header->destinationID, &mut(*tm_bytes)[11 .. 13]);
+    serialize_uint16(p_tm_df_header->destinationID, &muttm_bytes[11 .. 13]);
 
     // Serialize obt_secs (bytes 13-16)
-    serialize_uint32(p_tm_df_header->obt_secs, &mut(*tm_bytes)[13 .. 17]);
+    serialize_uint32(p_tm_df_header->obt_secs, &muttm_bytes[13 .. 17]);
 
     // Serialize obt_finetime (bytes 17-18)
-    serialize_uint16(p_tm_df_header->obt_finetime, &mut(*tm_bytes)[17 .. 19]);
+    serialize_uint16(p_tm_df_header->obt_finetime, &muttm_bytes[17 .. 19]);
 
     return;
 }
