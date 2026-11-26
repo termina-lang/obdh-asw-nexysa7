@@ -22,8 +22,8 @@ resource class CPUSService12 provides IPUSService12 {
     monitoring_transition_counter : u8; 
     param_mon_transitions_table : [ParamMonitoringTransition; max_num_transitions];
 
-    system_data_pool_u32 : access AtomicArrayAccess<u32; sdp_num_u32_params>;
-    system_data_pool_u8 : access AtomicArrayAccess<u8; sdp_num_u8_params>;
+    system_data_pool_u32 : access AtomicArrayAccess<u32, sdp_num_u32_params>;
+    system_data_pool_u8 : access AtomicArrayAccess<u8, sdp_num_u8_params>;
 
     tm_channel : access ITMChannel;
     tm_handler_pool : access Allocator<TMHandler>;

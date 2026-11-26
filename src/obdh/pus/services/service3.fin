@@ -18,8 +18,8 @@ resource class CPUSService3 provides IPUSService3 {
 
     hk_config_table : [HKConfiguration; max_num_of_SIDs];
 
-    system_data_pool_u32 : access AtomicArrayAccess<u32; sdp_num_u32_params>;
-    system_data_pool_u8 : access AtomicArrayAccess<u8; sdp_num_u8_params>;
+    system_data_pool_u32 : access AtomicArrayAccess<u32, sdp_num_u32_params>;
+    system_data_pool_u8 : access AtomicArrayAccess<u8, sdp_num_u8_params>;
 
     tm_channel: access ITMChannel;   
     tm_handler_pool : access Allocator<TMHandler>;

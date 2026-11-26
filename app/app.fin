@@ -31,22 +31,22 @@ emitter hk_fdir_timer : PeriodicTimer = {
     period = {tv_sec = 1, tv_usec = 0} : TimeVal
 } : PeriodicTimer;
 
-channel tc_message_queue : MsgQueue<box TCHandler;10>;
-channel hkfdir_message_queue : MsgQueue<box TCHandler;10>;
-channel bkg_message_queue : MsgQueue<box TCHandler;10>;
-channel action_tc_message_queue : MsgQueue<box TCHandler;5>;
+channel tc_message_queue : MsgQueue<box TCHandler,10>;
+channel hkfdir_message_queue : MsgQueue<box TCHandler,10>;
+channel bkg_message_queue : MsgQueue<box TCHandler,10>;
+channel action_tc_message_queue : MsgQueue<box TCHandler,5>;
 
-resource tm_pool : Pool<TMHandler; 10>;
-resource tc_pool : Pool<TCHandler; 10>;
+resource tm_pool : Pool<TMHandler, 10>;
+resource tc_pool : Pool<TCHandler, 10>;
 
-resource tc_frame_deque : Deque<TCHandler; 1>;
-resource tm_frame_deque : Deque<TMHandler; 10>;
+resource tc_frame_deque : Deque<TCHandler, 1>;
+resource tm_frame_deque : Deque<TMHandler, 10>;
 
-resource u32_system_data_pool : AtomicArray<u32; sdp_num_u32_params> = {
+resource u32_system_data_pool : AtomicArray<u32, sdp_num_u32_params> = {
     values = [0; sdp_num_u32_params]
 };
 
-resource u8_system_data_pool : AtomicArray<u8; sdp_num_u8_params> = {
+resource u8_system_data_pool : AtomicArray<u8, sdp_num_u8_params> = {
     values = [0; sdp_num_u8_params]
 };
 
